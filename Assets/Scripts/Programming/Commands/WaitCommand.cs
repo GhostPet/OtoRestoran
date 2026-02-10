@@ -1,16 +1,20 @@
-using UnityEngine;
+using RestAutoRant.Shared;
+using RestAutoRant.Shared.Interfaces;
 
-public class WaitCommand : MonoBehaviour
-{
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
+namespace RestAutoRant.Programming.Commands {
+	public class WaitCommand : IRobotCommand {
+		private float remaining;
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+		public WaitCommand(float seconds) {
+			remaining = seconds;
+		}
+
+		public bool Tick(IRobot robot, float deltaTime) {
+			remaining -= deltaTime;
+
+			UnityEngine.Debug.Log($"Wait: {remaining:F2}s");
+
+			return remaining <= 0f;
+		}
+	}
 }

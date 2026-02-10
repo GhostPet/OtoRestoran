@@ -1,7 +1,11 @@
 {
     "name": "RestAutoRant.Debug",
     "rootNamespace": "RestAutoRant",
-    "references": [],
+    "references": [
+        "RestAutoRant.Core",
+        "RestAutoRant.Programming",
+        "RestAutoRant.Shared"
+        ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

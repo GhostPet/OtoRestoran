@@ -1,16 +1,15 @@
 using UnityEngine;
+using RestAutoRant.Shared.Interfaces;
 
-public class RobotController : MonoBehaviour
-{
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
+namespace RestAutoRant.Core.Robots {
+	public class RobotController : MonoBehaviour, IRobot {
+		[SerializeField] private float moveSpeed = 2f;
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+		public Vector3 Position => transform.position;
+		public float MoveSpeed => moveSpeed;
+
+		public void MoveTo(Vector3 worldPosition) {
+			transform.position = worldPosition;
+		}
+	}
 }

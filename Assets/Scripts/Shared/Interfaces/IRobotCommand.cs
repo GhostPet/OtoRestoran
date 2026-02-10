@@ -1,7 +1,7 @@
-﻿namespace RestAutoRant.Shared.Interfaces {
+﻿using RestAutoRant.Shared.Interfaces;
+
+namespace RestAutoRant.Shared {
 	public interface IRobotCommand {
-		bool CanExecute(IRobot robot);
-		void Execute(IRobot robot);
-		bool IsCompleted { get; }
+		bool Tick(IRobot robot, float deltaTime);
 	}
 }
