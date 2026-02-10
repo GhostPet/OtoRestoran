@@ -5,7 +5,7 @@ using RestAutoRant.Shared.Interfaces;
 namespace RestAutoRant.Programming.Commands {
 	public class MoveToCommand : IRobotCommand {
 		private Vector3 target;
-
+		// abicim böyle iþ olmaz
 		public MoveToCommand(Vector3 target) {
 			this.target = target;
 		}
