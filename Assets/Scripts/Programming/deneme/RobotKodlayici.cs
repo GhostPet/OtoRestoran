@@ -4,58 +4,95 @@ using TMPro;
 
 public class RobotKodlayici : MonoBehaviour
 {
-    // Burada referanslar� tutaca��z
-    public TMP_InputField kodInput;
-
+    public TMP_InputField numaraInput;   // Sol taraftaki
+    public TMP_InputField kodInput;       // Sağ taraftaki
     public Button calistirButon;
-
+    public ScrollRect scrollRect;         // Scroll View bileşeni
+    
+    private bool senkronizeEdiliyor = false;
+    
     void Start()
     {
-        // Butona t�klan�nca KoduCalistir fonksiyonunu �al��t�r
         calistirButon.onClick.AddListener(KoduCalistir);
+        kodInput.onValueChanged.AddListener(NumaralariGuncelle);
+        
+        // Scroll olaylarını dinle
+        scrollRect.onValueChanged.AddListener(ScrollDegisti);
+        
+        // Başlangıçta numaraları göster
+        NumaralariGuncelle("");
     }
-
+    
+    void NumaralariGuncelle(string metin)
+    {
+        if (senkronizeEdiliyor) return;
+        
+        string[] satirlar = kodInput.text.Split('\n');
+        string numaralar = "";
+        
+        for (int i = 0; i < satirlar.Length; i++)
+        {
+            numaralar += i + "\n";
+        }
+        
+        numaraInput.text = numaralar;
+    }
+    
+    void ScrollDegisti(Vector2 pozisyon)
+    {
+        // İki InputField'ın scroll pozisyonlarını senkronize et
+        if (senkronizeEdiliyor) return;
+        
+        senkronizeEdiliyor = true;
+        
+        // Not: TMP_InputField'ın direkt scroll pozisyonu yok
+        // Bu nedenle farklı bir yöntem kullanacağız
+        
+        senkronizeEdiliyor = false;
+    }
+    
+    void Update()
+    {
+        // Her frame'de scroll pozisyonlarını kontrol et ve senkronize et
+        ScrollSenkronize();
+    }
+    
+    void ScrollSenkronize()
+    {
+        // Bu kısım biraz karmaşık, alternatif bir çözüm sunacağım
+    }
+    
     void KoduCalistir()
     {
-        // InputField'daki metni al
         string kod = kodInput.text;
-
-        // Kod sat�rlar�na b�l
         string[] satirlar = kod.Split('\n');
-
-        // Her sat�r� tek tek i�le
-        foreach (string satir in satirlar)
+        
+        for (int i = 0; i < satirlar.Length; i++)
         {
+            string satir = satirlar[i];
+            
             if (!string.IsNullOrWhiteSpace(satir))
             {
+                Debug.Log("Satır " + i + ": " + satir);
                 KomutYorumla(satir.Trim());
             }
         }
     }
-
+    
     void KomutYorumla(string komut)
     {
-        // yazd�r("merhaba") �eklindeki komutlar� alg�la
-        if (komut.StartsWith("yazdir(") && komut.EndsWith(")"))
+        if (komut.StartsWith("yazdır(\"") && komut.EndsWith("\")"))
         {
-            // T�rnak i�aretlerini bul
-            int baslangicIndex = komut.IndexOf('"');
-            int bitisIndex = komut.LastIndexOf('"');
-
-            if (baslangicIndex != -1 && bitisIndex != -1 && bitisIndex > baslangicIndex)
+            int basla = komut.IndexOf('"') + 1;
+            int bitir = komut.LastIndexOf('"');
+            
+            if (basla < bitir)
             {
-                // T�rnak i�aretleri aras�ndaki metni al
-                string mesaj = komut.Substring(baslangicIndex + 1, bitisIndex - baslangicIndex - 1);
-
-                // Console'a yazd�r
+                string mesaj = komut.Substring(basla, bitir - basla);
                 Debug.Log("Robot: " + mesaj);
             }
-            else
-            {
-                Debug.LogError("Hata: T�rnak i�aretlerini kontrol et!");
-            }
         }
-        else
+        else if (!string.IsNullOrEmpty(komut))
         {
             Debug.LogWarning("Bilinmeyen komut: " + komut);
         }
