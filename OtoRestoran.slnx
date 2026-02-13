@@ -1,8 +1,4 @@
 ﻿<Solution>
-  <Project Path="RestAutoRant.Programming.csproj" />
+  <Project Path="Assembly-CSharp-Editor.csproj" />
   <Project Path="Assembly-CSharp.csproj" />
-  <Project Path="RestAutoRant.Core.csproj" />
-  <Project Path="RestAutoRant.Infastructure.csproj" />
-  <Project Path="RestAutoRant.Shared.csproj" />
-  <Project Path="RestAutoRant.Debug.csproj" />
 </Solution>

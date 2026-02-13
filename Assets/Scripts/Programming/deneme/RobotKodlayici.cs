@@ -1,10 +1,11 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class RobotKodlayici : MonoBehaviour
 {
     // Burada referanslar� tutaca��z
-    public InputField kodInput;
+    public TMP_InputField kodInput;
 
     public Button calistirButon;
 

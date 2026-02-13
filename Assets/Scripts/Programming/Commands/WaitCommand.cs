@@ -1,6 +1,3 @@
-using RestAutoRant.Shared;
-using RestAutoRant.Shared.Interfaces;
-
 namespace RestAutoRant.Programming.Commands {
 	public class WaitCommand : IRobotCommand {
 		private float remaining;

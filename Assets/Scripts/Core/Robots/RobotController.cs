@@ -1,15 +1,14 @@
 using UnityEngine;
-using RestAutoRant.Shared.Interfaces;
 
-namespace RestAutoRant.Core.Robots {
-	public class RobotController : MonoBehaviour, IRobot {
-		[SerializeField] private float moveSpeed = 2f;
 
-		public Vector3 Position => transform.position;
-		public float MoveSpeed => moveSpeed;
+public class RobotController : MonoBehaviour, IRobot {
+	[SerializeField] private float moveSpeed = 2f;
 
-		public void MoveTo(Vector3 worldPosition) {
-			transform.position = worldPosition;
-		}
+	public Vector3 Position => transform.position;
+	public float MoveSpeed => moveSpeed;
+
+	public void MoveTo(Vector3 worldPosition) {
+		transform.position = worldPosition;
 	}
 }
+
