@@ -8,9 +8,6 @@ namespace RestAutoRant.Programming.Commands {
 
 		public bool Tick(IRobot robot, float deltaTime) {
 			remaining -= deltaTime;
-
-			UnityEngine.Debug.Log($"Wait: {remaining:F2}s");
-
 			return remaining <= 0f;
 		}
 	}

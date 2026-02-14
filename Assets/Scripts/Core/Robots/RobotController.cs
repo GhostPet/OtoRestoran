@@ -10,5 +10,9 @@ public class RobotController : MonoBehaviour, IRobot {
 	public void MoveTo(Vector3 worldPosition) {
 		transform.position = worldPosition;
 	}
+
+	public void MoveTo(Transform target) {
+		transform.position = target.position;
+	}
 }
 

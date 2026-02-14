@@ -1,17 +1,30 @@
 using UnityEngine;
 
-namespace RestAutoRant.Programming.Commands {
-	public class MoveToCommand : IRobotCommand {
-		private Vector3 target;
-		public MoveToCommand(Vector3 target) {
-			this.target = target;
-		}
+public class MoveToCommand : IRobotCommand {
 
-		public bool Tick(IRobot robot, float deltaTime) {
+	private Vector3? resolvedTarget;
+	private TableLogic tableTarget;
+	private bool executed;
 
-			robot.MoveTo(target);
+	public MoveToCommand(Vector3 target) {
+		resolvedTarget = target;
+	}
 
+	public MoveToCommand(TableLogic table) {
+		tableTarget = table;
+		resolvedTarget = null;
+	}
+
+	public bool Tick(IRobot robot, float deltaTime) {
+		if (robot == null || executed)
 			return true;
-		}
+
+		Vector3 target = resolvedTarget.HasValue
+			? resolvedTarget.Value
+			: TargetResolver.Resolve(robot, tableTarget);
+
+		robot.MoveTo(target);
+		executed = true;
+		return true;
 	}
 }
