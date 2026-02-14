@@ -3,19 +3,31 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
 using System;
+using System.Text.RegularExpressions;
 
 public class BasitRobotKodlayici : MonoBehaviour
 {
     public TMP_InputField kodInput;
     public Button calistirButon;
+    private Dictionary<string, Action<string>> komutFonksiyonlari;
     
     void Start()
     {
         // Butona tıklanınca KoduCalistir fonksiyonunu çalıştır
         calistirButon.onClick.AddListener(runner);
+
+        komutFonksiyonlari = new Dictionary<string, Action<string>>(StringComparer.OrdinalIgnoreCase)
+    {
+        { "yazdır", Qyazdir },
+        { "if", Qif },
+        { "foreach", Qforeach },
+        { "find", Qfind },
+        { "move", Qmove }
+    };
     }
 
-        public bool ParantezKontrol(string kod)
+
+    public bool ParantezKontrol(string kod)
     {
         int sayac = 0;
 
@@ -90,25 +102,110 @@ public class BasitRobotKodlayici : MonoBehaviour
     }
     
     void KoduCalistir(string kod)
-    {      
-        // Kod satırlarına böl
+    {
         string[] satirlar = kod.Split('\n');
-        
-        // Her satırı tek tek işle
-        foreach (string satir in satirlar)
+
+        for (int i = 0; i < satirlar.Length; i++)
         {
-            if (!string.IsNullOrWhiteSpace(satir))
+            string satir = satirlar[i].Trim();
+            if (string.IsNullOrWhiteSpace(satir)) continue;
+
+            // Eğer blok başlatıyorsa
+            if (satir.Contains("{"))
             {
-                KomutOkuma(satir.Trim());
+                string blok = satir;
+                int susluSayac = 0;
+
+                do
+                {
+                    foreach (char c in satir)
+                    {
+                        if (c == '{') susluSayac++;
+                        if (c == '}') susluSayac--;
+                    }
+
+                    if (susluSayac == 0) break;
+
+                    i++;
+                    satir = satirlar[i];
+                    blok += "\n" + satir;
+
+                } while (i < satirlar.Length);
+
+                SatırOkuma(blok.Trim());
+            }
+            else
+            {
+                SatırOkuma(satir);
             }
         }
     }
     public HashSet<string> komutlar = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
-    "var", "if", "for", "find", "go", "yazdır"
+    "if", "for", "find", "move", "yazdır"
     };
     
-    void KomutOkuma(string komut)
+    void SatırOkuma(string satir)
+    {
+        Match komutMatch = Regex.Match(satir, @"^([\p{L}_][\p{L}\p{N}_]*)");
+        if (!komutMatch.Success) return;
+
+        string komut = komutMatch.Groups[1].Value;
+
+        if (!komutFonksiyonlari.ContainsKey(komut))
+        {
+            Debug.LogError("Geçersiz komut: " + komut);
+            return;
+        }
+
+        komutFonksiyonlari[komut].Invoke(satir);
+    }
+
+    void Qyazdir(string satir)
+    {
+        Match m = Regex.Match(satir, @"yazdır\s*\(\s*""(.*?)""\s*\)");
+        if (m.Success)
+        {
+            Debug.Log(m.Groups[1].Value);
+        }
+    }
+
+    void Qif(string satir)
+    {
+        // Koşulu al
+        Match kosulMatch = Regex.Match(satir, @"if\s*\((.*?)\)");
+        if (!kosulMatch.Success)
+        {
+            Debug.LogError("if koşulu hatalı");
+            return;
+        }
+
+        string kosul = kosulMatch.Groups[1].Value.Trim();
+
+        // Şimdilik basit bool kontrolü
+        bool sonuc = kosul == "true";
+
+        if (!sonuc) return;
+
+        // Blok içeriğini al
+        Match blokMatch = Regex.Match(satir, @"\{([\s\S]*)\}");
+        if (!blokMatch.Success) return;
+
+        string blokIcerik = blokMatch.Groups[1].Value.Trim();
+
+        // Blok içindeki kodu tekrar çalıştır
+        KoduCalistir(blokIcerik);
+    }
+
+    void Qforeach(string obj)
+    {
+        
+    }
+    void Qfind(string obj)
+    {
+        
+    }
+    void Qmove(string obj)
     {
         
     }
