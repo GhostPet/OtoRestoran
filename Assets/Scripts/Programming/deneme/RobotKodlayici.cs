@@ -1,86 +1,115 @@
 using UnityEngine;
-using TMPro;
 using UnityEngine.UI;
+using TMPro;
 using System.Collections.Generic;
+using System;
 
-public class AutoTamamlama : MonoBehaviour
+public class BasitRobotKodlayici : MonoBehaviour
 {
     public TMP_InputField kodInput;
-    public GameObject oneriPanel;
-    public GameObject oneriButonPrefab;
-
-    private List<string> komutlar = new List<string>()
-    {
-        "yazdır(\"\")"
-    };
-
+    public Button calistirButon;
+    
     void Start()
     {
-        kodInput.onValueChanged.AddListener(OnerileriKontrolEt);
-        oneriPanel.SetActive(false);
+        // Butona tıklanınca KoduCalistir fonksiyonunu çalıştır
+        calistirButon.onClick.AddListener(runner);
     }
 
-    void OnerileriKontrolEt(string metin)
+        public bool ParantezKontrol(string kod)
     {
-        string sonKelime = SonKelimeyiAl(metin);
+        int sayac = 0;
 
-        if (string.IsNullOrEmpty(sonKelime))
+        foreach (char c in kod)
         {
-            oneriPanel.SetActive(false);
-            return;
-        }
-
-        List<string> eslesenler = komutlar.FindAll(k => k.StartsWith(sonKelime));
-
-        if (eslesenler.Count == 0)
-        {
-            oneriPanel.SetActive(false);
-            return;
-        }
-
-        OnerileriOlustur(eslesenler);
-    }
-
-    string SonKelimeyiAl(string metin)
-    {
-        string[] parcalar = metin.Split(' ', '\n');
-        return parcalar[parcalar.Length - 1];
-    }
-
-    void OnerileriOlustur(List<string> oneriler)
-    {
-        foreach (Transform child in oneriPanel.transform)
-            Destroy(child.gameObject);
-
-        foreach (string komut in oneriler)
-        {
-            GameObject btn = Instantiate(oneriButonPrefab, oneriPanel.transform);
-            btn.GetComponentInChildren<TMP_Text>().text = komut;
-
-            btn.GetComponent<Button>().onClick.AddListener(() =>
+            if (c == '(')
             {
-                KomutuTamamla(komut);
-            });
+                sayac++;
+            }
+            else if (c == ')')
+            {
+                sayac--;
+
+                // Kapanış fazla ise hata
+                if (sayac < 0)
+                    return false;
+            }
         }
 
-        oneriPanel.SetActive(true);
+        // Açık parantez kaldıysa hata
+        return sayac == 0;
+    }
+    public bool SusluParantezKontrol(string kod)
+    {
+        int sayac = 0;
+
+        foreach (char c in kod)
+        {
+            if (c == '{')
+            {
+                sayac++;
+            }
+            else if (c == '}')
+            {
+                sayac--;
+
+                // Kapanış fazla ise hata
+                if (sayac < 0)
+                    return false;
+            }
+        }
+
+        return sayac == 0;
+    }
+    void runner()
+    {
+        string kod = kodInput.text;
+        if (KodControl(kod))
+        {
+            KoduCalistir(kod);
+        };
     }
 
-    void KomutuTamamla(string komut)
+    public bool KodControl(string kod)
     {
-        string metin = kodInput.text;
-        string sonKelime = SonKelimeyiAl(metin);
+        bool normalDogru = ParantezKontrol(kod);
+        bool susluDogru = SusluParantezKontrol(kod);
 
-        int index = metin.LastIndexOf(sonKelime);
-        if (index >= 0)
+        if (!normalDogru)
         {
-            metin = metin.Remove(index, sonKelime.Length);
-            metin = metin.Insert(index, komut);
+            Debug.LogError("() parantez hatası var.");
+            return false;
         }
 
-        kodInput.text = metin;
-        kodInput.caretPosition = metin.Length;
+        if (!susluDogru)
+        {
+            Debug.LogError("{} parantez hatası var.");
+            return false;
+        }
 
-        oneriPanel.SetActive(false);
+        return true;
+    }
+    
+    void KoduCalistir(string kod)
+    {      
+        // Kod satırlarına böl
+        string[] satirlar = kod.Split('\n');
+        
+        // Her satırı tek tek işle
+        foreach (string satir in satirlar)
+        {
+            if (!string.IsNullOrWhiteSpace(satir))
+            {
+                KomutOkuma(satir.Trim());
+            }
+        }
+    }
+    public HashSet<string> komutlar = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+    "var", "if", "for", "find", "go", "yazdır"
+    };
+    
+    void KomutOkuma(string komut)
+    {
+        
     }
 }

@@ -233,7 +233,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 963.48, y: -15.903015}
+  m_AnchoredPosition: {x: 963.48, y: -15.903076}
   m_SizeDelta: {x: -975.3197, y: -710}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &262867484
@@ -672,6 +672,7 @@ GameObject:
   m_Component:
   - component: {fileID: 601724319}
   - component: {fileID: 601724318}
+  - component: {fileID: 601724320}
   m_Layer: 0
   m_Name: KodYonetici
   m_TagString: Untagged
@@ -692,8 +693,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: RestAutoRant.Programming::RobotKodlayici
   kodInput: {fileID: 968557323}
-  oneriPanel: {fileID: 45391788}
-  oneriButonPrefab: {fileID: 4652603045134799599, guid: 51c2cee080ab4e742a06db5bb6ba3917, type: 3}
+  calistirButon: {fileID: 740047365}
 --- !u!4 &601724319
 Transform:
   m_ObjectHideFlags: 0
@@ -709,6 +709,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &601724320
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 601724317}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 78eeb5ece2a0f244b8ae06121a57d23f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AutoTamamlama
+  kodInput: {fileID: 968557323}
+  oneriPanel: {fileID: 45391788}
+  oneriButonPrefab: {fileID: 4652603045134799599, guid: 51c2cee080ab4e742a06db5bb6ba3917, type: 3}
 --- !u!1 &740047363
 GameObject:
   m_ObjectHideFlags: 0
