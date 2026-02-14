@@ -1,100 +1,86 @@
 using UnityEngine;
-using UnityEngine.UI;
 using TMPro;
+using UnityEngine.UI;
+using System.Collections.Generic;
 
-public class RobotKodlayici : MonoBehaviour
+public class AutoTamamlama : MonoBehaviour
 {
-    public TMP_InputField numaraInput;   // Sol taraftaki
-    public TMP_InputField kodInput;       // Sağ taraftaki
-    public Button calistirButon;
-    public ScrollRect scrollRect;         // Scroll View bileşeni
-    
-    private bool senkronizeEdiliyor = false;
-    
+    public TMP_InputField kodInput;
+    public GameObject oneriPanel;
+    public GameObject oneriButonPrefab;
+
+    private List<string> komutlar = new List<string>()
+    {
+        "yazdır(\"\")"
+    };
+
     void Start()
     {
-        calistirButon.onClick.AddListener(KoduCalistir);
-        kodInput.onValueChanged.AddListener(NumaralariGuncelle);
-        
-        // Scroll olaylarını dinle
-        scrollRect.onValueChanged.AddListener(ScrollDegisti);
-        
-        // Başlangıçta numaraları göster
-        NumaralariGuncelle("");
+        kodInput.onValueChanged.AddListener(OnerileriKontrolEt);
+        oneriPanel.SetActive(false);
     }
-    
-    void NumaralariGuncelle(string metin)
+
+    void OnerileriKontrolEt(string metin)
     {
-        if (senkronizeEdiliyor) return;
-        
-        string[] satirlar = kodInput.text.Split('\n');
-        string numaralar = "";
-        
-        for (int i = 0; i < satirlar.Length; i++)
+        string sonKelime = SonKelimeyiAl(metin);
+
+        if (string.IsNullOrEmpty(sonKelime))
         {
-            numaralar += i + "\n";
+            oneriPanel.SetActive(false);
+            return;
         }
-        
-        numaraInput.text = numaralar;
-    }
-    
-    void ScrollDegisti(Vector2 pozisyon)
-    {
-        // İki InputField'ın scroll pozisyonlarını senkronize et
-        if (senkronizeEdiliyor) return;
-        
-        senkronizeEdiliyor = true;
-        
-        // Not: TMP_InputField'ın direkt scroll pozisyonu yok
-        // Bu nedenle farklı bir yöntem kullanacağız
-        
-        senkronizeEdiliyor = false;
-    }
-    
-    void Update()
-    {
-        // Her frame'de scroll pozisyonlarını kontrol et ve senkronize et
-        ScrollSenkronize();
-    }
-    
-    void ScrollSenkronize()
-    {
-        // Bu kısım biraz karmaşık, alternatif bir çözüm sunacağım
-    }
-    
-    void KoduCalistir()
-    {
-        string kod = kodInput.text;
-        string[] satirlar = kod.Split('\n');
-        
-        for (int i = 0; i < satirlar.Length; i++)
+
+        List<string> eslesenler = komutlar.FindAll(k => k.StartsWith(sonKelime));
+
+        if (eslesenler.Count == 0)
         {
-            string satir = satirlar[i];
-            
-            if (!string.IsNullOrWhiteSpace(satir))
+            oneriPanel.SetActive(false);
+            return;
+        }
+
+        OnerileriOlustur(eslesenler);
+    }
+
+    string SonKelimeyiAl(string metin)
+    {
+        string[] parcalar = metin.Split(' ', '\n');
+        return parcalar[parcalar.Length - 1];
+    }
+
+    void OnerileriOlustur(List<string> oneriler)
+    {
+        foreach (Transform child in oneriPanel.transform)
+            Destroy(child.gameObject);
+
+        foreach (string komut in oneriler)
+        {
+            GameObject btn = Instantiate(oneriButonPrefab, oneriPanel.transform);
+            btn.GetComponentInChildren<TMP_Text>().text = komut;
+
+            btn.GetComponent<Button>().onClick.AddListener(() =>
             {
-                Debug.Log("Satır " + i + ": " + satir);
-                KomutYorumla(satir.Trim());
-            }
+                KomutuTamamla(komut);
+            });
         }
+
+        oneriPanel.SetActive(true);
     }
-    
-    void KomutYorumla(string komut)
+
+    void KomutuTamamla(string komut)
     {
-        if (komut.StartsWith("yazdır(\"") && komut.EndsWith("\")"))
+        string metin = kodInput.text;
+        string sonKelime = SonKelimeyiAl(metin);
+
+        int index = metin.LastIndexOf(sonKelime);
+        if (index >= 0)
         {
-            int basla = komut.IndexOf('"') + 1;
-            int bitir = komut.LastIndexOf('"');
-            
-            if (basla < bitir)
-            {
-                string mesaj = komut.Substring(basla, bitir - basla);
-                Debug.Log("Robot: " + mesaj);
-            }
+            metin = metin.Remove(index, sonKelime.Length);
+            metin = metin.Insert(index, komut);
         }
-        else if (!string.IsNullOrEmpty(komut))
-        {
-            Debug.LogWarning("Bilinmeyen komut: " + komut);
-        }
+
+        kodInput.text = metin;
+        kodInput.caretPosition = metin.Length;
+
+        oneriPanel.SetActive(false);
     }
 }
