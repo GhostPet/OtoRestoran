@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.EventSystems;
+using TMPro;
 
 public class BuildManager : MonoBehaviour
 {
@@ -7,6 +8,13 @@ public class BuildManager : MonoBehaviour
     public Camera cam;
     public GameObject currentPrefab;
     public LayerMask groundLayer;
+    public TextMeshProUGUI buttonText;
+    public GameObject buildPanel;
+    public BuildInventory inventory;
+
+
+    private bool buildMode = false;
+
 
     private GameObject ghost;
     private Vector2Int currentGridPos;
@@ -21,10 +29,11 @@ public class BuildManager : MonoBehaviour
 
     void Update()
     {
-        if (currentPrefab == null || gridManager == null)
+
+        if (!buildMode)
             return;
 
-        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+        if (currentPrefab == null || gridManager == null)
             return;
 
         if (Input.GetKeyDown(KeyCode.R))
@@ -35,6 +44,21 @@ public class BuildManager : MonoBehaviour
         if (Input.GetMouseButtonDown(0))
             TryPlace();
     }
+    public void ToggleBuildModeUI()
+    {
+        buildMode = !buildMode;
+
+        if (buildPanel != null)
+            buildPanel.SetActive(buildMode);
+
+        if (!buildMode && ghost != null)
+            ghost.SetActive(false);
+
+        if (buttonText != null)
+            buttonText.text = buildMode ? "Build Mode: ON" : "Build Mode: OFF";
+    }
+
+
 
     void Rotate()
     {
@@ -145,6 +169,10 @@ public class BuildManager : MonoBehaviour
 
         Instantiate(currentPrefab, finalPos, Quaternion.Euler(0, rotation, 0));
         gridManager.SetOccupiedArea(gridPos, w, h, true);
+        if (!inventory.HasItem(currentPrefab))
+            return;
+
+        inventory.RemoveItem(currentPrefab);
     }
 
 

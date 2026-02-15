@@ -34,7 +34,7 @@ public class GridManager : MonoBehaviour
     {
         return origin + new Vector3(
             gridPos.x * cellSize + cellSize / 2f,
-            0.5f,
+            0.0f,
             gridPos.y * cellSize + cellSize / 2f
         );
     }
