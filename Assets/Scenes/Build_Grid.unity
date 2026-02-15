@@ -165,7 +165,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BuildManager
   gridManager: {fileID: 1177277911}
   cam: {fileID: 1715459103}
-  currentPrefab: {fileID: 4272813132720621153, guid: 1cce23f36a49d1344872c603ed4a36be, type: 3}
+  currentPrefab: {fileID: 6727803225821887186, guid: ef7b244a98dbb1d4ba70d437a05ea0c5, type: 3}
   groundLayer:
     serializedVersion: 2
     m_Bits: 64
