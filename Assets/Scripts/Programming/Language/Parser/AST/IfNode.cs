@@ -1,16 +1,5 @@
-using UnityEngine;
-
-public class IfNode : MonoBehaviour
-{
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+﻿public class IfNode : AstNode {
+	public ExpressionNode Condition;
+	public BlockNode ThenBlock;
+	public BlockNode ElseBlock; // null olabilir
 }

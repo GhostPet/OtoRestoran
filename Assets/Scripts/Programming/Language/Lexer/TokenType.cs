@@ -1,16 +1,36 @@
-using UnityEngine;
+public enum TokenType {
+	Identifier,
+	Number,
+	String,
 
-public class TokenType : MonoBehaviour
-{
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
+	NewLine,
+	Indent,
+	Dedent,
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+	Colon,
+	Comma,
+	Equals,
+	LParen,
+	RParen,
+	Plus,
+	Minus,
+	Star,
+	Slash,
+	Greater,
+	Less,
+	GreaterEqual,
+	LessEqual,
+	EqualEqual,
+	NotEqual,
+
+	KeywordDef,
+	KeywordIf,
+	KeywordElif,
+	KeywordElse,
+	KeywordWhile,
+	KeywordFor,
+	KeywordIn,
+	KeywordReturn,
+
+	EOF
 }

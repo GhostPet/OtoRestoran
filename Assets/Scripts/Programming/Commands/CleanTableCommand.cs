@@ -1,16 +1,21 @@
-using UnityEngine;
+﻿using UnityEngine;
 
-public class CleanTableCommand : MonoBehaviour
-{
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
+public class CleanTableCommand : IRobotCommand {
+	public int ExpectedArgumentCount => 1;
+	private bool _done = false;
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+	public bool Tick(params object[] args) {
+		if (!_done) {
+			Debug.Log($"Cleaning table {args[0]}");
+			_done = true;
+			return false;
+		}
+
+		_done = false;
+		return true;
+	}
+
+	public void Reset() {
+		_done = false;
+	}
 }

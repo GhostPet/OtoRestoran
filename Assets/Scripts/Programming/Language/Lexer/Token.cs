@@ -1,16 +1,15 @@
-using UnityEngine;
+public readonly struct Token {
+	public readonly TokenType Type;
+	public readonly string Lexeme;
+	public readonly int Line;
 
-public class Token : MonoBehaviour
-{
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
+	public Token(TokenType type, string lexeme, int line) {
+		Type = type;
+		Lexeme = lexeme;
+		Line = line;
+	}
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+	public override string ToString() {
+		return $"{Type} '{Lexeme}' (line {Line})";
+	}
 }
