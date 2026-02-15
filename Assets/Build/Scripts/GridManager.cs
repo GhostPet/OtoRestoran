@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class GridManager : MonoBehaviour
 {
@@ -7,49 +8,42 @@ public class GridManager : MonoBehaviour
     public float cellSize = 1f;
 
     private GridCell[,] grid;
+    private Vector3 origin;
 
     void Awake()
     {
         grid = new GridCell[width, height];
 
         for (int x = 0; x < width; x++)
-        {
             for (int y = 0; y < height; y++)
-            {
                 grid[x, y] = new GridCell();
-            }
-        }
+
+        origin = transform.position -
+                 new Vector3(width * cellSize / 2f, 0, height * cellSize / 2f);
     }
 
     public Vector2Int GetGridPosition(Vector3 worldPos)
     {
-        Vector3 origin = transform.position -
-            new Vector3(width * cellSize / 2, 0, height * cellSize / 2);
-
-        float percentX = (worldPos.x - origin.x) / cellSize;
-        float percentY = (worldPos.z - origin.z) / cellSize;
-
-        int x = Mathf.RoundToInt(percentX);
-        int y = Mathf.RoundToInt(percentY);
+        int x = Mathf.FloorToInt((worldPos.x - origin.x) / cellSize);
+        int y = Mathf.FloorToInt((worldPos.z - origin.z) / cellSize);
 
         return new Vector2Int(x, y);
     }
 
-
-
     public Vector3 GetWorldPosition(Vector2Int gridPos)
     {
-        Vector3 origin = transform.position -
-            new Vector3(width * cellSize / 2, 0, height * cellSize / 2);
-
         return origin + new Vector3(
-            gridPos.x * cellSize,
-            0.5f, // <-- bunu ekledik
-            gridPos.y * cellSize
+            gridPos.x * cellSize + cellSize / 2f,
+            0.5f,
+            gridPos.y * cellSize + cellSize / 2f
         );
     }
 
-
+    public bool IsInsideGrid(Vector2Int pos)
+    {
+        return pos.x >= 0 && pos.x < width &&
+               pos.y >= 0 && pos.y < height;
+    }
 
     public bool IsCellOccupied(Vector2Int pos)
     {
@@ -57,42 +51,30 @@ public class GridManager : MonoBehaviour
         return grid[pos.x, pos.y].isOccupied;
     }
 
-    public void SetOccupied(Vector2Int pos, bool value)
+    public void SetOccupiedArea(Vector2Int startPos, int objWidth, int objHeight, bool value)
     {
-        if (!IsInsideGrid(pos)) return;
-        grid[pos.x, pos.y].isOccupied = value;
-    }
-
-    bool IsInsideGrid(Vector2Int pos)
-    {
-        return pos.x >= 0 && pos.x < width &&
-               pos.y >= 0 && pos.y < height;
-    }
-    void OnDrawGizmos()
-    {
-        Gizmos.color = Color.white;
-
-        Vector3 origin = transform.position -
-            new Vector3(width * cellSize / 2, 0, height * cellSize / 2);
-
-        for (int x = 0; x < width; x++)
-        {
-            for (int y = 0; y < height; y++)
+        for (int x = 0; x < objWidth; x++)
+            for (int y = 0; y < objHeight; y++)
             {
-                Vector3 worldPos = origin + new Vector3(
-                    x * cellSize,
-                    0,
-                    y * cellSize
-                );
-
-                Gizmos.DrawWireCube(
-                    worldPos + new Vector3(cellSize / 2, 0, cellSize / 2),
-                    new Vector3(cellSize, 0.05f, cellSize)
-                );
+                Vector2Int p = new Vector2Int(startPos.x + x, startPos.y + y);
+                if (IsInsideGrid(p))
+                    grid[p.x, p.y].isOccupied = value;
             }
-        }
     }
 
+    public bool CanPlace(Vector2Int startPos, int objWidth, int objHeight)
+    {
+        for (int x = 0; x < objWidth; x++)
+            for (int y = 0; y < objHeight; y++)
+            {
+                Vector2Int p = new Vector2Int(startPos.x + x, startPos.y + y);
+
+                if (!IsInsideGrid(p) || IsCellOccupied(p))
+                    return false;
+            }
+
+        return true;
+    }
 }
 
 public class GridCell
