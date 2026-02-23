@@ -66,10 +66,22 @@ public class Parser {
 		if (Match(TokenType.KeywordWhile)) return ParseWhile();
 		if (Match(TokenType.KeywordFor)) return ParseFor();
 
-		if (Check(TokenType.Identifier) && CheckNext(TokenType.Equals))
-			return ParseAssignment();
+		// Detect assignment even for complex targets like "a[i], b = ..." by
+		// scanning ahead for an '=' before end-of-statement tokens.
+		if (IsAssignmentAhead()) return ParseAssignment();
 
 		return ParseCall();
+	}
+
+	private bool IsAssignmentAhead() {
+		int i = _current;
+		while (i < _tokens.Count) {
+			var t = _tokens[i].Type;
+			if (t == TokenType.Equals) return true;
+			if (t == TokenType.NewLine || t == TokenType.Colon || t == TokenType.Dedent || t == TokenType.EOF) return false;
+			i++;
+		}
+		return false;
 	}
 
 	private AstNode ParseIf() {
@@ -131,15 +143,46 @@ public class Parser {
 	}
 
 	private AstNode ParseAssignment() {
-		var name = Consume(TokenType.Identifier, "Expected variable name");
-		Consume(TokenType.Equals, "Expected '='");
-		var value = ParseExpression();
+		// Support: multiple assignment targets like 'a, b = ...' and indexing 'a[i], b[j] = ...'
+		var targets = new System.Collections.Generic.List<ExpressionNode>();
+
+		while (true) {
+			if (Check(TokenType.Identifier)) {
+				var id = Advance();
+				ExpressionNode baseExpr = new IdentifierExpression { Name = id.Lexeme, Line = id.Line };
+				if (Match(TokenType.LBracket)) {
+					var idx = ParseExpression();
+					Consume(TokenType.RBracket, "Expected ']' after index");
+					baseExpr = new IndexExpression { Target = baseExpr, Index = idx, Line = id.Line };
+				}
+				targets.Add(baseExpr);
+			} else {
+				throw Error(Peek(), "Expected target variable in assignment");
+			}
+
+			if (Match(TokenType.Comma)) continue;
+			break;
+		}
+
+		Consume(TokenType.Equals, "Expected '='");
+		// Parse right-hand side: single expression or comma-separated list (tuple) without parentheses
+		var firstValue = ParseExpression();
+		ExpressionNode value;
+		if (Match(TokenType.Comma)) {
+			var list = new ListLiteralExpression { Line = firstValue.Line };
+			list.Elements.Add(firstValue);
+			do {
+				list.Elements.Add(ParseExpression());
+			} while (Match(TokenType.Comma));
+			value = list;
+		} else {
+			value = firstValue;
+		}
 		Consume(TokenType.NewLine, "Expected newline after assignment");
 
 		return new AssignmentNode {
-			VariableName = name.Lexeme,
-			Value = value,
-			Line = name.Line
+			Targets = targets,
+			Value = value
 		};
 	}
 
@@ -189,6 +232,7 @@ public class Parser {
 			case TokenType.LessEqual:
 			case TokenType.EqualEqual:
 			case TokenType.NotEqual:
+			case TokenType.KeywordIn:
 				return 5;
 			default:
 				return 0;
@@ -196,6 +240,16 @@ public class Parser {
 	}
 
 	private ExpressionNode ParsePrimary() {
+		// Support unary minus (e.g. -5 or -x)
+		if (Match(TokenType.Minus)) {
+			// If directly followed by a number token, return a negative number literal
+			if (Match(TokenType.Number)) {
+				return new NumberLiteralExpression { Value = -float.Parse(Previous().Lexeme), Line = Previous().Line };
+			}
+			// Otherwise parse the following primary and represent unary minus as (0 - expr)
+			var rhs = ParsePrimary();
+			return new BinaryExpression { Left = new NumberLiteralExpression { Value = 0f, Line = rhs.Line }, Right = rhs, Operator = TokenType.Minus, Line = rhs.Line };
+		}
 		if (Match(TokenType.Number))
 			return new NumberLiteralExpression { Value = float.Parse(Previous().Lexeme), Line = Previous().Line };
 
@@ -219,22 +273,34 @@ public class Parser {
 				return call;
 			}
 
-			return new IdentifierExpression { Name = id.Lexeme, Line = id.Line };
+			// support indexing like identifier[expr]
+			ExpressionNode baseExpr = new IdentifierExpression { Name = id.Lexeme, Line = id.Line };
+			while (Match(TokenType.LBracket)) {
+				var idx = ParseExpression();
+				Consume(TokenType.RBracket, "Expected ']' after index");
+				baseExpr = new IndexExpression { Target = baseExpr, Index = idx, Line = id.Line };
+			}
+
+			return baseExpr;
 		}
 
-		// parenthesized tuple or expression
-		if (Match(TokenType.LParen)) {
+
+		// list literal using square brackets or parenthesized tuple
+		if (Match(TokenType.LParen) || Match(TokenType.LBracket)) {
 			var start = Previous();
 			var inner = new ListLiteralExpression { Line = start.Line };
-			if (!Check(TokenType.RParen)) {
+			if (!(Check(TokenType.RParen) || Check(TokenType.RBracket))) {
 				do {
 					inner.Elements.Add(ParseExpression());
 				} while (Match(TokenType.Comma));
 			}
 
-			Consume(TokenType.RParen, "Expected ')' for tuple/list literal");
-			if (inner.Elements.Count == 1 && !Check(TokenType.Comma))
-				return inner.Elements[0];
+			// Use the starting token to determine which closing token to expect.
+			if (start.Type == TokenType.LParen)
+				Consume(TokenType.RParen, "Expected ')' for tuple/list literal");
+			else
+				Consume(TokenType.RBracket, "Expected ']' for list literal");
+
 			return inner;
 		}
 

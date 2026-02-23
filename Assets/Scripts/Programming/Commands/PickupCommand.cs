@@ -5,14 +5,24 @@ public class PickupCommand : IRobotCommand {
 	private bool _done = false;
 
 	public bool Tick(params object[] args) {
-		if (!_done) {
-			int line = CommandExecutionContext.CurrentLine;
-			Debug.Log($"Picking up {args[0]} (line {line})");
-			_done = true;
-			return false;
+
+		int line = CommandExecutionContext.CurrentLine;
+		var robot = CommandExecutionContext.CurrentRobot;
+
+
+		if (robot != null) {
+			// If robot has to be at object first, ensure not moving
+			if (robot.IsMoving) {
+				// still moving, try again next tick
+				return false;
+			}
+
+			// simulate pickup on robot (no-op for now)
+			Debug.Log($"[PickupCommand] Robot picking up {args[0]} (line {line})");
+			return true;
 		}
 
-		_done = false;
+		Debug.Log($"Picking up {args[0]} (line {line})");
 		return true;
 	}
 

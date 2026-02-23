@@ -16,6 +16,8 @@ public enum TokenType {
 	Minus,
 	Star,
 	Slash,
+    LBracket,
+    RBracket,
 	Greater,
 	Less,
 	GreaterEqual,

@@ -1,5 +1,7 @@
 public static class CommandExecutionContext {
 	public static int CurrentLine { get; set; } = -1;
+	// Current robot executing enqueued commands (set by RobotExecutor during Tick)
+	public static IRobot CurrentRobot { get; set; }
 
 	private static readonly System.Collections.Generic.Dictionary<string, object> _variables =
 		new(System.StringComparer.OrdinalIgnoreCase);

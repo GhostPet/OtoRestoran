@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 
 public class RobotCommandQueue {
-	private readonly Queue<IRobotCommand> queue = new Queue<IRobotCommand>();
+	private readonly Queue<IRobotCommand> queue = new();
 
 	public void Enqueue(IRobotCommand command) {
 		queue.Enqueue(command);
@@ -13,5 +13,10 @@ public class RobotCommandQueue {
 
 	public bool HasCommands() {
 		return queue.Count > 0;
+	}
+
+	// Peek without dequeuing
+	public IRobotCommand Peek() {
+		return queue.Count > 0 ? queue.Peek() : null;
 	}
 }
