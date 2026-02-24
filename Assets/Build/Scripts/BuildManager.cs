@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using TMPro;
 
 public class BuildManager : MonoBehaviour
@@ -19,6 +20,10 @@ public class BuildManager : MonoBehaviour
     private bool buildMode = false;
     private GameObject ghost;
     private int rotation = 0;
+    // highlighting (outline instances)
+    private PlaceableObject highlighted = null;
+    private List<GameObject> highlightInstances = new List<GameObject>();
+    private Material outlineMaterial;
 
     void Start()
     {
@@ -28,20 +33,27 @@ public class BuildManager : MonoBehaviour
 
     void Update()
     {
+        // always update highlight (show outlines even outside build mode)
+        UpdateHighlight();
+
         if (!buildMode)
             return;
 
-        if (currentPrefab == null || gridManager == null)
+        if (gridManager == null)
             return;
 
-        if (Input.GetKeyDown(KeyCode.R))
+        if (Input.GetKeyDown(KeyCode.R) && currentPrefab != null)
             Rotate();
 
-        UpdateGhost();
+        if (currentPrefab != null)
+        {
+            UpdateGhost();
 
-        if (Input.GetMouseButtonDown(0))
-            TryPlace();
+            if (Input.GetMouseButtonDown(0))
+                TryPlace();
+        }
 
+        // allow removing objects even when no prefab is currently selected
         if (Input.GetMouseButtonDown(1))
             TryRemove();
     }
@@ -51,6 +63,9 @@ public class BuildManager : MonoBehaviour
     public void ToggleBuildModeUI()
     {
         buildMode = !buildMode;
+
+        // Clear any current selection when toggling build mode on or off
+        SetCurrentPrefab(null);
 
         if (buildPanel != null)
             buildPanel.SetActive(buildMode);
@@ -204,6 +219,13 @@ public class BuildManager : MonoBehaviour
 
         inventory.RemoveItem(currentPrefab);
         inventory.GenerateUI(this);
+
+        // if we've used up the last item, clear current selection so it can't be placed anymore
+        if (!inventory.HasItem(currentPrefab))
+        {
+            SetCurrentPrefab(null);
+            inventory.GenerateUI(this);
+        }
     }
 
     #endregion
@@ -217,7 +239,7 @@ public class BuildManager : MonoBehaviour
         if (!Physics.Raycast(ray, out RaycastHit hit))
             return;
 
-        PlaceableObject placed = hit.collider.GetComponentInParent<PlaceableObject>();
+        PlaceableObject placed = FindPlaceableFromCollider(hit.collider);
         if (placed == null)
             return;
 
@@ -238,7 +260,16 @@ public class BuildManager : MonoBehaviour
 
         gridManager.SetOccupiedArea(gridPos, w, h, false);
 
-        inventory.AddItem(placed.originalPrefab);
+        // add back to inventory and make it the current selection so player can place it again
+        if (placed.originalPrefab != null)
+        {
+            inventory.AddItem(placed.originalPrefab);
+            SetCurrentPrefab(placed.originalPrefab);
+        }
+
+        // clear highlight if we're removing the highlighted object
+        if (highlighted == placed)
+            ClearHighlight();
 
         Destroy(placed.gameObject);
 
@@ -257,6 +288,135 @@ public class BuildManager : MonoBehaviour
             m.color = new Color(0, 1, 0, 0.5f);
             r.material = m;
         }
+    }
+
+    // Try to find a PlaceableObject related to a collider robustly. This helps if scene
+    // objects were modified at runtime (ghost destroyed, nested colliders, etc.).
+    PlaceableObject FindPlaceableFromCollider(Collider col)
+    {
+        if (col == null) return null;
+
+        var p = col.GetComponentInParent<PlaceableObject>();
+        if (p != null) return p;
+
+        p = col.GetComponent<PlaceableObject>();
+        if (p != null) return p;
+
+        var root = col.transform.root;
+        if (root != null)
+            return root.GetComponentInChildren<PlaceableObject>();
+
+        return null;
+    }
+
+    void UpdateHighlight()
+    {
+        if (cam == null) return;
+
+        Ray ray = cam.ScreenPointToRay(Input.mousePosition);
+        if (!Physics.Raycast(ray, out RaycastHit hit))
+        {
+            ClearHighlight();
+            return;
+        }
+
+        var po = FindPlaceableFromCollider(hit.collider);
+        if (po == null)
+        {
+            ClearHighlight();
+            return;
+        }
+
+        // don't highlight the ghost preview
+        if (ghost != null && (po.gameObject == ghost || po.transform.IsChildOf(ghost.transform)))
+        {
+            ClearHighlight();
+            return;
+        }
+
+        if (highlighted == po) return;
+
+        ClearHighlight();
+        ApplyHighlight(po);
+    }
+
+    void ApplyHighlight(PlaceableObject po)
+    {
+        if (po == null) return;
+
+        highlighted = po;
+
+        // create outline material if needed
+        if (outlineMaterial == null)
+        {
+            var sh = Shader.Find("Universal Render Pipeline/Unlit");
+            outlineMaterial = new Material(sh ?? Shader.Find("Unlit/Color"));
+            // use an orange outline and ensure we render only backfaces to get a rim (inverted hull)
+            outlineMaterial.color = new Color(1f, 0.5f, 0f, 1f);
+            outlineMaterial.renderQueue = 3000;
+            // cull front faces so only the backfaces (expanded hull) are visible -> creates outline effect
+            try { outlineMaterial.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Front); } catch { }
+            // don't write depth so outline draws over the object edges
+            try { outlineMaterial.SetInt("_ZWrite", 0); } catch { }
+        }
+
+        // create outline objects for MeshFilter + MeshRenderer
+        foreach (var mf in po.GetComponentsInChildren<MeshFilter>())
+        {
+            if (mf.sharedMesh == null) continue;
+
+            var parent = mf.transform;
+            GameObject go = new GameObject("__outline_" + mf.name);
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = Vector3.zero;
+            go.transform.localRotation = Quaternion.identity;
+            go.transform.localScale = Vector3.one * 1.02f;
+
+            var of = go.AddComponent<MeshFilter>();
+            of.sharedMesh = mf.sharedMesh;
+            var or = go.AddComponent<MeshRenderer>();
+            or.material = outlineMaterial;
+            or.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            or.receiveShadows = false;
+
+            highlightInstances.Add(go);
+        }
+
+        // support SkinnedMeshRenderer outlines
+        foreach (var smr in po.GetComponentsInChildren<UnityEngine.SkinnedMeshRenderer>())
+        {
+            if (smr.sharedMesh == null) continue;
+
+            var parent = smr.transform;
+            GameObject go = new GameObject("__outline_smr_" + smr.name);
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = Vector3.zero;
+            go.transform.localRotation = Quaternion.identity;
+            go.transform.localScale = Vector3.one * 1.02f;
+
+            var of = go.AddComponent<MeshFilter>();
+            of.sharedMesh = smr.sharedMesh;
+            var or = go.AddComponent<MeshRenderer>();
+            or.material = outlineMaterial;
+            or.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            or.receiveShadows = false;
+
+            highlightInstances.Add(go);
+        }
+    }
+
+    void ClearHighlight()
+    {
+        if (highlighted == null && highlightInstances.Count == 0) return;
+
+        foreach (var go in highlightInstances)
+        {
+            if (go != null)
+                Destroy(go);
+        }
+
+        highlightInstances.Clear();
+        highlighted = null;
     }
 
     void SetColor(Color c)

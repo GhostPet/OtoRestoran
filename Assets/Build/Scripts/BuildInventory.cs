@@ -27,6 +27,10 @@ public class BuildInventory : MonoBehaviour
         foreach (var item in items)
         {
             var itemLocal = item; // avoid closure capture issues
+            // don't show items with zero count
+            if (itemLocal.count <= 0)
+                continue;
+
             GameObject btn = Instantiate(buttonPrefab, panelParent);
 
             btn.GetComponentInChildren<TMPro.TextMeshProUGUI>().text =
