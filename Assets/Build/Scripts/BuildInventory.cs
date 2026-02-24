@@ -7,11 +7,37 @@ public class BuildItem
     public string itemName;
     public GameObject prefab;
     public int count;
+
+
+
 }
 
 public class BuildInventory : MonoBehaviour
 {
     public List<BuildItem> items = new List<BuildItem>();
+
+    public Transform panelParent;
+    public GameObject buttonPrefab;
+
+    public void GenerateUI(BuildManager buildManager)
+    {
+        foreach (Transform child in panelParent)
+            Destroy(child.gameObject);
+
+        foreach (var item in items)
+        {
+            var itemLocal = item; // avoid closure capture issues
+            GameObject btn = Instantiate(buttonPrefab, panelParent);
+
+            btn.GetComponentInChildren<TMPro.TextMeshProUGUI>().text =
+                itemLocal.itemName + " (" + itemLocal.count + ")";
+
+            btn.GetComponent<UnityEngine.UI.Button>().onClick.AddListener(() =>
+            {
+                buildManager.SetCurrentPrefab(itemLocal.prefab);
+            });
+        }
+    }
 
     public bool HasItem(GameObject prefab)
     {
