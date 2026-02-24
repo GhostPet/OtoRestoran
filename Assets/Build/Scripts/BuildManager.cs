@@ -130,7 +130,8 @@ public class BuildManager : MonoBehaviour
         {
             ghost = Instantiate(currentPrefab);
             SetGhostMaterial(ghost);
-        }
+            Debug.Log("Created ghost object for " + currentPrefab.name);
+		}
 
         ghost.SetActive(true);
         ghost.transform.position = finalPos;
