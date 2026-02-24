@@ -1,25 +1,24 @@
 ﻿using UnityEngine;
-using UnityEngine.EventSystems;
 using TMPro;
 
 public class BuildManager : MonoBehaviour
 {
+    [Header("References")]
     public GridManager gridManager;
     public Camera cam;
-    public GameObject currentPrefab;
     public LayerMask groundLayer;
     public TextMeshProUGUI buttonText;
+
+    [Header("Build UI")]
     public GameObject buildPanel;
     public BuildInventory inventory;
 
+    [Header("Current Selection")]
+    public GameObject currentPrefab;
 
     private bool buildMode = false;
-
-
     private GameObject ghost;
-    private Vector2Int currentGridPos;
-
-    private int rotation = 0; // 0, 90, 180, 270
+    private int rotation = 0;
 
     void Start()
     {
@@ -29,7 +28,6 @@ public class BuildManager : MonoBehaviour
 
     void Update()
     {
-
         if (!buildMode)
             return;
 
@@ -43,7 +41,13 @@ public class BuildManager : MonoBehaviour
 
         if (Input.GetMouseButtonDown(0))
             TryPlace();
+
+        if (Input.GetMouseButtonDown(1))
+            TryRemove();
     }
+
+    #region BUILD MODE
+
     public void ToggleBuildModeUI()
     {
         buildMode = !buildMode;
@@ -51,14 +55,19 @@ public class BuildManager : MonoBehaviour
         if (buildPanel != null)
             buildPanel.SetActive(buildMode);
 
+        if (buildMode)
+            inventory.GenerateUI(this);
+
         if (!buildMode && ghost != null)
-            ghost.SetActive(false);
+            Destroy(ghost);
 
         if (buttonText != null)
             buttonText.text = buildMode ? "Build Mode: ON" : "Build Mode: OFF";
     }
 
+    #endregion
 
+    #region ROTATION
 
     void Rotate()
     {
@@ -69,6 +78,10 @@ public class BuildManager : MonoBehaviour
         if (ghost != null)
             ghost.transform.rotation = Quaternion.Euler(0, rotation, 0);
     }
+
+    #endregion
+
+    #region GHOST
 
     void UpdateGhost()
     {
@@ -89,8 +102,6 @@ public class BuildManager : MonoBehaviour
                 ghost.SetActive(false);
             return;
         }
-
-        currentGridPos = gridPos;
 
         var data = currentPrefab.GetComponent<PlaceableObject>();
         if (data == null) return;
@@ -131,9 +142,15 @@ public class BuildManager : MonoBehaviour
             SetColor(Color.red);
     }
 
+    #endregion
+
+    #region PLACE
 
     void TryPlace()
     {
+        if (!inventory.HasItem(currentPrefab))
+            return;
+
         Ray ray = cam.ScreenPointToRay(Input.mousePosition);
 
         if (!Physics.Raycast(ray, out RaycastHit hit, 500f, groundLayer))
@@ -167,14 +184,69 @@ public class BuildManager : MonoBehaviour
 
         Vector3 finalPos = basePos + offset;
 
-        Instantiate(currentPrefab, finalPos, Quaternion.Euler(0, rotation, 0));
+        GameObject placedGO = Instantiate(currentPrefab, finalPos, Quaternion.Euler(0, rotation, 0));
+
+        // Ensure the instantiated object has its PlaceableObject data set so removal can
+        // correctly calculate which grid cells to free and which prefab to return to inventory.
+        var placedData = placedGO.GetComponent<PlaceableObject>();
+        if (placedData != null)
+        {
+            placedData.placedGridPosition = gridPos;
+            placedData.placedRotation = rotation;
+            // Ensure originalPrefab reference is set on the instance in case the prefab asset
+            // wasn't assigned in the inspector.
+            if (placedData.originalPrefab == null)
+                placedData.originalPrefab = currentPrefab;
+        }
+
         gridManager.SetOccupiedArea(gridPos, w, h, true);
-        if (!inventory.HasItem(currentPrefab))
-            return;
 
         inventory.RemoveItem(currentPrefab);
+        inventory.GenerateUI(this);
     }
 
+    #endregion
+
+    #region REMOVE
+
+    void TryRemove()
+    {
+        Ray ray = cam.ScreenPointToRay(Input.mousePosition);
+
+        if (!Physics.Raycast(ray, out RaycastHit hit))
+            return;
+
+        PlaceableObject placed = hit.collider.GetComponentInParent<PlaceableObject>();
+        if (placed == null)
+            return;
+
+        // Use stored grid position and rotation from the placed object so we free the exact
+        // area that was originally reserved when placing.
+        Vector2Int gridPos = placed.placedGridPosition;
+
+        int w = placed.width;
+        int h = placed.height;
+
+        int placedRot = placed.placedRotation;
+        if (placedRot == 90 || placedRot == 270)
+        {
+            int temp = w;
+            w = h;
+            h = temp;
+        }
+
+        gridManager.SetOccupiedArea(gridPos, w, h, false);
+
+        inventory.AddItem(placed.originalPrefab);
+
+        Destroy(placed.gameObject);
+
+        inventory.GenerateUI(this);
+    }
+
+    #endregion
+
+    #region VISUAL
 
     void SetGhostMaterial(GameObject obj)
     {
@@ -194,5 +266,15 @@ public class BuildManager : MonoBehaviour
         {
             r.material.color = new Color(c.r, c.g, c.b, 0.5f);
         }
+    }
+
+    #endregion
+
+    public void SetCurrentPrefab(GameObject prefab)
+    {
+        currentPrefab = prefab;
+
+        if (ghost != null)
+            Destroy(ghost);
     }
 }
