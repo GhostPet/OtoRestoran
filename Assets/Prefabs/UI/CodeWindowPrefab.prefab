@@ -35,12 +35,13 @@ RectTransform:
   - {fileID: 5210113228008169324}
   - {fileID: 6893730010278809555}
   - {fileID: 8353059155704407947}
+  - {fileID: 2714144870098420868}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -1092, y: 0}
-  m_SizeDelta: {x: 1000, y: 1200}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5031171933079330223
 CanvasRenderer:
@@ -201,6 +202,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WindowResize
   window: {fileID: 7417894309570578174}
+  forceTopLeftPivot: 1
   resizeSpeed: 4
   minWidth: 380
   minHeight: 150
@@ -376,6 +378,53 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.RectMask2D
   m_Padding: {x: -8, y: -5, z: -8, w: -5}
   m_Softness: {x: 0, y: 0}
+--- !u!1 &4284830413042498044
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2714144870098420868}
+  - component: {fileID: 2226390993783983913}
+  m_Layer: 0
+  m_Name: GameCodeRunner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2714144870098420868
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4284830413042498044}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -93.90149, y: -325.49997, z: 488.72287}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7417894309570578174}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2226390993783983913
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4284830413042498044}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70e5bb8bb73a33c4aaa64f4b2ece992e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameCodeRunner
+  codeInput: {fileID: 1250714890988883329}
+  runButton: {fileID: 7527665806389338129}
+  executor: {fileID: 0}
 --- !u!1 &5047778625721794733
 GameObject:
   m_ObjectHideFlags: 0
@@ -1036,6 +1085,7 @@ GameObject:
   - component: {fileID: 8217557228611740839}
   - component: {fileID: 5115793355299669053}
   - component: {fileID: 1250714890988883329}
+  - component: {fileID: 1291732646306332005}
   m_Layer: 5
   m_Name: InputField (TMP)
   m_TagString: Untagged
@@ -1202,6 +1252,19 @@ MonoBehaviour:
   isAlert: 0
   m_InputValidator: {fileID: 0}
   m_ShouldActivateOnSelect: 1
+--- !u!114 &1291732646306332005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7103404599043319506}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b6936d5a7770f94985dd52b8a44acb8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CodeEditor
+  TabSize: 4
 --- !u!1 &8267073963358510117
 GameObject:
   m_ObjectHideFlags: 0
