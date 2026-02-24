@@ -39,9 +39,9 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -1092, y: 600}
+  m_AnchoredPosition: {x: -1092, y: 0}
   m_SizeDelta: {x: 1000, y: 1200}
-  m_Pivot: {x: 0.5, y: 1}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5031171933079330223
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -94,6 +94,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WindowController
   windowRect: {fileID: 7417894309570578174}
   body: {fileID: 7044352308293848766}
+  resizeHandle: {fileID: 1253971837730957831}
+  minimizedWidth: 450
+  minimizedHeight: 120
+  animationDuration: 0.25
 --- !u!114 &43269038183617936
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -197,7 +201,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WindowResize
   window: {fileID: 7417894309570578174}
-  resizeSpeed: 3
+  resizeSpeed: 4
   minWidth: 380
   minHeight: 150
 --- !u!1 &2929442843965568817
@@ -942,6 +946,7 @@ GameObject:
   - component: {fileID: 6893730010278809555}
   - component: {fileID: 946120458904571823}
   - component: {fileID: 7999681674922049277}
+  - component: {fileID: 8363096021615627976}
   m_Layer: 5
   m_Name: Body
   m_TagString: Untagged
@@ -1007,6 +1012,18 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!225 &8363096021615627976
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7044352308293848766}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &7103404599043319506
 GameObject:
   m_ObjectHideFlags: 0
