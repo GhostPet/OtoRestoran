@@ -1501,7 +1501,6 @@ Transform:
   - {fileID: 1090846803}
   - {fileID: 2056589360}
   - {fileID: 1420258223}
-  - {fileID: 966919493}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &424617123
@@ -2550,7 +2549,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b6936d5a7770f94985dd52b8a44acb8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CodeEditor
-  inputField: {fileID: 621855013}
   TabSize: 4
 --- !u!1 &668720034
 GameObject:
@@ -2758,7 +2756,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -250.00005, y: 600}
+  m_AnchoredPosition: {x: -250.00006, y: 600}
   m_SizeDelta: {x: -500, y: 2000}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &757998214
@@ -3821,53 +3819,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 960427183}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!1 &966919492
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 966919493}
-  - component: {fileID: 966919494}
-  m_Layer: 0
-  m_Name: GameCodeRunner
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &966919493
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 966919492}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 422882684}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &966919494
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 966919492}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 70e5bb8bb73a33c4aaa64f4b2ece992e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GameCodeRunner
-  codeInput: {fileID: 621855013}
-  runButton: {fileID: 1194899725}
-  executor: {fileID: 118199215}
 --- !u!1 &981825786
 GameObject:
   m_ObjectHideFlags: 0
@@ -4944,17 +4895,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 34274be08bc312748a6bbb507d80ff47, type: 3}
---- !u!114 &1194899725 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 9101687870574132100, guid: 34274be08bc312748a6bbb507d80ff47, type: 3}
-  m_PrefabInstance: {fileID: 1194899724}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1331322818}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
 --- !u!1 &1200595449
 GameObject:
   m_ObjectHideFlags: 0
@@ -7673,7 +7613,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -250.00005, y: -75}
+  m_AnchoredPosition: {x: -250.00006, y: -75}
   m_SizeDelta: {x: -500, y: 150}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &2112234108

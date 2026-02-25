@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class MoveToCommand : IRobotCommand, ICompletable {
@@ -14,7 +13,7 @@ public class MoveToCommand : IRobotCommand, ICompletable {
 		return CommandExecutionContext.CurrentLine;
 	}
 
-	public int ExpectedArgumentCount => 1; // Tek argüman: tuple, Vector3 veya Transform
+	public int ExpectedArgumentCount => 1;
 
 	public bool Tick(params object[] args) {
 

@@ -3,36 +3,47 @@ using UnityEngine.EventSystems;
 
 public class WindowResize : MonoBehaviour, IBeginDragHandler, IDragHandler
 {
-    public RectTransform window;
+	public RectTransform window;
 
-    public float resizeSpeed = 2.5f;   // Hız (2-3 ideal)
+	[Tooltip("If true, force the window RectTransform pivot/anchors to top-left so resizing from the bottom-right will expand only to the right and down. Disable if you manage anchors/pivot in the inspector.")]
+	public bool forceTopLeftPivot = true;
 
-    public float minWidth = 250f;      // Minimum genişlik
-    public float minHeight = 150f;     // Minimum yükseklik
+	public float resizeSpeed = 2.5f;   // Hız (2-3 ideal)
 
-    private Vector2 lastMousePosition;
+	public float minWidth = 250f;      // Minimum genişlik
+	public float minHeight = 150f;     // Minimum yükseklik
 
-    public void OnBeginDrag(PointerEventData eventData)
-    {
-        lastMousePosition = eventData.position;
-    }
+	private Vector2 lastMousePosition;
 
-    public void OnDrag(PointerEventData eventData)
-    {
-        Vector2 currentMousePosition = eventData.position;
-        Vector2 difference = (currentMousePosition - lastMousePosition) * resizeSpeed;
+	public void OnBeginDrag(PointerEventData eventData)
+	{
+		lastMousePosition = eventData.position;
+	}
 
-        Vector2 newSize = window.sizeDelta + new Vector2(difference.x, -difference.y);
+	private void Start() {
+		if (forceTopLeftPivot && window != null) {
+			// Set anchors and pivot to top-left so sizeDelta changes expand to right/down only.
+			window.pivot = new Vector2(0f, 1f);
+			window.anchorMin = window.anchorMax = new Vector2(0f, 1f);
+		}
+	}
 
-        // Minimum boyut kontrolü
-        if (newSize.x < minWidth)
-            newSize.x = minWidth;
+	public void OnDrag(PointerEventData eventData)
+	{
+		Vector2 currentMousePosition = eventData.position;
+		Vector2 difference = (currentMousePosition - lastMousePosition) * resizeSpeed;
 
-        if (newSize.y < minHeight)
-            newSize.y = minHeight;
+		Vector2 newSize = window.sizeDelta + new Vector2(difference.x, -difference.y);
 
-        window.sizeDelta = newSize;
+		// Minimum boyut kontrolü
+		if (newSize.x < minWidth)
+			newSize.x = minWidth;
 
-        lastMousePosition = currentMousePosition;
-    }
+		if (newSize.y < minHeight)
+			newSize.y = minHeight;
+
+		window.sizeDelta = newSize;
+
+		lastMousePosition = currentMousePosition;
+	}
 }

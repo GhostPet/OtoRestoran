@@ -2,11 +2,14 @@ using System.Text;
 using TMPro;
 using UnityEngine;
 
-// Component to attach to an in-game code editor TMP_InputField.
-// Handles Tab -> spaces and automatic indent on Enter.
+[RequireComponent(typeof(TMP_InputField))]
 public class CodeEditor : MonoBehaviour {
-	public TMP_InputField inputField;
+	private TMP_InputField inputField;
 	public int TabSize = 4;
+
+	private void Awake() {
+		inputField = GetComponent<TMP_InputField>();
+	}
 
 	private void OnEnable() {
 		if (inputField != null) inputField.onValidateInput += ValidateInput;
@@ -18,14 +21,14 @@ public class CodeEditor : MonoBehaviour {
 
 	private char ValidateInput(string text, int charIndex, char addedChar) {
 		if (addedChar == '\t') {
-			string insert = new string(' ', TabSize);
+			string insert = new(' ', TabSize);
 			InsertTextAt(insert, charIndex);
 			return '\0';
 		}
 
 		if (addedChar == '\n' || addedChar == '\r') {
 			int lineStart = text.LastIndexOf('\n', System.Math.Max(0, charIndex - 1));
-			if (lineStart < 0) lineStart = 0; else lineStart = lineStart + 1;
+			if (lineStart < 0) lineStart = 0; else lineStart++;
 			var sb = new StringBuilder();
 			while (lineStart < text.Length) {
 				char c = text[lineStart];
@@ -44,7 +47,7 @@ public class CodeEditor : MonoBehaviour {
 		var txt = inputField.text ?? string.Empty;
 		if (index < 0) index = 0;
 		if (index > txt.Length) index = txt.Length;
-		string newText = txt.Substring(0, index) + insert + txt.Substring(index);
+		string newText = txt[..index] + insert + txt[index..];
 		inputField.text = newText;
 		int newPos = index + insert.Length;
 		inputField.stringPosition = newPos;
