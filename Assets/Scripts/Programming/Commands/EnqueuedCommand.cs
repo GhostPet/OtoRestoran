@@ -4,6 +4,7 @@ public class EnqueuedCommand : IRobotCommand, ICompletable {
 	private readonly IRobotCommand _impl;
 	private readonly object[] _args;
 	private readonly int _line;
+	private readonly string _contextId;
 	private bool _isCompleted;
 	public bool IsCompleted {
 		get {
@@ -16,25 +17,38 @@ public class EnqueuedCommand : IRobotCommand, ICompletable {
 		}
 	}
 
-	public EnqueuedCommand(IRobotCommand impl, object[] args, int line = -1) {
+	public EnqueuedCommand(IRobotCommand impl, object[] args, int line = -1, string contextId = null) {
 		_impl = impl ?? throw new ArgumentNullException(nameof(impl));
 		_args = args ?? new object[0];
 		_line = line;
+		_contextId = string.IsNullOrEmpty(contextId) ? CommandExecutionContext.CurrentContextId : contextId;
 		IsCompleted = false;
 	}
 
 	public int ExpectedArgumentCount => _impl.ExpectedArgumentCount;
 
+
 	public bool Tick(params object[] args) {
+		// Switch to this enqueued command's context
+		var prevContext = CommandExecutionContext.CurrentContextId;
+		CommandExecutionContext.CurrentContextId = _contextId;
+
 		// Set execution context line for accurate error reporting
-		int prev = CommandExecutionContext.CurrentLine;
+		int prevLine = CommandExecutionContext.CurrentLine;
 		CommandExecutionContext.CurrentLine = _line;
+
+		// If caller passed a robot as first arg, set it for this context so commands
+		// relying on CurrentRobot see the right robot.
+		if (args != null && args.Length > 0 && args[0] is IRobot r) {
+			CommandExecutionContext.CurrentRobot = r;
+		}
 
 		bool done = _impl.Tick(_args);
 		if (done) IsCompleted = true;
 
 		// restore previous
-		CommandExecutionContext.CurrentLine = prev;
+		CommandExecutionContext.CurrentLine = prevLine;
+		CommandExecutionContext.CurrentContextId = prevContext;
 		return done;
 	}
 

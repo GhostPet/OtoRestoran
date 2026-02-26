@@ -8,11 +8,17 @@ public class AstInterpreter : MonoBehaviour {
 	public List<FunctionDefNode> Functions;
 	// If set, builtin commands will be enqueued to this executor instead of run inline
 	public RobotExecutor Executor;
+	// Assigned unique context id for this interpreter so multiple interpreters
+	// can run concurrently without sharing variables/state.
+	public string ContextId { get; private set; }
 
 	// Başlatmak için çağırın: interpreter.StartExecution(functions);
 	public void StartExecution(List<FunctionDefNode> functions, string entryFunctionName = "main") {
 		Functions = functions;
-		Debug.Log($"[AstInterpreter] Starting execution of function '{entryFunctionName}'");
+		ContextId = System.Guid.NewGuid().ToString();
+		Debug.Log($"[AstInterpreter] Starting execution of function '{entryFunctionName}' (context={ContextId})");
+		// Ensure context exists and clear any previous context state
+		CommandExecutionContext.ClearVariables(ContextId);
 		StartCoroutine(RunFunction(entryFunctionName));
 	}
 
@@ -46,7 +52,7 @@ public class AstInterpreter : MonoBehaviour {
 		}
 
 		// multiple targets: RHS must be a list/tuple with same length
-		if (!(val is List<object> values)) throw new ValidationError($"Right-hand side must be a list for multiple assignment (line {line})", line);
+		if (val is not List<object> values) throw new ValidationError($"Right-hand side must be a list for multiple assignment (line {line})", line);
 		if (values.Count != an.Targets.Count) throw new ValidationError($"Mismatch in multiple assignment target/value count (line {line})", line);
 		for (int ti = 0; ti < an.Targets.Count; ti++) {
 			var tgt = an.Targets[ti];
@@ -168,7 +174,7 @@ public class AstInterpreter : MonoBehaviour {
 
 			if (Executor != null) {
 				// Enqueue to executor and wait for completion
-				var enq = new EnqueuedCommand(command, runtimeArgs.ToArray(), call.Line);
+				var enq = new EnqueuedCommand(command, runtimeArgs.ToArray(), call.Line, ContextId);
 				Executor.Enqueue(enq);
 
 				// wait until executor runs and completes this command
@@ -176,6 +182,9 @@ public class AstInterpreter : MonoBehaviour {
 				yield break;
 			} else {
 				// fallback to inline execution (existing behavior)
+				// Use this interpreter's context for inline execution
+				var prevContext = CommandExecutionContext.CurrentContextId;
+				CommandExecutionContext.CurrentContextId = ContextId;
 				CommandExecutionContext.CurrentLine = call.Line;
 
 				while (true) {
@@ -193,8 +202,8 @@ public class AstInterpreter : MonoBehaviour {
 					if (done) break;
 					yield return null;
 				}
-
 				CommandExecutionContext.CurrentLine = -1;
+				CommandExecutionContext.CurrentContextId = prevContext;
 				yield break;
 			}
 		} else {

@@ -1,26 +1,80 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 // In-game component to run user code attached to a UI panel.
 // Replace previous debug-only CodeTest with this component and wire it to your UI.
 public class GameCodeRunner : MonoBehaviour {
-	public TMP_InputField codeInput;
-	public Button runButton;
-	public RobotExecutor executor;
+	public List<TMP_InputField> codeInputs;
+	public List<Button> runButtons;
+	public List<RobotExecutor> executors;
+
+	// Track active interpreters per executor so stopping/starting one does not
+	// affect others.
+	private readonly Dictionary<RobotExecutor, AstInterpreter> _interpreters =
+		new(EqualityComparer<RobotExecutor>.Default);
+	private AstInterpreter _fallbackInterpreter;
+
+	private readonly Dictionary<Button, UnityAction> _buttonListeners
+		= new(EqualityComparer<Button>.Default);
 
 	private void Awake() {
-		if (runButton != null) runButton.onClick.AddListener(Run);
+		// No global wiring here. Editors register themselves via RegisterEditor when opened.
 	}
 
 	private void OnDestroy() {
-		if (runButton != null) runButton.onClick.RemoveListener(Run);
+		// Remove listeners added via RegisterEditor
+		foreach (var kv in _buttonListeners) {
+			var btn = kv.Key;
+			var act = kv.Value;
+			if (btn != null && act != null) btn.onClick.RemoveListener(act);
+		}
+		_buttonListeners.Clear();
 	}
 
-	// Starts execution of the code currently present in the input field.
-	public void Run() {
-		string code = codeInput != null ? codeInput.text ?? string.Empty : string.Empty;
+	// Called by UI code when a new editor window is created. Wires the run button to
+	// start/stop the interpreter for the given index mapping.
+	public void RegisterEditor(TMP_InputField input, Button runButton, RobotExecutor executor) {
+		codeInputs ??= new List<TMP_InputField>();
+		runButtons ??= new List<Button>();
+		executors ??= new List<RobotExecutor>();
+
+		codeInputs.Add(input);
+		runButtons.Add(runButton);
+		executors.Add(executor);
+
+		int index = codeInputs.Count - 1;
+		void action() => ToggleRunForIndex(index);
+		if (runButton != null) {
+			runButton.onClick.AddListener(action);
+			_buttonListeners[runButton] = action;
+			UpdateButtonLabel(index, "Run");
+		}
+	}
+
+	public void ToggleRunForIndex(int index) {
+		// Validate index
+		if (codeInputs == null || index < 0 || index >= codeInputs.Count) {
+			Debug.LogWarning($"ToggleRunForIndex: invalid index {index}");
+			return;
+		}
+
+		// If there is an executor for this index, use per-executor interpreter
+		RobotExecutor targetExecutor = (executors != null && index < executors.Count) ? executors[index] : null;
+
+		// If already running for this executor/index, stop it
+		if (targetExecutor != null && _interpreters.ContainsKey(targetExecutor)) {
+			StopExecutionFor(targetExecutor);
+			UpdateButtonLabel(index, "Run");
+			return;
+		}
+
+		// Otherwise start this editor: stop all other interpreters first
+		StopAllExecution();
+
+		string code = codeInputs[index] != null ? codeInputs[index].text ?? string.Empty : string.Empty;
 
 		// Tokenize and parse
 		Lexer lexer = new(code);
@@ -28,7 +82,7 @@ public class GameCodeRunner : MonoBehaviour {
 		try {
 			tokens = lexer.Tokenize();
 		} catch (System.Exception ex) {
-			Debug.LogError($"Lexer error: {ex.Message}");
+			Debug.LogError($"Lexer error for editor {index}: {ex.Message}");
 			return;
 		}
 
@@ -37,22 +91,66 @@ public class GameCodeRunner : MonoBehaviour {
 		try {
 			functions = parser.Parse();
 		} catch (System.Exception ex) {
-			Debug.LogError($"Parser error: {ex.Message}");
+			Debug.LogError($"Parser error for editor {index}: {ex.Message}");
 			return;
 		}
 
-		// Create interpreter in-scene and set executor reference so builtins enqueue to the robot
-		var interpreterObj = new GameObject("AstInterpreter");
-		var interpreter = interpreterObj.AddComponent<AstInterpreter>();
-		interpreter.Executor = executor;
+		if (targetExecutor != null) {
+			var interpObj = new GameObject($"AstInterpreter_{targetExecutor.name}");
+			var interp = interpObj.AddComponent<AstInterpreter>();
+			interp.Executor = targetExecutor;
+			_interpreters[targetExecutor] = interp;
+			interp.StartExecution(functions, "main");
+		} else {
+			// Fallback: inline interpreter for this editor
+			var fallbackObj = new GameObject($"AstInterpreter_editor_{index}");
+			var fallbackInterp = fallbackObj.AddComponent<AstInterpreter>();
+			_fallbackInterpreter = fallbackInterp;
+			fallbackInterp.StartExecution(functions, "main");
+		}
 
-		CommandExecutionContext.ClearVariables();
-		interpreter.StartExecution(functions, "main");
+		UpdateButtonLabel(index, "Stop");
 	}
 
-	// Optional helper to stop running interpreter (destroys interpreter GameObject)
+	private void UpdateButtonLabel(int index, string label) {
+		if (runButtons == null || index < 0 || index >= runButtons.Count) return;
+		var btn = runButtons[index];
+		if (btn == null) return;
+		// Try to update TMP text if present
+		var tmp = btn.GetComponentInChildren<TMPro.TextMeshProUGUI>();
+		if (tmp != null) tmp.text = label;
+		else {
+			var txt = btn.GetComponentInChildren<UnityEngine.UI.Text>();
+			if (txt != null) txt.text = label;
+		}
+	}
+
+	// Optional helper to stop running interpreters (destroys interpreter GameObjects)
 	public void StopAllExecution() {
-		var interp = GameObject.Find("AstInterpreter");
-		if (interp != null) Destroy(interp);
+		// Destroy all tracked interpreters and clear their contexts individually.
+		foreach (var kv in _interpreters) {
+			var interp = kv.Value;
+			if (interp != null) {
+				if (!string.IsNullOrEmpty(interp.ContextId)) CommandExecutionContext.ClearVariables(interp.ContextId);
+				Destroy(interp.gameObject);
+			}
+		}
+		_interpreters.Clear();
+
+		if (_fallbackInterpreter != null) {
+			if (!string.IsNullOrEmpty(_fallbackInterpreter.ContextId)) CommandExecutionContext.ClearVariables(_fallbackInterpreter.ContextId);
+			Destroy(_fallbackInterpreter.gameObject);
+			_fallbackInterpreter = null;
+		}
+	}
+
+	// Stop execution only for a single executor; does not affect others.
+	public void StopExecutionFor(RobotExecutor executor) {
+		if (executor == null) return;
+		if (_interpreters.TryGetValue(executor, out var interp)) {
+			if (!string.IsNullOrEmpty(interp.ContextId)) CommandExecutionContext.ClearVariables(interp.ContextId);
+			if (interp != null) Destroy(interp.gameObject);
+			_interpreters.Remove(executor);
+		}
 	}
 }
