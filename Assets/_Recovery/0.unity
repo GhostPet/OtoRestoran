@@ -172,6 +172,7 @@ MonoBehaviour:
   buildPanel: {fileID: 476830227}
   inventory: {fileID: 1166231505}
   currentPrefab: {fileID: 0}
+  chairPrefab: {fileID: 7516383840198433933, guid: 0d0f82a4fd47cb84fade4be68e1e99e8, type: 3}
 --- !u!1 &476830227
 GameObject:
   m_ObjectHideFlags: 0
@@ -783,7 +784,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 2, y: 1, z: 2}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -827,11 +828,11 @@ MonoBehaviour:
   - itemName: oven
     prefab: {fileID: 7358757324953424483, guid: 0db368fc09b08a24db54524696ac5604, type: 3}
     count: 3
-  - itemName: fridge
-    prefab: {fileID: 2224014996176195101, guid: ba0c193f839ff8949bd6f3da12951fde, type: 3}
+  - itemName: 2x2
+    prefab: {fileID: 8109022636083218387, guid: 59fda692beca1e34ab1e54bf3b27764c, type: 3}
     count: 1
   - itemName: masa
-    prefab: {fileID: 8109022636083218387, guid: 59fda692beca1e34ab1e54bf3b27764c, type: 3}
+    prefab: {fileID: 2085655913344793814, guid: 8592d8288d71c3e4da03c2dd388af4d0, type: 3}
     count: 5
   panelParent: {fileID: 476830228}
   buttonPrefab: {fileID: 8940384928784396446, guid: bd4fadae58e8fee429fdf6335ac65844, type: 3}
