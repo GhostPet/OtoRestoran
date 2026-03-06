@@ -22,6 +22,12 @@ public class BuildManager : MonoBehaviour
     private GameObject ghost;
     private GameObject ghostChair;
     private int rotation = 0;
+    private bool suppressGhostForChair = false;
+    // chair-target cycling state
+    private List<PlaceableObject> chairTargetCandidates = new List<PlaceableObject>();
+    private int chairCandidateIndex = 0;
+    private UnityEngine.Vector2Int lastHoverCell = new UnityEngine.Vector2Int(int.MinValue, int.MinValue);
+    private PlaceableObject selectedChairTarget = null;
     // highlighting (outline instances)
     private PlaceableObject highlighted = null;
     private List<GameObject> highlightInstances = new List<GameObject>();
@@ -31,6 +37,33 @@ public class BuildManager : MonoBehaviour
     {
         if (cam == null)
             cam = Camera.main;
+    }
+
+    List<PlaceableObject> GetAdjacentTables(Vector2Int cell)
+    {
+        var res = new List<PlaceableObject>();
+        Vector2Int[] dirs = { new Vector2Int(1,0), new Vector2Int(-1,0), new Vector2Int(0,1), new Vector2Int(0,-1) };
+        var seen = new HashSet<PlaceableObject>();
+        foreach (var d in dirs)
+        {
+            Vector2Int n = new Vector2Int(cell.x + d.x, cell.y + d.y);
+            if (!gridManager.IsInsideGrid(n)) continue;
+            var p = GetPlaceableAtCell(n);
+            if (p != null && p.type == PlaceableType.Table && !seen.Contains(p))
+            {
+                res.Add(p);
+                seen.Add(p);
+            }
+        }
+        return res;
+    }
+
+    void SetGameObjectLayerRecursive(GameObject go, int layer)
+    {
+        if (go == null) return;
+        go.layer = layer;
+        foreach (Transform t in go.transform)
+            SetGameObjectLayerRecursive(t.gameObject, layer);
     }
 
     void Update()
@@ -146,7 +179,7 @@ public class BuildManager : MonoBehaviour
             }
         }
 
-        // find chairs that occupy any of these adjacent cells
+        // find chairs that occupy any of these adjacent cells and are facing the table
         var all = FindObjectsOfType<PlaceableObject>();
         foreach (var p in all)
         {
@@ -160,6 +193,24 @@ public class BuildManager : MonoBehaviour
             }
 
             if (!intersects) continue;
+
+            // only remove chairs that face the table center (within tolerance)
+            int tw = table.width;
+            int th = table.height;
+            if (table.placedRotation == 90 || table.placedRotation == 270)
+            {
+                int tmp = tw; tw = th; th = tmp;
+            }
+            Vector3 tableBase = gridManager.GetWorldPosition(table.placedGridPosition);
+            Vector3 tableCenter = tableBase + new Vector3((tw - 1) * gridManager.cellSize / 2f, 0, (th - 1) * gridManager.cellSize / 2f);
+
+            Vector3 chairWorld = gridManager.GetWorldPosition(p.placedGridPosition);
+            Vector3 dirToTable = (tableCenter - chairWorld);
+            float expectedAngle = Mathf.Atan2(dirToTable.x, dirToTable.z) * Mathf.Rad2Deg;
+            float actualAngle = p.placedRotation;
+            float delta = Mathf.DeltaAngle(actualAngle, expectedAngle);
+            if (Mathf.Abs(delta) > 20f)
+                continue; // chair is not facing this table
 
             // remove chair: free grid, add to inventory, destroy
             gridManager.SetOccupiedArea(p.placedGridPosition, p.width, p.height, false);
@@ -204,6 +255,17 @@ public class BuildManager : MonoBehaviour
     void PlaceChairsAroundTable(PlaceableObject table)
     {
         Vector2Int start = table.placedGridPosition;
+        // compute table center in world space (respecting table size and rotation)
+        int tw = table.width;
+        int th = table.height;
+        if (table.placedRotation == 90 || table.placedRotation == 270)
+        {
+            int tmp = tw; tw = th; th = tmp;
+        }
+
+        Vector3 tableBase = gridManager.GetWorldPosition(start);
+        Vector3 tableCenter = tableBase + new Vector3((tw - 1) * gridManager.cellSize / 2f, 0, (th - 1) * gridManager.cellSize / 2f);
+
         Vector2Int[] dirs = { new Vector2Int(1,0), new Vector2Int(-1,0), new Vector2Int(0,1), new Vector2Int(0,-1) };
         foreach (var d in dirs)
         {
@@ -212,12 +274,17 @@ public class BuildManager : MonoBehaviour
             if (gridManager.IsCellOccupied(cell)) continue;
 
             Vector3 world = gridManager.GetWorldPosition(cell);
-            GameObject chair = Instantiate(chairPrefab, world, Quaternion.identity);
+            // compute rotation so chair faces table center
+            Vector3 dir = (tableCenter - world);
+            float angle = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
+            Quaternion rot = Quaternion.Euler(0, angle, 0);
+
+            GameObject chair = Instantiate(chairPrefab, world, rot);
             var po = chair.GetComponent<PlaceableObject>();
             if (po != null)
             {
                 po.placedGridPosition = cell;
-                po.placedRotation = 0;
+                po.placedRotation = Mathf.RoundToInt(angle);
                 if (po.originalPrefab == null) po.originalPrefab = chairPrefab;
                 po.type = PlaceableType.Chair;
             }
@@ -225,19 +292,43 @@ public class BuildManager : MonoBehaviour
         }
     }
 
-    void PlaceChairAt(Vector2Int cell)
+    void PlaceChairAt(Vector2Int cell, PlaceableObject targetTable = null)
     {
         if (!gridManager.IsInsideGrid(cell)) return;
         if (gridManager.IsCellOccupied(cell)) return;
         Vector3 world = gridManager.GetWorldPosition(cell);
-        GameObject chair = Instantiate(chairPrefab, world, Quaternion.identity);
+        // If a target table was provided use it, otherwise find any adjacent table
+        Vector3 finalRotEuler = Vector3.zero;
+        var table = targetTable ?? (GetPlaceableAtCell(new Vector2Int(cell.x + 1, cell.y)) ?? GetPlaceableAtCell(new Vector2Int(cell.x - 1, cell.y)) ?? GetPlaceableAtCell(new Vector2Int(cell.x, cell.y + 1)) ?? GetPlaceableAtCell(new Vector2Int(cell.x, cell.y - 1)));
+        Quaternion rot = Quaternion.identity;
+        if (table != null && table.type == PlaceableType.Table)
+        {
+            // compute table center
+            int tw = table.width;
+            int th = table.height;
+            if (table.placedRotation == 90 || table.placedRotation == 270)
+            {
+                int tmp = tw; tw = th; th = tmp;
+            }
+            Vector3 tableBase = gridManager.GetWorldPosition(table.placedGridPosition);
+            Vector3 tableCenter = tableBase + new Vector3((tw - 1) * gridManager.cellSize / 2f, 0, (th - 1) * gridManager.cellSize / 2f);
+            Vector3 dir = (tableCenter - world);
+            float angle = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
+            rot = Quaternion.Euler(0, angle, 0);
+        }
+
+        GameObject chair = Instantiate(chairPrefab, world, rot);
         var po = chair.GetComponent<PlaceableObject>();
         if (po != null)
         {
             po.placedGridPosition = cell;
-            po.placedRotation = 0;
+            po.placedRotation = Mathf.RoundToInt(rot.eulerAngles.y);
             if (po.originalPrefab == null) po.originalPrefab = chairPrefab;
             po.type = PlaceableType.Chair;
+            if (table != null && table.type == PlaceableType.Table)
+            {
+                po.linkedTableGridPosition = table.placedGridPosition;
+            }
         }
         gridManager.SetOccupiedArea(cell, 1, 1, true);
     }
@@ -259,6 +350,13 @@ public class BuildManager : MonoBehaviour
 
     void UpdateGhost()
     {
+        // if a chair ghost is active, suppress showing the normal currentPrefab ghost
+        if (suppressGhostForChair)
+        {
+            if (ghost != null)
+                ghost.SetActive(false);
+            return;
+        }
         Ray ray = cam.ScreenPointToRay(Input.mousePosition);
 
         if (!Physics.Raycast(ray, out RaycastHit hit, 500f, groundLayer))
@@ -526,58 +624,214 @@ public class BuildManager : MonoBehaviour
     void UpdateChairGhost()
     {
         if (cam == null) return;
+        // reset suppression each frame; we'll enable it only when needed
+        suppressGhostForChair = false;
 
         Ray ray = cam.ScreenPointToRay(Input.mousePosition);
-        if (!Physics.Raycast(ray, out RaycastHit hit, 500f, groundLayer))
+
+        // first try to hit objects (chairs) without layer mask
+        bool hitObject = Physics.Raycast(ray, out RaycastHit objHit, 500f);
+        // separately try to hit ground to get grid position
+        bool hitGround = Physics.Raycast(ray, out RaycastHit groundHit, 500f, groundLayer);
+
+        // if pointing at an existing chair object, show orange ghost over it and allow removal
+        if (hitObject)
         {
-            if (ghostChair != null) ghostChair.SetActive(false);
+            var poObj = FindPlaceableFromCollider(objHit.collider);
+            if (poObj != null && poObj.type == PlaceableType.Chair)
+            {
+                // don't show the orange chair ghost when hovering an existing chair (user requested)
+                // ensure any chair ghost is hidden
+                if (ghostChair != null)
+                    ghostChair.SetActive(false);
+                // build list of adjacent tables as candidates
+                var candidates = GetAdjacentTables(poObj.placedGridPosition);
+                // if hover changed, reset candidates/index and selected target
+                if (lastHoverCell != poObj.placedGridPosition)
+                {
+                    chairTargetCandidates = candidates;
+                    chairCandidateIndex = 0;
+                    selectedChairTarget = chairTargetCandidates.Count > 0 ? chairTargetCandidates[0] : null;
+                    lastHoverCell = poObj.placedGridPosition;
+                }
+
+                // if there are candidates, compute rotation toward selected target
+                if (selectedChairTarget != null)
+                {
+                    try
+                    {
+                        int tw = selectedChairTarget.width;
+                        int th = selectedChairTarget.height;
+                        if (selectedChairTarget.placedRotation == 90 || selectedChairTarget.placedRotation == 270) { int tmp = tw; tw = th; th = tmp; }
+                        Vector3 tableBase = gridManager.GetWorldPosition(selectedChairTarget.placedGridPosition);
+                        Vector3 tableCenter = tableBase + new Vector3((tw - 1) * gridManager.cellSize / 2f, 0, (th - 1) * gridManager.cellSize / 2f);
+                        Vector3 dir = (tableCenter - gridManager.GetWorldPosition(poObj.placedGridPosition));
+                        float angle = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
+                        Quaternion chosenRot = Quaternion.Euler(0, angle, 0);
+                        try { ghostChair.transform.rotation = chosenRot; } catch { }
+                    }
+                    catch { }
+                }
+                else
+                {
+                    try { ghostChair.transform.rotation = poObj.transform.rotation; } catch { }
+                }
+
+                // pressing R cycles selected target
+                if (Input.GetKeyDown(KeyCode.R) && chairTargetCandidates != null && chairTargetCandidates.Count > 0)
+                {
+                    chairCandidateIndex = (chairCandidateIndex + 1) % chairTargetCandidates.Count;
+                    selectedChairTarget = chairTargetCandidates[chairCandidateIndex];
+                    // apply rotation to both ghost and actual chair
+                    try
+                    {
+                        int tw = selectedChairTarget.width;
+                        int th = selectedChairTarget.height;
+                        if (selectedChairTarget.placedRotation == 90 || selectedChairTarget.placedRotation == 270) { int tmp = tw; tw = th; th = tmp; }
+                        Vector3 tableBase = gridManager.GetWorldPosition(selectedChairTarget.placedGridPosition);
+                        Vector3 tableCenter = tableBase + new Vector3((tw - 1) * gridManager.cellSize / 2f, 0, (th - 1) * gridManager.cellSize / 2f);
+                        Vector3 dir = (tableCenter - gridManager.GetWorldPosition(poObj.placedGridPosition));
+                        float angle = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
+                        Quaternion newRot = Quaternion.Euler(0, angle, 0);
+                        try { ghostChair.transform.rotation = newRot; } catch { }
+                        try { poObj.transform.rotation = newRot; poObj.placedRotation = Mathf.RoundToInt(newRot.eulerAngles.y); poObj.linkedTableGridPosition = selectedChairTarget.placedGridPosition; } catch { }
+                    }
+                    catch { }
+                }
+
+                SetGhostMaterial(ghostChair, new Color(1f, 0.5f, 0f, 0.6f));
+
+                if (Input.GetMouseButtonDown(0))
+                {
+                    // remove chair on left click
+                    gridManager.SetOccupiedArea(poObj.placedGridPosition, poObj.width, poObj.height, false);
+                    if (poObj.originalPrefab != null)
+                        inventory.AddItem(poObj.originalPrefab);
+                    if (highlighted == poObj) ClearHighlight();
+                    Destroy(poObj.gameObject);
+                    inventory.GenerateUI(this);
+                }
+
+                return;
+            }
+        }
+
+        // if pointing at ground, get the grid cell
+        if (!hitGround)
+        {
+            if (ghostChair != null)
+            {
+                ghostChair.SetActive(false);
+                suppressGhostForChair = false;
+            }
             return;
         }
 
-        Vector2Int gridPos = gridManager.GetGridPosition(hit.point);
-
-        // if pointing at an existing chair, show orange ghost over it
-        var po = FindPlaceableFromCollider(hit.collider);
-        if (po != null && po.type == PlaceableType.Chair)
-        {
-            if (ghostChair == null)
-            {
-                ghostChair = Instantiate(chairPrefab);
-            }
-            ghostChair.SetActive(true);
-            ghostChair.transform.position = gridManager.GetWorldPosition(po.placedGridPosition);
-            SetGhostMaterial(ghostChair, new Color(1f, 0.5f, 0f, 0.6f));
-
-            if (Input.GetMouseButtonDown(0))
-            {
-                // remove chair on left click
-                gridManager.SetOccupiedArea(po.placedGridPosition, po.width, po.height, false);
-                Destroy(po.gameObject);
-            }
-
-            return;
-        }
+        Vector2Int gridPos = gridManager.GetGridPosition(groundHit.point);
 
         // if grid cell is empty and adjacent to a table, show yellow chair ghost and allow placement
         if (gridManager.IsInsideGrid(gridPos) && !gridManager.IsCellOccupied(gridPos) && IsAdjacentToTable(gridPos))
         {
             if (ghostChair == null)
+            {
                 ghostChair = Instantiate(chairPrefab);
+                SetGameObjectLayerRecursive(ghostChair, 2);
+                foreach (var col in ghostChair.GetComponentsInChildren<Collider>()) col.enabled = false;
+            }
+
+            // suppress normal ghost while chair ghost is shown
+            suppressGhostForChair = true;
+            if (ghost != null) ghost.SetActive(false);
 
             ghostChair.SetActive(true);
             ghostChair.transform.position = gridManager.GetWorldPosition(gridPos);
+
+            // collect adjacent tables as candidates for cycling
+            var candidates = GetAdjacentTables(gridPos);
+            if (lastHoverCell != gridPos)
+            {
+                chairTargetCandidates = candidates;
+                chairCandidateIndex = 0;
+                selectedChairTarget = chairTargetCandidates.Count > 0 ? chairTargetCandidates[0] : null;
+                lastHoverCell = gridPos;
+            }
+
+            Quaternion rot = Quaternion.identity;
+            if (chairTargetCandidates != null && chairTargetCandidates.Count > 0)
+            {
+                var target = chairTargetCandidates[Mathf.Clamp(chairCandidateIndex, 0, chairTargetCandidates.Count - 1)];
+                try
+                {
+                    int tw = target.width;
+                    int th = target.height;
+                    if (target.placedRotation == 90 || target.placedRotation == 270) { int tmp = tw; tw = th; th = tmp; }
+                    Vector3 tableBase = gridManager.GetWorldPosition(target.placedGridPosition);
+                    Vector3 tableCenter = tableBase + new Vector3((tw - 1) * gridManager.cellSize / 2f, 0, (th - 1) * gridManager.cellSize / 2f);
+                    Vector3 dir = (tableCenter - ghostChair.transform.position);
+                    float angle = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
+                    rot = Quaternion.Euler(0, angle, 0);
+                }
+                catch { }
+
+                if (Input.GetKeyDown(KeyCode.R) && chairTargetCandidates.Count > 0)
+                {
+                    chairCandidateIndex = (chairCandidateIndex + 1) % chairTargetCandidates.Count;
+                    selectedChairTarget = chairTargetCandidates[chairCandidateIndex];
+                    var target2 = selectedChairTarget;
+                    try
+                    {
+                        int tw = target2.width;
+                        int th = target2.height;
+                        if (target2.placedRotation == 90 || target2.placedRotation == 270) { int tmp = tw; tw = th; th = tmp; }
+                        Vector3 tableBase = gridManager.GetWorldPosition(target2.placedGridPosition);
+                        Vector3 tableCenter = tableBase + new Vector3((tw - 1) * gridManager.cellSize / 2f, 0, (th - 1) * gridManager.cellSize / 2f);
+                        Vector3 dir = (tableCenter - ghostChair.transform.position);
+                        float angle = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
+                        Quaternion newRot = Quaternion.Euler(0, angle, 0);
+                        ghostChair.transform.rotation = newRot;
+                    }
+                    catch { }
+                }
+            }
+            else
+            {
+                // fallback: try to face any adjacent table
+                var table = GetPlaceableAtCell(new Vector2Int(gridPos.x + 1, gridPos.y)) ?? GetPlaceableAtCell(new Vector2Int(gridPos.x - 1, gridPos.y)) ?? GetPlaceableAtCell(new Vector2Int(gridPos.x, gridPos.y + 1)) ?? GetPlaceableAtCell(new Vector2Int(gridPos.x, gridPos.y - 1));
+                if (table != null)
+                {
+                    Vector3 tableBase = gridManager.GetWorldPosition(table.placedGridPosition);
+                    int tw = table.width;
+                    int th = table.height;
+                    if (table.placedRotation == 90 || table.placedRotation == 270)
+                    {
+                        int tmp = tw; tw = th; th = tmp;
+                    }
+                    Vector3 tableCenter = tableBase + new Vector3((tw - 1) * gridManager.cellSize / 2f, 0, (th - 1) * gridManager.cellSize / 2f);
+                    Vector3 dir = (tableCenter - ghostChair.transform.position);
+                    float angle = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
+                    rot = Quaternion.Euler(0, angle, 0);
+                }
+            }
+
+            try { ghostChair.transform.rotation = rot; } catch { }
             SetGhostMaterial(ghostChair, new Color(1f, 1f, 0f, 0.6f));
 
             if (Input.GetMouseButtonDown(0))
             {
-                PlaceChairAt(gridPos);
+                // use currently selected candidate (if any)
+                PlaceChairAt(gridPos, selectedChairTarget);
+                inventory.GenerateUI(this);
             }
 
             return;
         }
 
         if (ghostChair != null)
+        {
             ghostChair.SetActive(false);
+            // stop suppressing once chair ghost is hidden
+            suppressGhostForChair = false;
+        }
     }
 
     void ApplyHighlight(PlaceableObject po)

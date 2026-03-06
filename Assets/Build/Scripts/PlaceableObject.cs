@@ -12,6 +12,9 @@ public class PlaceableObject : MonoBehaviour
 
     [HideInInspector]
     public int placedRotation;
+    
+    [HideInInspector]
+    public UnityEngine.Vector2Int linkedTableGridPosition;
 }
 
 public enum PlaceableType

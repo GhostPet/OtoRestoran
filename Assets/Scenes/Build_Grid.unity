@@ -172,6 +172,7 @@ MonoBehaviour:
   buildPanel: {fileID: 476830227}
   inventory: {fileID: 1166231505}
   currentPrefab: {fileID: 0}
+  chairPrefab: {fileID: 5929946304821176030, guid: 2f5f4cf4019d69549abeb358e3628dfe, type: 3}
 --- !u!1 &476830227
 GameObject:
   m_ObjectHideFlags: 0
@@ -819,7 +820,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BuildInventory
   items:
   - itemName: table
-    prefab: {fileID: 308981385717804670, guid: 4ff22e400a10fea419877fb597a02555, type: 3}
+    prefab: {fileID: 2085655913344793814, guid: 8592d8288d71c3e4da03c2dd388af4d0, type: 3}
     count: 4
   - itemName: dolap
     prefab: {fileID: 2966514784828675698, guid: 83bf5a4d81682ea4f805a2d4ae53d8b2, type: 3}
@@ -830,7 +831,7 @@ MonoBehaviour:
   - itemName: fridge
     prefab: {fileID: 2224014996176195101, guid: ba0c193f839ff8949bd6f3da12951fde, type: 3}
     count: 1
-  - itemName: masa
+  - itemName: 2x2
     prefab: {fileID: 8109022636083218387, guid: 59fda692beca1e34ab1e54bf3b27764c, type: 3}
     count: 5
   panelParent: {fileID: 476830228}
