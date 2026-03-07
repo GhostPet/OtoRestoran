@@ -11,7 +11,7 @@ public class BuildItem
 
 
 }
-
+/*
 public class BuildInventory : MonoBehaviour
 {
     public List<BuildItem> items = new List<BuildItem>();
@@ -63,3 +63,4 @@ public class BuildInventory : MonoBehaviour
             item.count++;
     }
 }
+*/

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using UnityEngine;
 
 public class BuiltinFunctionsTests {
 	[Test]
@@ -44,5 +45,61 @@ public class BuiltinFunctionsTests {
 		Assert.AreEqual("42", BuiltinFunctions.Invoke("str", new object[] { 42 }));
 		Assert.Throws<ValidationError>(() => BuiltinFunctions.Invoke("int", new object[] { "nope" }));
 		Assert.Throws<ValidationError>(() => BuiltinFunctions.Invoke("float", new object[] { "nope" }));
+	}
+
+	[Test]
+	public void GetTables_ReturnsSceneTables() {
+		var go1 = new GameObject("table_test_1");
+		var go2 = new GameObject("table_test_2");
+		var t1 = go1.AddComponent<TableBehavior>();
+		var t2 = go2.AddComponent<TableBehavior>();
+
+		try {
+			var res = BuiltinFunctions.Invoke("get_tables", Array.Empty<object>()) as List<TableBehavior>;
+			Assert.IsNotNull(res);
+			Assert.Contains(t1, res);
+			Assert.Contains(t2, res);
+		} finally {
+			UnityEngine.Object.DestroyImmediate(go1);
+			UnityEngine.Object.DestroyImmediate(go2);
+		}
+	}
+
+	[Test]
+	public void GetFurnaces_ReturnsSceneFurnaces() {
+		var go1 = new GameObject("furnace_test_1");
+		var go2 = new GameObject("furnace_test_2");
+		var f1 = go1.AddComponent<OvenBehavior>();
+		var f2 = go2.AddComponent<OvenBehavior>();
+
+		try {
+			var res = BuiltinFunctions.Invoke("get_furnaces", Array.Empty<object>()) as List<OvenBehavior>;
+			Assert.IsNotNull(res);
+			Assert.Contains(f1, res);
+			Assert.Contains(f2, res);
+		} finally {
+			UnityEngine.Object.DestroyImmediate(go1);
+			UnityEngine.Object.DestroyImmediate(go2);
+		}
+	}
+
+	[Test]
+	public void ActiveOrders_ReturnsRememberedOrders() {
+		ActiveOrders.Clear();
+		var customerGo = new GameObject("order_customer_test");
+		var customer = customerGo.AddComponent<Customer>();
+		var order = new Order { Customer = customer };
+		order.Items.Add("Soup");
+		ActiveOrders.Remember(order);
+
+		try {
+			var res = BuiltinFunctions.Invoke("active_orders", Array.Empty<object>()) as List<Order>;
+			Assert.IsNotNull(res);
+			Assert.AreEqual(1, res.Count);
+			Assert.AreEqual(order, res[0]);
+		} finally {
+			ActiveOrders.Clear();
+			UnityEngine.Object.DestroyImmediate(customerGo);
+		}
 	}
 }

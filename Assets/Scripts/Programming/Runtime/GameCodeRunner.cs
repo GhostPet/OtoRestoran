@@ -16,13 +16,10 @@ public class GameCodeRunner : MonoBehaviour {
 	private readonly Dictionary<RobotExecutor, AstInterpreter> _interpreters =
 		new(EqualityComparer<RobotExecutor>.Default);
 	private AstInterpreter _fallbackInterpreter;
+	private int _fallbackInterpreterIndex = -1;
 
 	private readonly Dictionary<Button, UnityAction> _buttonListeners
 		= new(EqualityComparer<Button>.Default);
-
-	private void Awake() {
-		// No global wiring here. Editors register themselves via RegisterEditor when opened.
-	}
 
 	private void OnDestroy() {
 		// Remove listeners added via RegisterEditor
@@ -99,13 +96,16 @@ public class GameCodeRunner : MonoBehaviour {
 			var interpObj = new GameObject($"AstInterpreter_{targetExecutor.name}");
 			var interp = interpObj.AddComponent<AstInterpreter>();
 			interp.Executor = targetExecutor;
+			interp.ExecutionFinished += OnInterpreterFinished;
 			_interpreters[targetExecutor] = interp;
 			interp.StartExecution(functions, "main");
 		} else {
 			// Fallback: inline interpreter for this editor
 			var fallbackObj = new GameObject($"AstInterpreter_editor_{index}");
 			var fallbackInterp = fallbackObj.AddComponent<AstInterpreter>();
+			fallbackInterp.ExecutionFinished += OnInterpreterFinished;
 			_fallbackInterpreter = fallbackInterp;
+			_fallbackInterpreterIndex = index;
 			fallbackInterp.StartExecution(functions, "main");
 		}
 
@@ -131,6 +131,7 @@ public class GameCodeRunner : MonoBehaviour {
 		foreach (var kv in _interpreters) {
 			var interp = kv.Value;
 			if (interp != null) {
+				interp.ExecutionFinished -= OnInterpreterFinished;
 				if (!string.IsNullOrEmpty(interp.ContextId)) CommandExecutionContext.ClearVariables(interp.ContextId);
 				Destroy(interp.gameObject);
 			}
@@ -138,9 +139,11 @@ public class GameCodeRunner : MonoBehaviour {
 		_interpreters.Clear();
 
 		if (_fallbackInterpreter != null) {
+			_fallbackInterpreter.ExecutionFinished -= OnInterpreterFinished;
 			if (!string.IsNullOrEmpty(_fallbackInterpreter.ContextId)) CommandExecutionContext.ClearVariables(_fallbackInterpreter.ContextId);
 			Destroy(_fallbackInterpreter.gameObject);
 			_fallbackInterpreter = null;
+			_fallbackInterpreterIndex = -1;
 		}
 	}
 
@@ -148,9 +151,46 @@ public class GameCodeRunner : MonoBehaviour {
 	public void StopExecutionFor(RobotExecutor executor) {
 		if (executor == null) return;
 		if (_interpreters.TryGetValue(executor, out var interp)) {
+			interp.ExecutionFinished -= OnInterpreterFinished;
 			if (!string.IsNullOrEmpty(interp.ContextId)) CommandExecutionContext.ClearVariables(interp.ContextId);
 			if (interp != null) Destroy(interp.gameObject);
 			_interpreters.Remove(executor);
+		}
+	}
+
+	private void OnInterpreterFinished(AstInterpreter finishedInterpreter) {
+		if (finishedInterpreter == null) return;
+
+		RobotExecutor matchedExecutor = null;
+		foreach (var kv in _interpreters) {
+			if (kv.Value == finishedInterpreter) {
+				matchedExecutor = kv.Key;
+				break;
+			}
+		}
+
+		if (matchedExecutor != null) {
+			finishedInterpreter.ExecutionFinished -= OnInterpreterFinished;
+			_interpreters.Remove(matchedExecutor);
+
+			if (executors != null) {
+				for (int i = 0; i < executors.Count; i++) {
+					if (executors[i] == matchedExecutor) {
+						UpdateButtonLabel(i, "Run");
+						break;
+					}
+				}
+			}
+			return;
+		}
+
+		if (_fallbackInterpreter == finishedInterpreter) {
+			finishedInterpreter.ExecutionFinished -= OnInterpreterFinished;
+			_fallbackInterpreter = null;
+			if (_fallbackInterpreterIndex >= 0) {
+				UpdateButtonLabel(_fallbackInterpreterIndex, "Run");
+			}
+			_fallbackInterpreterIndex = -1;
 		}
 	}
 }

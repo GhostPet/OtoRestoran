@@ -19,8 +19,8 @@ public class CustomerSpawner : MonoBehaviour {
 	}
 
 	private void TrySpawnCustomer() {
-		var freeSeat = Seat.FindAnyFreeSeat();
-		if (freeSeat == null) {
+		var freeChair = ChairBehavior.FindAnyFreeChair();
+		if (freeChair == null) {
 			Debug.Log("[Spawner] No free seat. Spawn skipped.");
 			return;
 		}
@@ -28,9 +28,13 @@ public class CustomerSpawner : MonoBehaviour {
 		var customerGO = Instantiate(customerPrefab.gameObject);
 		var customer = customerGO.GetComponent<Customer>();
 
-		freeSeat.Assign(customer);
-		customer.SetSeat(freeSeat);
+		freeChair.Assign(customer);
+		customer.SetSeat(freeChair);
 
-		Debug.Log($"[Spawner] Customer spawned and seated at {freeSeat.name} (Table: {freeSeat.Table?.name})");
+		string tableName = "None";
+		if (freeChair.Table != null)
+			tableName = freeChair.Table.name;
+
+		Debug.Log($"[Spawner] Customer spawned and seated at {freeChair.name} (Table: {tableName})");
 	}
 }

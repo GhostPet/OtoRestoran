@@ -250,43 +250,17 @@ public class Parser {
 			var rhs = ParsePrimary();
 			return new BinaryExpression { Left = new NumberLiteralExpression { Value = 0f, Line = rhs.Line }, Right = rhs, Operator = TokenType.Minus, Line = rhs.Line };
 		}
-		if (Match(TokenType.Number))
-			return new NumberLiteralExpression { Value = float.Parse(Previous().Lexeme), Line = Previous().Line };
 
-		if (Match(TokenType.String))
-			return new StringLiteralExpression { Value = Previous().Lexeme, Line = Previous().Line };
-
-		if (Match(TokenType.Identifier)) {
+		ExpressionNode expr;
+		if (Match(TokenType.Number)) {
+			expr = new NumberLiteralExpression { Value = float.Parse(Previous().Lexeme), Line = Previous().Line };
+		} else if (Match(TokenType.String)) {
+			expr = new StringLiteralExpression { Value = Previous().Lexeme, Line = Previous().Line };
+		} else if (Match(TokenType.Identifier)) {
 			var id = Previous();
-
-			if (Match(TokenType.LParen)) {
-				var call = new CallNode { FunctionName = id.Lexeme, Line = id.Line };
-
-				if (!Check(TokenType.RParen)) {
-					do {
-						call.Arguments.Add(ParseExpression());
-					}
-					while (Match(TokenType.Comma));
-				}
-
-				Consume(TokenType.RParen, "Expected ')'");
-				return call;
-			}
-
-			// support indexing like identifier[expr]
-			ExpressionNode baseExpr = new IdentifierExpression { Name = id.Lexeme, Line = id.Line };
-			while (Match(TokenType.LBracket)) {
-				var idx = ParseExpression();
-				Consume(TokenType.RBracket, "Expected ']' after index");
-				baseExpr = new IndexExpression { Target = baseExpr, Index = idx, Line = id.Line };
-			}
-
-			return baseExpr;
-		}
-
-
-		// list literal using square brackets or parenthesized tuple
-		if (Match(TokenType.LParen) || Match(TokenType.LBracket)) {
+			expr = new IdentifierExpression { Name = id.Lexeme, Line = id.Line };
+		} else if (Match(TokenType.LParen) || Match(TokenType.LBracket)) {
+			// list literal using square brackets or parenthesized tuple
 			var start = Previous();
 			var inner = new ListLiteralExpression { Line = start.Line };
 			if (!(Check(TokenType.RParen) || Check(TokenType.RBracket))) {
@@ -295,16 +269,59 @@ public class Parser {
 				} while (Match(TokenType.Comma));
 			}
 
-			// Use the starting token to determine which closing token to expect.
 			if (start.Type == TokenType.LParen)
 				Consume(TokenType.RParen, "Expected ')' for tuple/list literal");
 			else
 				Consume(TokenType.RBracket, "Expected ']' for list literal");
 
-			return inner;
+			expr = inner;
+		} else {
+			throw Error(Peek(), "Invalid expression");
 		}
 
-		throw Error(Peek(), "Invalid expression");
+		while (true) {
+			if (Match(TokenType.Dot)) {
+				var member = Consume(TokenType.Identifier, "Expected member name after '.'");
+				expr = new MemberAccessExpression {
+					Target = expr,
+					MemberName = member.Lexeme,
+					Line = member.Line
+				};
+				continue;
+			}
+
+			if (Match(TokenType.LBracket)) {
+				var idx = ParseExpression();
+				Consume(TokenType.RBracket, "Expected ']' after index");
+				expr = new IndexExpression { Target = expr, Index = idx, Line = expr.Line };
+				continue;
+			}
+
+			if (Match(TokenType.LParen)) {
+				var args = new List<ExpressionNode>();
+				if (!Check(TokenType.RParen)) {
+					do {
+						args.Add(ParseExpression());
+					} while (Match(TokenType.Comma));
+				}
+				Consume(TokenType.RParen, "Expected ')'");
+
+				if (expr is IdentifierExpression idExpr) {
+					var call = new CallNode { FunctionName = idExpr.Name, Line = idExpr.Line };
+					call.Arguments.AddRange(args);
+					expr = call;
+				} else {
+					var invoke = new InvocationExpression { Target = expr, Line = expr.Line };
+					invoke.Arguments.AddRange(args);
+					expr = invoke;
+				}
+				continue;
+			}
+
+			break;
+		}
+
+		return expr;
 	}
 
 	// ------------------ Helpers ------------------

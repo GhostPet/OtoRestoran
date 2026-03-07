@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-
+/*
 public class PlaceableObject : MonoBehaviour
 {
     public GameObject originalPrefab;
@@ -23,3 +23,4 @@ public enum PlaceableType
     Table,
     Chair
 }
+*/

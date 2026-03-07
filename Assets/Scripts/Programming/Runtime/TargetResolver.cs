@@ -2,7 +2,7 @@
 
 public static class TargetResolver {
 
-	public static Vector3 Resolve(IRobot robot, TableLogic table) {
+	public static Vector3 Resolve(IRobot robot, TableBehavior table) {
 		if (robot == null || table == null)
 			return Vector3.zero;
 

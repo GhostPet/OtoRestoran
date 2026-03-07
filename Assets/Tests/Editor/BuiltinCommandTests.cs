@@ -63,4 +63,57 @@ public class BuiltinCommandTests {
 		Assert.IsFalse(serve.Tick("o1"));
 		Assert.IsTrue(serve.Tick("o1"));
 	}
+
+	[Test]
+	public void MoveToCommand_AcceptsTableBehavior() {
+		var go = new GameObject("move_to_table_test");
+		var table = go.AddComponent<TableBehavior>();
+
+		try {
+			var move = new MoveToCommand();
+			move.Reset();
+			Assert.IsTrue(move.Tick(table));
+		} finally {
+			Object.DestroyImmediate(go);
+		}
+	}
+
+	[Test]
+	public void MoveToCommand_AcceptsRestaurantObject() {
+		var go = new GameObject("move_to_oven_test");
+		var oven = go.AddComponent<OvenBehavior>();
+
+		try {
+			var move = new MoveToCommand();
+			move.Reset();
+			Assert.IsTrue(move.Tick(oven));
+		} finally {
+			UnityEngine.Object.DestroyImmediate(go);
+		}
+	}
+
+	[Test]
+	public void TableBehavior_Customers_ReturnsCustomersFromAttachedChairs() {
+		var tableGo = new GameObject("table_customers_test");
+		var chairGo = new GameObject("chair_customers_test");
+		var customerGo = new GameObject("customer_customers_test");
+
+		var table = tableGo.AddComponent<TableBehavior>();
+		var chair = chairGo.AddComponent<ChairBehavior>();
+		var customer = customerGo.AddComponent<Customer>();
+
+		try {
+			chair.SetTable(table);
+			chair.Assign(customer);
+
+			var customers = table.Customers;
+			Assert.IsNotNull(customers);
+			Assert.AreEqual(1, customers.Count);
+			Assert.AreEqual(customer, customers[0]);
+		} finally {
+			UnityEngine.Object.DestroyImmediate(customerGo);
+			UnityEngine.Object.DestroyImmediate(chairGo);
+			UnityEngine.Object.DestroyImmediate(tableGo);
+		}
+	}
 }

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
-
+/*
 public class BuildManager : MonoBehaviour
 {
     [Header("References")]
@@ -932,4 +932,4 @@ public class BuildManager : MonoBehaviour
         if (ghost != null)
             Destroy(ghost);
     }
-}
+}*/

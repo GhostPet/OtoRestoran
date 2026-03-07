@@ -55,11 +55,33 @@ public class MoveToCommand : IRobotCommand, ICompletable {
 			}
 			} else if (arg is Vector3 vec) {
 				target = vec;
+			} else if (arg is TableBehavior table) {
+				var currentRobot = CommandExecutionContext.CurrentRobot;
+				// Determine a reference position to select the nearest serve point on the table.
+				Vector3 referencePos;
+				if (currentRobot != null) {
+					referencePos = currentRobot.Position;
+				} else {
+					// No robot available in context: use the table location as a fallback reference
+					if (table.Location != null) referencePos = table.Location.position;
+					else referencePos = table.transform.position;
+				}
+
+				var servePoint = table.GetNearestServePoint(referencePos);
+				if (servePoint != null) target = servePoint.position;
+				else if (table.Location != null) target = table.Location.position;
+				else target = table.transform.position;
+			} else if (arg is BaseRestaurantObject restaurantObject) {
+				target = restaurantObject.transform.position;
+			} else if (arg is Component component) {
+				target = component.transform.position;
+			} else if (arg is GameObject gameObject) {
+				target = gameObject.transform.position;
 			} else if (arg is Transform t) {
 				target = t.position;
 			} else {
 				int line = GetExecutionLine();
-				throw new InvalidAssignmentError("move_to", "argument must be (x,z) tuple, (x,y,z) tuple, Vector3, or Transform", line);
+				throw new InvalidAssignmentError("move_to", "argument must be (x,z) tuple, (x,y,z) tuple, Vector3, restaurant object, Component, GameObject, TableBehavior, or Transform", line);
 			}
 		} else {
 			// args.Length == 2 or 3 -> expect numeric coordinate arguments

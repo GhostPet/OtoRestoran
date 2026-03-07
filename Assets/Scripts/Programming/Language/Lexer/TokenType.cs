@@ -12,6 +12,7 @@ public enum TokenType {
 	Equals,
 	LParen,
 	RParen,
+	Dot,
 	Plus,
 	Minus,
 	Star,

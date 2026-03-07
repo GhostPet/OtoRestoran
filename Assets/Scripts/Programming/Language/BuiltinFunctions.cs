@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
 public static class BuiltinFunctions {
 	private static readonly Dictionary<string, Func<object[], int, object>> _funcs = new(StringComparer.OrdinalIgnoreCase);
@@ -12,6 +13,9 @@ public static class BuiltinFunctions {
 		Register("int", Int);
 		Register("float", Float);
 		Register("str", Str);
+		Register("get_tables", GetTables);
+		Register("get_furnaces", GetFurnaces);
+		Register("get_orders", ActiveOrdersList);
 	}
 
 	public static void Register(string name, Func<object[], int, object> func) {
@@ -96,5 +100,34 @@ public static class BuiltinFunctions {
 		if (args.Length != 1) throw new ValidationError($"str() takes exactly one argument (line {line})", line);
 		var o = args[0];
 		return o?.ToString() ?? "null";
+	}
+
+	private static object GetTables(object[] args, int line) {
+		if (args.Length != 0) throw new ValidationError($"get_tables() takes no arguments (line {line})", line);
+
+		var found = UnityEngine.Object.FindObjectsByType<TableBehavior>(FindObjectsSortMode.None);
+		var tables = new List<TableBehavior>(found.Length);
+		for (int i = 0; i < found.Length; i++) {
+			if (found[i] != null) tables.Add(found[i]);
+		}
+
+		return tables;
+	}
+
+	private static object GetFurnaces(object[] args, int line) {
+		if (args.Length != 0) throw new ValidationError($"get_furnaces() takes no arguments (line {line})", line);
+
+		var found = UnityEngine.Object.FindObjectsByType<OvenBehavior>(FindObjectsSortMode.None);
+		var furnaces = new List<OvenBehavior>(found.Length);
+		for (int i = 0; i < found.Length; i++) {
+			if (found[i] != null) furnaces.Add(found[i]);
+		}
+
+		return furnaces;
+	}
+
+	private static object ActiveOrdersList(object[] args, int line) {
+		if (args.Length != 0) throw new ValidationError($"active_orders() takes no arguments (line {line})", line);
+		return ActiveOrders.Snapshot();
 	}
 }

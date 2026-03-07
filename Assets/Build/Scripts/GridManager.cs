@@ -1,6 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
-
+/*
 public class GridManager : MonoBehaviour
 {
     public int width = 20;
@@ -81,3 +81,4 @@ public class GridCell
 {
     public bool isOccupied = false;
 }
+*/

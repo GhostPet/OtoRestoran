@@ -1,16 +1,7 @@
 using UnityEngine;
 
-public class BaseRestaurantObject : MonoBehaviour
-{
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-}
+/// <summary>
+/// Marker base class for all restaurant placeable objects.
+/// Keep this class minimal so derived components can implement their own lifecycle.
+/// </summary>
+public class BaseRestaurantObject : MonoBehaviour { }
