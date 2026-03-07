@@ -7,11 +7,14 @@ public class GridManager : MonoBehaviour {
 	public float cellSize = 1f;
 	public Vector3 origin = Vector3.zero;
 	public bool showGizmos = true;
+	[Header("Auto Placement")]
+	[SerializeField] private PlaceableData autoChairData;
 
 	// map from grid coordinate to occupying PlaceableObject
 	private readonly Dictionary<Vector2Int, PlaceableObject> occupied = new();
 
 	public static GridManager Instance { get; private set; }
+	public PlaceableData AutoChairData => autoChairData;
 
 	private void Awake() {
 		if (Instance != null && Instance != this) {
@@ -53,59 +56,23 @@ public class GridManager : MonoBehaviour {
 		return CanPlace(data, baseCell, data.size);
 	}
 
-	/// <summary>
-	/// Check placement using an explicit base cell and size (size should already account for rotation).
-	/// baseCell is the bottom-left / origin cell for the object.
-	/// </summary>
-	public bool CanPlace(PlaceableData data, Vector2Int baseCell, Vector2Int size) {
-		if (data == null || data.prefab == null)
-			return false;
-
-		for (int x = 0; x < size.x; x++)
-			for (int y = 0; y < size.y; y++) {
-				Vector2Int c = new(baseCell.x + x, baseCell.y + y);
-				if (!IsInsideGrid(c)) return false;
-				if (occupied.ContainsKey(c)) return false;
-			}
-
-		// special-case: chairs must be adjacent to exactly one table seat cell
-		if (data.prefab.TryGetComponent<ChairBehavior>(out _)) {
-			Vector2Int chairCell = baseCell;
-			TableBehavior[] allTables = FindObjectsByType<TableBehavior>(FindObjectsSortMode.None);
-			int matchCount = 0;
-			for (int i = 0; i < allTables.Length; i++) {
-				var table = allTables[i];
-				if (table != null && table.IsSeatCell(chairCell))
-					matchCount++;
-			}
-
-			// allow placement if at least one table adjacent; final facing check is done in rotation-aware overload
-			return matchCount > 0;
-		}
-
-		return true;
+	private static Vector2Int GetRotatedSize(Vector2Int size, int rotationIndex) {
+		return rotationIndex % 2 == 1 ? new Vector2Int(size.y, size.x) : size;
 	}
 
-	/// <summary>
-	/// Rotation-aware placement check. For chairs, ensure the given rotation faces one of the adjacent tables.
-	/// </summary>
-	public bool CanPlace(PlaceableData data, Vector2Int baseCell, Vector2Int size, Quaternion rotation) {
-		if (data == null || data.prefab == null) return false;
+	private static Quaternion GetRotationForIndex(int rotationIndex) {
+		return Quaternion.Euler(0f, -90f + rotationIndex * 90f, 0f);
+	}
 
-		// basic bounds/occupancy check
-		for (int x = 0; x < size.x; x++)
-			for (int y = 0; y < size.y; y++) {
-				Vector2Int c = new(baseCell.x + x, baseCell.y + y);
-				if (!IsInsideGrid(c)) return false;
-				if (occupied.ContainsKey(c)) return false;
-			}
+	private static int GetRotationIndex(Quaternion rotation) {
+		int index = Mathf.RoundToInt((rotation.eulerAngles.y + 90f) / 90f) % 4;
+		if (index < 0) index += 4;
+		return index;
+	}
 
-		// if not a chair, rotation doesn't affect placement
-		if (!data.prefab.TryGetComponent<ChairBehavior>(out _)) return true;
-
-		// gather adjacent tables for this seat cell
+	private int[] GetChairAllowedRotationIndices(Vector2Int baseCell, Vector2Int size) {
 		TableBehavior[] allTables = FindObjectsByType<TableBehavior>(FindObjectsSortMode.None);
-		System.Collections.Generic.List<float> tableAngles = new();
+		var indices = new List<int>();
 		Vector3 worldPos = GetWorldPositionForCell(baseCell, size);
 		for (int i = 0; i < allTables.Length; i++) {
 			var table = allTables[i];
@@ -117,21 +84,65 @@ public class GridManager : MonoBehaviour {
 			if (dir.sqrMagnitude < 0.0001f) continue;
 			float y = Quaternion.LookRotation(dir.normalized, Vector3.up).eulerAngles.y;
 			float snapped = Mathf.Round(y / 90f) * 90f;
-			if (!tableAngles.Contains(snapped)) tableAngles.Add(snapped);
+			int idx = ((int)Mathf.Round((snapped + 90f) / 90f)) % 4;
+			if (!indices.Contains(idx)) indices.Add(idx);
 		}
 
-		if (tableAngles.Count == 0) return false;
+		return indices.ToArray();
+	}
 
-		// compute rotation's snapped angle
-		float rotY = rotation.eulerAngles.y;
-		float rotSnapped = Mathf.Round(rotY / 90f) * 90f;
+	public int[] GetValidChairRotationIndices(PlaceableData data, Vector2Int baseCell, Vector2Int size) {
+		if (data == null || data.prefab == null) return new int[0];
+		if (!data.prefab.TryGetComponent<ChairBehavior>(out _)) return new int[0];
 
-		// valid if rotation matches any adjacent table's snapped angle
-		for (int i = 0; i < tableAngles.Count; i++) {
-			if (Mathf.Abs(Mathf.DeltaAngle(rotSnapped, tableAngles[i])) < 0.1f) return true;
+		var allowedIndices = GetChairAllowedRotationIndices(baseCell, size);
+		var validIndices = new List<int>();
+		for (int i = 0; i < allowedIndices.Length; i++) {
+			int rotationIndex = allowedIndices[i];
+			Quaternion rotation = GetRotationForIndex(rotationIndex);
+			if (CanPlaceInternal(data, baseCell, size, rotation, null))
+				validIndices.Add(rotationIndex);
+		}
+
+		return validIndices.ToArray();
+	}
+
+	private bool CanPlaceInternal(PlaceableData data, Vector2Int baseCell, Vector2Int size, Quaternion rotation, PlaceableObject ignoredObject) {
+		if (data == null || data.prefab == null) return false;
+
+		for (int x = 0; x < size.x; x++)
+			for (int y = 0; y < size.y; y++) {
+				Vector2Int c = new(baseCell.x + x, baseCell.y + y);
+				if (!IsInsideGrid(c)) return false;
+				if (occupied.TryGetValue(c, out var occupiedObject) && occupiedObject != ignoredObject) return false;
+			}
+
+		if (!data.prefab.TryGetComponent<ChairBehavior>(out _)) return true;
+
+		var chairAllowedIndices = GetChairAllowedRotationIndices(baseCell, size);
+		if (chairAllowedIndices.Length == 0) return false;
+
+		int rotationIndex = GetRotationIndex(rotation);
+		for (int i = 0; i < chairAllowedIndices.Length; i++) {
+			if (chairAllowedIndices[i] == rotationIndex) return true;
 		}
 
 		return false;
+	}
+
+	/// <summary>
+	/// Check placement using an explicit base cell and size (size should already account for rotation).
+	/// baseCell is the bottom-left / origin cell for the object.
+	/// </summary>
+	public bool CanPlace(PlaceableData data, Vector2Int baseCell, Vector2Int size) {
+		return CanPlaceInternal(data, baseCell, size, Quaternion.Euler(0f, -90f, 0f), null);
+	}
+
+	/// <summary>
+	/// Rotation-aware placement check. For chairs, ensure the given rotation faces one of the adjacent tables.
+	/// </summary>
+	public bool CanPlace(PlaceableData data, Vector2Int baseCell, Vector2Int size, Quaternion rotation) {
+		return CanPlaceInternal(data, baseCell, size, rotation, null);
 	}
 
 	public PlaceableObject Place(PlaceableData data, Vector2Int at) {
@@ -155,7 +166,7 @@ public class GridManager : MonoBehaviour {
 			return null;
 		}
 
-		if (!CanPlace(data, baseCell, size)) return null;
+		if (!CanPlace(data, baseCell, size, rotation)) return null;
 
 		Vector3 worldPos = GetWorldPositionForCell(baseCell, size);
 		GameObject go = Instantiate(data.prefab, worldPos, rotation, transform);
@@ -167,7 +178,106 @@ public class GridManager : MonoBehaviour {
 			occupied[cell] = po;
 		}
 
+		if (go.TryGetComponent<TableBehavior>(out var table)) {
+			TryAutoPlaceChairsAroundTable(po, table);
+		}
+
 		return po;
+	}
+
+	private void TryAutoPlaceChairsAroundTable(PlaceableObject tableObject, TableBehavior table) {
+		if (tableObject == null || table == null || autoChairData == null || autoChairData.prefab == null)
+			return;
+
+		var seatOffsets = table.SeatCellOffsets;
+		for (int i = 0; i < seatOffsets.Count; i++) {
+			Vector2Int chairBaseCell = tableObject.OriginCell + seatOffsets[i];
+			Vector2Int chairSize = autoChairData.size;
+			Vector3 chairWorldPos = GetWorldPositionForCell(chairBaseCell, chairSize);
+			Vector3 tablePos = table.Location != null ? table.Location.position : table.transform.position;
+			Vector3 dir = tablePos - chairWorldPos;
+			dir.y = 0f;
+			if (dir.sqrMagnitude < 0.0001f)
+				continue;
+
+			float y = Quaternion.LookRotation(dir.normalized, Vector3.up).eulerAngles.y;
+			float snapped = Mathf.Round(y / 90f) * 90f;
+			int rotationIndex = ((int)Mathf.Round((snapped + 90f) / 90f)) % 4;
+			Quaternion chairRotation = GetRotationForIndex(rotationIndex);
+
+			if (!CanPlace(autoChairData, chairBaseCell, chairSize, chairRotation))
+				continue;
+
+			Place(autoChairData, chairBaseCell, chairSize, chairRotation);
+		}
+	}
+
+	public bool TryGetAutoChairPlacement(Vector3 worldPos, out Vector2Int baseCell, out Vector2Int size, out Quaternion rotation) {
+		baseCell = default;
+		size = default;
+		rotation = Quaternion.identity;
+
+		if (autoChairData == null || autoChairData.prefab == null)
+			return false;
+
+		size = autoChairData.size;
+		baseCell = WorldToCell(worldPos, size);
+		var allowedIndices = GetValidChairRotationIndices(autoChairData, baseCell, size);
+		if (allowedIndices == null || allowedIndices.Length == 0)
+			return false;
+
+		for (int i = 0; i < allowedIndices.Length; i++) {
+			rotation = GetRotationForIndex(allowedIndices[i]);
+			if (CanPlace(autoChairData, baseCell, size, rotation))
+				return true;
+		}
+
+		return false;
+	}
+
+	public bool RotatePlacedObject(PlaceableObject obj) {
+		if (obj == null || obj.Data == null) return false;
+
+		int currentRotationIndex = GetRotationIndex(obj.transform.rotation);
+		int nextRotationIndex = -1;
+
+		if (obj.Data.prefab != null && obj.Data.prefab.TryGetComponent<ChairBehavior>(out _)) {
+			int[] allowedIndices = GetChairAllowedRotationIndices(obj.OriginCell, obj.OccupiedCells.Count > 0 ? new Vector2Int(1, 1) : obj.Data.size);
+			if (allowedIndices.Length <= 1) return false;
+
+			int currentPos = System.Array.IndexOf(allowedIndices, currentRotationIndex);
+			if (currentPos < 0) nextRotationIndex = allowedIndices[0];
+			else nextRotationIndex = allowedIndices[(currentPos + 1) % allowedIndices.Length];
+		} else {
+			for (int offset = 1; offset <= 4; offset++) {
+				int candidateIndex = (currentRotationIndex + offset) % 4;
+				Vector2Int candidateSize = GetRotatedSize(obj.Data.size, candidateIndex);
+				Quaternion candidateRotation = GetRotationForIndex(candidateIndex);
+				if (CanPlaceInternal(obj.Data, obj.OriginCell, candidateSize, candidateRotation, obj)) {
+					nextRotationIndex = candidateIndex;
+					break;
+				}
+			}
+			if (nextRotationIndex < 0) return false;
+		}
+
+		Vector2Int nextSize = GetRotatedSize(obj.Data.size, nextRotationIndex);
+		Quaternion nextRotation = GetRotationForIndex(nextRotationIndex);
+		if (!CanPlaceInternal(obj.Data, obj.OriginCell, nextSize, nextRotation, obj)) return false;
+
+		for (int i = 0; i < obj.OccupiedCells.Count; i++) {
+			var cell = obj.OccupiedCells[i];
+			if (occupied.TryGetValue(cell, out var occupiedObject) && occupiedObject == obj)
+				occupied.Remove(cell);
+		}
+
+		obj.UpdatePlacement(obj.OriginCell, nextSize, nextRotation);
+
+		for (int i = 0; i < obj.OccupiedCells.Count; i++) {
+			occupied[obj.OccupiedCells[i]] = obj;
+		}
+
+		return true;
 	}
 
 	public void Remove(PlaceableObject obj) {

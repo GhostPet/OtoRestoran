@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 
 public class CustomerSpawner : MonoBehaviour {
 	public Customer customerPrefab;

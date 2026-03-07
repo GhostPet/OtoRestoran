@@ -33,6 +33,11 @@ public class PlaceableObject : MonoBehaviour {
 		}
 	}
 
+	public void UpdatePlacement(Vector2Int originCell, Vector2Int size, Quaternion rotation) {
+		if (grid == null || Data == null) return;
+		Initialize(grid, Data, originCell, size, rotation);
+	}
+
 	private void OnDestroy() {
 		foreach (var comp in GetComponents<MonoBehaviour>()) {
 			(comp as IPlaceableLifecycle)?.OnRemoved(this);

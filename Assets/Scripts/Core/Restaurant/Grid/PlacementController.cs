@@ -10,11 +10,20 @@ public class PlacementController : MonoBehaviour {
 
 	private PlaceableData currentData;
 	private GameObject previewInstance;
+	private GameObject autoChairPreviewInstance;
 	private int rotationIndex = 0; // 0..3
 	private bool manualRotation = false;
 	private Vector2Int lastBaseCell = new(-999, -999);
+	private Vector2Int autoChairPreviewBaseCell;
+	private Vector2Int autoChairPreviewSize;
+	private Quaternion autoChairPreviewRotation = Quaternion.identity;
+	private bool hasAutoChairPreview;
+	private int autoChairRotationIndex = -1;
+	private int[] autoChairAllowedIndices;
+	private Vector2Int lastAutoChairBaseCell = new(-999, -999);
 
 	private GridManager grid;
+	private int objectsLayerMask = ~0;
 
 	// hover/remove support
 	private PlaceableObject lastHovered;
@@ -23,6 +32,8 @@ public class PlacementController : MonoBehaviour {
 	void Start() {
 		grid = GridManager.Instance;
 		if (sceneCamera == null) sceneCamera = Camera.main;
+		int layerIndex = LayerMask.NameToLayer("Objects");
+		objectsLayerMask = layerIndex >= 0 ? (1 << layerIndex) : ~0;
 	}
 
 	void Update() {
@@ -53,9 +64,7 @@ public class PlacementController : MonoBehaviour {
 		if (currentData == null) {
 			PlaceableObject hovered = null;
 			// prefer a single raycast against the "Objects" layer to avoid scanning all hits
-			int layerIndex = LayerMask.NameToLayer("Objects");
-			int layerMask = layerIndex >= 0 ? (1 << layerIndex) : ~0;
-			if (Physics.Raycast(ray, out RaycastHit hitInfo, 100f, layerMask)) {
+			if (Physics.Raycast(ray, out RaycastHit hitInfo, 100f, objectsLayerMask)) {
 				var po = hitInfo.collider.GetComponentInParent<PlaceableObject>();
 				if (po != null) {
 					// ignore preview instance (ghost) if present
@@ -72,6 +81,22 @@ public class PlacementController : MonoBehaviour {
 			// update hover highlighting
 			UpdateHover(hovered);
 
+			if (hovered == null) UpdateAutoChairPreview(hit);
+			else ClearAutoChairPreview();
+
+			if (Input.GetKeyDown(KeyCode.R) && hovered == null && hasAutoChairPreview)
+				RotateAutoChairPreview();
+
+			if (Input.GetKeyDown(KeyCode.R) && hovered != null) {
+				grid.RotatePlacedObject(hovered);
+			}
+
+			if (Input.GetMouseButtonDown(0) && hovered == null && hasAutoChairPreview) {
+				var autoChairData = grid.AutoChairData;
+				if (autoChairData != null)
+					grid.Place(autoChairData, autoChairPreviewBaseCell, autoChairPreviewSize, autoChairPreviewRotation);
+			}
+
 			// handle removal on right click when nothing is selected
 			if (Input.GetMouseButtonDown(1)) {
 				if (lastHovered != null) {
@@ -87,6 +112,7 @@ public class PlacementController : MonoBehaviour {
 		} else {
 			// when we have an active selection, clear any hover highlight
 			ClearHover();
+			ClearAutoChairPreview();
 		}
 
 		Vector2Int size = (rotationIndex % 2 == 1) ? new Vector2Int(currentData.size.y, currentData.size.x) : currentData.size;
@@ -102,23 +128,9 @@ public class PlacementController : MonoBehaviour {
 		// Determine chair-related candidates (if this is a chair)
 		int[] chairAllowedIndices = null;
 		if (currentData.prefab != null && currentData.prefab.TryGetComponent<ChairBehavior>(out _)) {
-			TableBehavior[] allTables = FindObjectsByType<TableBehavior>(FindObjectsSortMode.None);
-			System.Collections.Generic.List<int> indices = new();
-			Vector3 worldPos = grid.GetWorldPositionForCell(baseCell, size);
-			for (int i = 0; i < allTables.Length; i++) {
-				var table = allTables[i];
-				if (table == null) continue;
-				if (!table.IsSeatCell(baseCell)) continue;
-				Vector3 tpos = table.Location != null ? table.Location.position : table.transform.position;
-				Vector3 dir = tpos - worldPos;
-				dir.y = 0f;
-				if (dir.sqrMagnitude < 0.0001f) continue;
-				float y = Quaternion.LookRotation(dir.normalized, Vector3.up).eulerAngles.y;
-				float snapped = Mathf.Round(y / 90f) * 90f;
-				int idx = ((int)Mathf.Round((snapped + 90f) / 90f)) % 4;
-				if (!indices.Contains(idx)) indices.Add(idx);
-			}
-			if (indices.Count > 0) chairAllowedIndices = indices.ToArray();
+			// Delegate the computation to GridManager to avoid duplicating table lookups
+			var indices = grid.GetValidChairRotationIndices(currentData, baseCell, size);
+			if (indices != null && indices.Length > 0) chairAllowedIndices = indices;
 		}
 
 		// handle rotate input now that we know chair candidates
@@ -176,6 +188,7 @@ public class PlacementController : MonoBehaviour {
 		}
 		currentData = data;
 		rotationIndex = 0;
+		ClearAutoChairPreview();
 		CreatePreviewInstance();
 	}
 
@@ -186,6 +199,7 @@ public class PlacementController : MonoBehaviour {
 			ClearSelection();
 			// also clear any hover highlight
 			ClearHover();
+			ClearAutoChairPreview();
 		}
 	}
 
@@ -196,23 +210,114 @@ public class PlacementController : MonoBehaviour {
 		previewInstance = null;
 	}
 
+	private void UpdateAutoChairPreview(Vector3 hit) {
+		if (grid == null) {
+			ClearAutoChairPreview();
+			return;
+		}
+
+		var autoChairData = grid.AutoChairData;
+		if (autoChairData == null || autoChairData.prefab == null) {
+			ClearAutoChairPreview();
+			return;
+		}
+
+		var baseCell = grid.WorldToCell(hit, autoChairData.size);
+		var size = autoChairData.size;
+		if (baseCell != lastAutoChairBaseCell) {
+			lastAutoChairBaseCell = baseCell;
+			autoChairRotationIndex = -1;
+		}
+
+		autoChairAllowedIndices = grid.GetValidChairRotationIndices(autoChairData, baseCell, size);
+		if (autoChairAllowedIndices == null || autoChairAllowedIndices.Length == 0) {
+			ClearAutoChairPreview();
+			return;
+		}
+
+		if (autoChairRotationIndex < 0 || System.Array.IndexOf(autoChairAllowedIndices, autoChairRotationIndex) < 0)
+			autoChairRotationIndex = autoChairAllowedIndices[0];
+
+		var rotation = Quaternion.Euler(0f, -90f + autoChairRotationIndex * 90f, 0f);
+		if (!grid.CanPlace(autoChairData, baseCell, size, rotation)) {
+			ClearAutoChairPreview();
+			return;
+		}
+
+		autoChairPreviewBaseCell = baseCell;
+		autoChairPreviewSize = size;
+		autoChairPreviewRotation = rotation;
+		hasAutoChairPreview = true;
+
+		if (autoChairPreviewInstance == null)
+			autoChairPreviewInstance = CreatePreviewObject(autoChairData.prefab);
+
+		if (autoChairPreviewInstance != null) {
+			autoChairPreviewInstance.transform.SetPositionAndRotation(grid.GetWorldPositionForCell(baseCell, size), rotation);
+			ApplyPreviewColor(autoChairPreviewInstance, new Color(0f, 1f, 0f, 0.6f));
+		}
+	}
+
+	private void RotateAutoChairPreview() {
+		if (!hasAutoChairPreview || autoChairAllowedIndices == null || autoChairAllowedIndices.Length <= 1)
+			return;
+
+		int pos = System.Array.IndexOf(autoChairAllowedIndices, autoChairRotationIndex);
+		if (pos < 0) autoChairRotationIndex = autoChairAllowedIndices[0];
+		else autoChairRotationIndex = autoChairAllowedIndices[(pos + 1) % autoChairAllowedIndices.Length];
+
+		autoChairPreviewRotation = Quaternion.Euler(0f, -90f + autoChairRotationIndex * 90f, 0f);
+		if (autoChairPreviewInstance != null) {
+			autoChairPreviewInstance.transform.SetPositionAndRotation(grid.GetWorldPositionForCell(autoChairPreviewBaseCell, autoChairPreviewSize), autoChairPreviewRotation);
+			ApplyPreviewColor(autoChairPreviewInstance, new Color(0f, 1f, 0f, 0.6f));
+		}
+	}
+
+	private void ClearAutoChairPreview() {
+		hasAutoChairPreview = false;
+		autoChairRotationIndex = -1;
+		autoChairAllowedIndices = null;
+		if (autoChairPreviewInstance != null) Destroy(autoChairPreviewInstance);
+		autoChairPreviewInstance = null;
+	}
+
 	private void CreatePreviewInstance() {
 		if (previewInstance != null) Destroy(previewInstance);
 		if (currentData == null || currentData.prefab == null) return;
-		previewInstance = Instantiate(currentData.prefab);
+		previewInstance = CreatePreviewObject(currentData.prefab);
+	}
+
+	private GameObject CreatePreviewObject(GameObject prefab) {
+		if (prefab == null) return null;
+		var instance = Instantiate(prefab);
 		// make preview non-interactive
-		foreach (var c in previewInstance.GetComponentsInChildren<Collider>()) c.enabled = false;
-		foreach (var mb in previewInstance.GetComponentsInChildren<MonoBehaviour>()) {
+		foreach (var c in instance.GetComponentsInChildren<Collider>()) c.enabled = false;
+		foreach (var mb in instance.GetComponentsInChildren<MonoBehaviour>()) {
 			// disable behaviours so they don't run on preview
 			mb.enabled = false;
 		}
 
 		// apply preview material if provided
 		if (previewMaterial != null) {
-			foreach (var r in previewInstance.GetComponentsInChildren<Renderer>()) {
+			foreach (var r in instance.GetComponentsInChildren<Renderer>()) {
 				var mats = new Material[r.sharedMaterials.Length];
 				for (int i = 0; i < mats.Length; i++) mats[i] = previewMaterial;
 				r.materials = mats;
+			}
+		}
+
+		return instance;
+	}
+
+	private void ApplyPreviewColor(GameObject instance, Color color) {
+		if (instance == null) return;
+		var renderers = instance.GetComponentsInChildren<Renderer>();
+		foreach (var r in renderers) {
+			if (r == null) continue;
+			var mats = r.materials;
+			for (int i = 0; i < mats.Length; i++) {
+				if (mats[i] != null && mats[i].HasProperty("_Color"))
+					mats[i].color = color;
 			}
 		}
 	}

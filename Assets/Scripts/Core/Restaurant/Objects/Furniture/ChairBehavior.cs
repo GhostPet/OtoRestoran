@@ -25,6 +25,7 @@ public class ChairBehavior : BaseRestaurantObject, IPlaceableLifecycle {
 	public void OnPlaced(PlaceableObject placedObject) {
 		Vector2Int chairCell = placedObject.OriginCell;
 		TableBehavior[] allTables = FindObjectsByType<TableBehavior>(FindObjectsSortMode.None);
+		var previousTable = attachedTable;
 
 		var candidates = new List<TableBehavior>();
 		for (int i = 0; i < allTables.Length; i++) {
@@ -33,11 +34,13 @@ public class ChairBehavior : BaseRestaurantObject, IPlaceableLifecycle {
 			if (table.IsSeatCell(chairCell)) candidates.Add(table);
 		}
 
-		if (candidates.Count == 0) return;
+		if (candidates.Count == 0) {
+			ApplyTableBinding(previousTable, null, default);
+			return;
+		}
 
 		if (candidates.Count == 1) {
-			attachedTable = candidates[0];
-			attachedCell = chairCell;
+			ApplyTableBinding(previousTable, candidates[0], chairCell);
 			return;
 		}
 
@@ -62,13 +65,23 @@ public class ChairBehavior : BaseRestaurantObject, IPlaceableLifecycle {
 		}
 
 		if (bestTable != null) {
-			attachedTable = bestTable;
-			attachedCell = chairCell;
+			ApplyTableBinding(previousTable, bestTable, chairCell);
 			return;
 		}
 
 		Debug.LogWarning($"{name}: Sandalye birden fazla masaya bitişik; uygun olarak bağlanamadı. cell={chairCell}");
 
+	}
+
+	private void ApplyTableBinding(TableBehavior previousTable, TableBehavior newTable, Vector2Int chairCell) {
+		if (previousTable != null && previousTable != newTable && currentCustomer != null)
+			previousTable.UnregisterCustomer(currentCustomer);
+
+		attachedTable = newTable;
+		attachedCell = newTable != null ? chairCell : default;
+
+		if (newTable != null && newTable != previousTable && currentCustomer != null)
+			newTable.RegisterCustomer(currentCustomer);
 	}
 
 	public void OnRemoved(PlaceableObject placedObject) {
