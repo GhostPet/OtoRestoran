@@ -182,7 +182,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 32053637}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -2366,6 +2366,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1418702810}
   - component: {fileID: 1418702811}
+  - component: {fileID: 1418702812}
   m_Layer: 0
   m_Name: SingleCustomerSpawner
   m_TagString: Untagged
@@ -2395,7 +2396,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1418702809}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0acfe89cd700b9944b167fc9e86df1dd, type: 3}
   m_Name: 
@@ -2403,6 +2404,20 @@ MonoBehaviour:
   customerPrefab: {fileID: 7964758361271457668, guid: 4d5299022b578494ba17009ce4ed1d2d, type: 3}
   spawnOnStart: 0
   spawnKey: 115
+--- !u!114 &1418702812
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1418702809}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 16ccde7cc0eade24894d8330c21ba7cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CustomerSpawner
+  customerPrefab: {fileID: 7964758361271457668, guid: 4d5299022b578494ba17009ce4ed1d2d, type: 3}
+  spawnInterval: 3
 --- !u!1 &1420258222
 GameObject:
   m_ObjectHideFlags: 0
@@ -3670,7 +3685,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &2000269161
 RectTransform:
   m_ObjectHideFlags: 0
