@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e73cd55ffbbdebf4ba8ba55f31281227, type: 3}
-  m_Name: TablePlaceableData
+  m_Name: 002_ChairPlaceableData
   m_EditorClassIdentifier: Assembly-CSharp::PlaceableData
-  id: 1
-  prefab: {fileID: 7856934089734427276, guid: 431f5c44f520d0241b27c60059f602d3, type: 3}
+  id: 2
+  prefab: {fileID: 7986310117792019135, guid: f71ee0780027ba643ae39fdc8936d696, type: 3}
   size: {x: 1, y: 1}
   pivot: {x: 0, y: 0}
