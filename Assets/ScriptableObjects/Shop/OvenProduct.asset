@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0caf2bc76e6af0d4d9bb50674d750c96, type: 3}
+  m_Name: OvenProduct
+  m_EditorClassIdentifier: Assembly-CSharp::ShopProductDefinitionSO
+  productId: oven_basic
+  displayName: "F\u0131r\u0131n"
+  description: "yemek pi\u015Firmeye yarar"
+  icon: {fileID: 0}
+  worldPrefab: {fileID: 734507576093410180, guid: ee7f1fa4635c3bf4788af0fd45be3c49, type: 3}
+  buyPrice: 100
+  sellPrice: 50
+  canBePurchased: 1
+  canBeSold: 1
+  maxTransactionQuantity: 1
