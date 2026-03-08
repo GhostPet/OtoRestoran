@@ -10,15 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0caf2bc76e6af0d4d9bb50674d750c96, type: 3}
-  m_Name: TableProduct
+  m_Name: ShopProduct
   m_EditorClassIdentifier: Assembly-CSharp::ShopProductDefinitionSO
-  productId: table_basic
-  displayName: Masa
-  description: yemek yenilen yer
+  productId: 
+  displayName: 
+  description: 
   icon: {fileID: 0}
-  worldPrefab: {fileID: 7856934089734427276, guid: 431f5c44f520d0241b27c60059f602d3, type: 3}
-  buyPrice: 200
-  sellPrice: 80
+  worldPrefab: {fileID: 0}
+  buyPrice: 100
+  sellPrice: 50
   canBePurchased: 1
   canBeSold: 1
   maxTransactionQuantity: 1

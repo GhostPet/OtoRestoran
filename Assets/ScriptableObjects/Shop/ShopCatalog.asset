@@ -22,14 +22,16 @@ MonoBehaviour:
     displayName: Mutfak malzemeleri
     icon: {fileID: 0}
     products:
-    - {fileID: 11400000, guid: e10135066707cc444aae6efe798467a6, type: 2}
+    - {fileID: 11400000, guid: 9087329a1efa685438474ccae6eacb4f, type: 2}
   - tabId: robots
     displayName: Robotlar
     icon: {fileID: 0}
-    products:
-    - {fileID: 11400000, guid: e10135066707cc444aae6efe798467a6, type: 2}
+    products: []
   - tabId: 'Decoration '
     displayName: 'Dekorasyon '
     icon: {fileID: 0}
-    products:
-    - {fileID: 11400000, guid: e10135066707cc444aae6efe798467a6, type: 2}
+    products: []
+  - tabId: ' '
+    displayName: ' '
+    icon: {fileID: 0}
+    products: []
