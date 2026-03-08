@@ -442,7 +442,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 38078b84d925e7b41be57697263c5c50, type: 3}
+  m_Sprite: {fileID: 21300000, guid: b463e643360a00c478d70c25611f84a8, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1371,7 +1371,7 @@ GameObject:
   - component: {fileID: 3431839695293113122}
   - component: {fileID: 2047496214965616708}
   - component: {fileID: 3906454098445822041}
-  - component: {fileID: 4597692887482394210}
+  - component: {fileID: 2034402032440329073}
   m_Layer: 5
   m_Name: SaveButton
   m_TagString: Untagged
@@ -1480,9 +1480,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 4597692887482394210}
-        m_TargetAssemblyTypeName: RobotSaveButton, Assembly-CSharp
-        m_MethodName: PressSave
+      - m_Target: {fileID: 2034402032440329073}
+        m_TargetAssemblyTypeName: PrefabSaveHelper, Assembly-CSharp
+        m_MethodName: OnSaveButtonClicked
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1492,7 +1492,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
---- !u!114 &4597692887482394210
+--- !u!114 &2034402032440329073
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1501,8 +1501,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 8684271457833206361}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 770f207f13c62b34fa3ba1c743028c6e, type: 3}
+  m_Script: {fileID: 11500000, guid: 11204eb79bbb1f545ad6cad86e0c7a4e, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RobotSaveButton
-  robotID: 0
-  popup: {fileID: 3660109428467681067, guid: 83e2d985ccb5f414c84ba0e89eb9abc0, type: 3}
+  m_EditorClassIdentifier: Assembly-CSharp::PrefabSaveHelper
