@@ -23,15 +23,12 @@ public class ShopProductDefinitionSO : ScriptableObject
     [Header("İşlem Kuralları")]
     [SerializeField] private bool canBePurchased = true;
     [SerializeField] private bool canBeSold = true;
-    [SerializeField] private int maxTransactionQuantity = 1;
+    [SerializeField] private int transactionQuantity = 1;
 
     [Header("Envanter Hedefi")]
     [SerializeField] private ShopProductStorageType storageType = ShopProductStorageType.None;
     [SerializeField] private ItemSO consumableItem;
     [SerializeField] private PlaceableData buildPlaceableData;
-
-    [Header("Toplu Fiyatlandırma")]
-    [SerializeField] private ShopPriceTier[] priceTiers;
 
     /// <summary>
     /// Kod tarafında güvenilir ve sabit kimlik olarak kullanılabilir.
@@ -62,10 +59,10 @@ public class ShopProductDefinitionSO : ScriptableObject
     public bool CanBeSold => canBeSold;
 
     /// <summary>
-    /// Tek seferde alınabilecek veya satılabilecek maksimum adet.
-    /// Şimdiden eklenmesi ileride UI spinner veya adet seçimi eklendiğinde fayda sağlar.
+    /// Bu ürün satın alındığında veya satıldığında kaç adet hareket edeceğini belirtir.
+    /// Örnek: 10'lu köfte paketi, 100'lü köfte paketi, 500'lü köfte paketi.
     /// </summary>
-    public int MaxTransactionQuantity => maxTransactionQuantity;
+    public int TransactionQuantity => transactionQuantity;
 
     /// <summary>
     /// Ürün satın alındığında hangi sisteme gideceğini belirtir.
@@ -83,61 +80,14 @@ public class ShopProductDefinitionSO : ScriptableObject
     /// </summary>
     public PlaceableData BuildPlaceableData => buildPlaceableData;
 
-    public ShopPriceTier[] PriceTiers => priceTiers;
-
-    /// <summary>
-    /// Girilen adede göre hangi fiyat kademesinin geçerli olduğunu hesaplar.
-    /// Örneğin 1, 10, 100, 1000 gibi kademe yapıları burada yönetilir.
-    /// </summary>
-    public ShopPriceTier GetBestPriceTier(int quantity)
-    {
-        ShopPriceTier bestTier = null;
-
-        if (priceTiers == null)
-        {
-            return null;
-        }
-
-        for (int i = 0; i < priceTiers.Length; i++)
-        {
-            ShopPriceTier currentTier = priceTiers[i];
-            if (currentTier == null)
-            {
-                continue;
-            }
-
-            if (currentTier.MinimumQuantity <= quantity)
-            {
-                if (bestTier == null || currentTier.MinimumQuantity > bestTier.MinimumQuantity)
-                {
-                    bestTier = currentTier;
-                }
-            }
-        }
-
-        return bestTier;
-    }
-
     public int GetBuyUnitPrice(int quantity)
     {
-        ShopPriceTier tier = GetBestPriceTier(quantity);
-        if (tier == null || tier.BuyUnitPrice <= 0)
-        {
-            return buyPrice;
-        }
-
-        return tier.BuyUnitPrice;
+        return buyPrice;
     }
 
     public int GetSellUnitPrice(int quantity)
     {
-        ShopPriceTier tier = GetBestPriceTier(quantity);
-        if (tier == null || tier.SellUnitPrice < 0)
-        {
-            return sellPrice;
-        }
-
-        return tier.SellUnitPrice;
+        return sellPrice;
     }
 
     public int GetBuyTotalPrice(int quantity)
@@ -147,7 +97,7 @@ public class ShopProductDefinitionSO : ScriptableObject
             quantity = 1;
         }
 
-        return GetBuyUnitPrice(quantity) * quantity;
+        return buyPrice;
     }
 
     public int GetSellTotalPrice(int quantity)
@@ -157,7 +107,7 @@ public class ShopProductDefinitionSO : ScriptableObject
             quantity = 1;
         }
 
-        return GetSellUnitPrice(quantity) * quantity;
+        return sellPrice;
     }
 
     private void OnValidate()
@@ -172,25 +122,9 @@ public class ShopProductDefinitionSO : ScriptableObject
             sellPrice = 0;
         }
 
-        if (maxTransactionQuantity < 1)
+        if (transactionQuantity < 1)
         {
-            maxTransactionQuantity = 1;
-        }
-
-        if (priceTiers == null)
-        {
-            return;
-        }
-
-        for (int i = 0; i < priceTiers.Length; i++)
-        {
-            ShopPriceTier tier = priceTiers[i];
-            if (tier == null)
-            {
-                continue;
-            }
-
-            tier.ClampValues();
+            transactionQuantity = 1;
         }
     }
 }

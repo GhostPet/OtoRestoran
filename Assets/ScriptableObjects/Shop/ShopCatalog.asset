@@ -23,6 +23,7 @@ MonoBehaviour:
     icon: {fileID: 0}
     products:
     - {fileID: 11400000, guid: 9087329a1efa685438474ccae6eacb4f, type: 2}
+    - {fileID: 11400000, guid: 6273a99a08bbd1a43bad1af2760c0c2a, type: 2}
   - tabId: robots
     displayName: Robotlar
     icon: {fileID: 0}

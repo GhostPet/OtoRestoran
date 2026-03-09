@@ -6,7 +6,7 @@ public class ShopManager : MonoBehaviour
 {
     [Header("Bağlantılar")]
     [SerializeField] private EconomyManager economyManager;
-    [SerializeField] private InvenyoryManager inventoryManager;
+    [SerializeField] private InventoryManager inventoryManager;
     [SerializeField] private BuildInventoryManager buildInventoryManager;
     [SerializeField] private ShopCatalogSO catalog;
 
@@ -58,7 +58,7 @@ public class ShopManager : MonoBehaviour
 
         if (inventoryManager == null)
         {
-            inventoryManager = FindObjectOfType<InvenyoryManager>();
+            inventoryManager = FindObjectOfType<InventoryManager>();
         }
 
         if (buildInventoryManager == null)
@@ -142,6 +142,8 @@ public class ShopManager : MonoBehaviour
     /// </summary>
     public bool TryPurchase(ShopProductDefinitionSO product, int quantity, out ShopOperationResult result)
     {
+        quantity = ResolveTransactionQuantity(product, quantity);
+
         string validationMessage;
         if (!ValidatePurchaseRequest(product, quantity, out validationMessage))
         {
@@ -176,6 +178,8 @@ public class ShopManager : MonoBehaviour
     /// </summary>
     public bool TrySell(ShopProductDefinitionSO product, int quantity, out ShopOperationResult result)
     {
+        quantity = ResolveTransactionQuantity(product, quantity);
+
         string validationMessage;
         if (!ValidateSellRequest(product, quantity, out validationMessage))
         {
@@ -209,6 +213,7 @@ public class ShopManager : MonoBehaviour
     /// </summary>
     public bool CanPurchase(ShopProductDefinitionSO product, int quantity, out string reason)
     {
+        quantity = ResolveTransactionQuantity(product, quantity);
         return ValidatePurchaseRequest(product, quantity, out reason);
     }
 
@@ -218,7 +223,42 @@ public class ShopManager : MonoBehaviour
     /// </summary>
     public bool CanSell(ShopProductDefinitionSO product, int quantity, out string reason)
     {
+        quantity = ResolveTransactionQuantity(product, quantity);
         return ValidateSellRequest(product, quantity, out reason);
+    }
+
+    /// <summary>
+    /// UI tarafının üründen oyuncuda kaç adet olduğunu gösterebilmesi için yazıldı.
+    /// Malzeme ve build envanteri arasında doğru kaynağı otomatik seçer.
+    /// </summary>
+    public int GetOwnedQuantity(ShopProductDefinitionSO product)
+    {
+        if (product == null)
+        {
+            return 0;
+        }
+
+        switch (product.StorageType)
+        {
+            case ShopProductStorageType.ConsumableInventory:
+                if (inventoryManager == null || product.ConsumableItem == null)
+                {
+                    return 0;
+                }
+
+                return inventoryManager.GetQuantity(product.ConsumableItem);
+
+            case ShopProductStorageType.BuildInventory:
+                if (buildInventoryManager == null || product.BuildPlaceableData == null)
+                {
+                    return 0;
+                }
+
+                return buildInventoryManager.GetQuantity(product.BuildPlaceableData);
+
+            default:
+                return 0;
+        }
     }
 
     private void InitializeSelectedTab()
@@ -258,6 +298,11 @@ public class ShopManager : MonoBehaviour
         if (!product.CanBePurchased)
         {
             message = "Bu ürün şu anda satın alınamaz durumda.";
+            return false;
+        }
+
+        if (!CanStorePurchasedProduct(product, quantity, out message))
+        {
             return false;
         }
 
@@ -332,9 +377,9 @@ public class ShopManager : MonoBehaviour
             return false;
         }
 
-        if (quantity > product.MaxTransactionQuantity)
+        if (quantity <= 0)
         {
-            message = "Tek işlemde izin verilen maksimum ürün adedi aşıldı.";
+            message = "Geçerli bir ürün adedi tanımlanmamış.";
             return false;
         }
 
@@ -346,6 +391,78 @@ public class ShopManager : MonoBehaviour
     {
         PublishMessage(result.Message);
         OperationProcessed?.Invoke(result);
+    }
+
+    private int ResolveTransactionQuantity(ShopProductDefinitionSO product, int requestedQuantity)
+    {
+        if (product == null)
+        {
+            return requestedQuantity;
+        }
+
+        if (product.TransactionQuantity > 0)
+        {
+            return product.TransactionQuantity;
+        }
+
+        if (requestedQuantity > 0)
+        {
+            return requestedQuantity;
+        }
+
+        return 1;
+    }
+
+    private bool CanStorePurchasedProduct(ShopProductDefinitionSO product, int quantity, out string message)
+    {
+        switch (product.StorageType)
+        {
+            case ShopProductStorageType.None:
+                message = string.Empty;
+                return true;
+
+            case ShopProductStorageType.ConsumableInventory:
+                if (inventoryManager == null)
+                {
+                    message = "Malzeme envanteri bulunamadı.";
+                    return false;
+                }
+
+                if (product.ConsumableItem == null)
+                {
+                    message = "Bu shop ürünü için malzeme item eşlemesi yapılmamış.";
+                    return false;
+                }
+
+                if (!inventoryManager.CanAddItem(product.ConsumableItem, quantity))
+                {
+                    message = "Bu paketi almak envanter limitini aşıyor.";
+                    return false;
+                }
+
+                message = string.Empty;
+                return true;
+
+            case ShopProductStorageType.BuildInventory:
+                if (buildInventoryManager == null)
+                {
+                    message = "Build envanteri bulunamadı.";
+                    return false;
+                }
+
+                if (product.BuildPlaceableData == null)
+                {
+                    message = "Bu shop ürünü için build placeable eşlemesi yapılmamış.";
+                    return false;
+                }
+
+                message = string.Empty;
+                return true;
+
+            default:
+                message = "Bilinmeyen shop ürün tipi.";
+                return false;
+        }
     }
 
     private bool HasEnoughInventoryForSale(ShopProductDefinitionSO product, int quantity, out string message)

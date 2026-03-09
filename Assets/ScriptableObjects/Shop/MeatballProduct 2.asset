@@ -10,19 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0caf2bc76e6af0d4d9bb50674d750c96, type: 3}
-  m_Name: OvenProduct
+  m_Name: MeatballProduct 2
   m_EditorClassIdentifier: Assembly-CSharp::ShopProductDefinitionSO
-  productId: oven_basic
-  displayName: "F\u0131r\u0131n"
-  description: "yemek pi\u015Firmeye yarar"
+  productId: meatball
+  displayName: "K\xF6fte"
+  description: "hamburger i\xE7in haz\u0131r k\xF6fte"
   icon: {fileID: 0}
-  worldPrefab: {fileID: 734507576093410180, guid: ee7f1fa4635c3bf4788af0fd45be3c49, type: 3}
-  buyPrice: 500
-  sellPrice: 400
+  worldPrefab: {fileID: 0}
+  buyPrice: 90
+  sellPrice: 0
   canBePurchased: 1
-  canBeSold: 1
-  maxTransactionQuantity: 1
-  storageType: 2
-  consumableItem: {fileID: 0}
-  buildPlaceableData: {fileID: 11400000, guid: 3d8bf5eaad54d2d43a5d1a58a582d37b, type: 2}
-  priceTiers: []
+  canBeSold: 0
+  transactionQuantity: 100
+  storageType: 1
+  consumableItem: {fileID: 11400000, guid: 4d3cb230ad3bd4a4581f3c399d79643e, type: 2}
+  buildPlaceableData: {fileID: 0}

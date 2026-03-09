@@ -14,6 +14,7 @@ public class ShopProductItemUI : MonoBehaviour
     [SerializeField] private TMP_Text buyPriceText;
     [SerializeField] private TMP_Text sellPriceText;
     [SerializeField] private TMP_Text quantityInfoText;
+    [SerializeField] private TMP_Text ownedQuantityText;
     [SerializeField] private TMP_Text availabilityText;
     [SerializeField] private TMP_InputField quantityInputField;
     [SerializeField] private Button buyButton;
@@ -41,18 +42,19 @@ public class ShopProductItemUI : MonoBehaviour
             return;
         }
 
-        int quantity = GetRequestedQuantity();
+        int quantity = GetTransactionQuantity();
 
         RefreshPricingTexts(quantity);
+        RefreshOwnedQuantityText();
 
-        string purchaseReason;
+        string purchaseReason = string.Empty;
         bool canPurchase = false;
         if (controller != null && controller.ShopManager != null)
         {
             canPurchase = controller.ShopManager.CanPurchase(product, quantity, out purchaseReason);
         }
 
-        string sellReason;
+        string sellReason = string.Empty;
         bool canSell = false;
         if (controller != null && controller.ShopManager != null)
         {
@@ -60,7 +62,17 @@ public class ShopProductItemUI : MonoBehaviour
         }
 
         SetButtonState(buyButton, canPurchase);
-        SetButtonState(sellButton, canSell);
+
+        if (sellButton != null)
+        {
+            sellButton.gameObject.SetActive(product.CanBeSold);
+            SetButtonState(sellButton, canSell && product.CanBeSold);
+        }
+
+        if (sellPriceText != null)
+        {
+            sellPriceText.gameObject.SetActive(product.CanBeSold);
+        }
 
         if (availabilityText != null)
         {
@@ -70,7 +82,7 @@ public class ShopProductItemUI : MonoBehaviour
             }
             else
             {
-                availabilityText.text = "Şu anda satın alınamaz";
+                availabilityText.text = string.IsNullOrWhiteSpace(purchaseReason) ? "Şu anda satın alınamaz" : purchaseReason;
             }
         }
     }
@@ -87,7 +99,8 @@ public class ShopProductItemUI : MonoBehaviour
             descriptionText.text = product != null ? product.Description : string.Empty;
         }
 
-        RefreshPricingTexts(GetRequestedQuantity());
+        RefreshPricingTexts(GetTransactionQuantity());
+        RefreshOwnedQuantityText();
 
         if (iconImage != null)
         {
@@ -104,7 +117,7 @@ public class ShopProductItemUI : MonoBehaviour
 
         if (quantityInputField != null)
         {
-            quantityInputField.text = "1";
+            quantityInputField.gameObject.SetActive(false);
         }
     }
 
@@ -170,18 +183,34 @@ public class ShopProductItemUI : MonoBehaviour
 
         if (quantityInfoText != null)
         {
-            quantityInfoText.text = "Adet: " + quantity;
+            quantityInfoText.text = product.CanBeSold ? "Al / Sat Miktarı: " + quantity : "Alım Miktarı: " + quantity;
         }
 
         if (buyPriceText != null)
         {
-            buyPriceText.text = "Alış: " + buyUnitPrice + " x " + quantity + " = " + buyTotalPrice;
+            buyPriceText.text = "Alış Fiyatı: " + buyTotalPrice;
         }
 
         if (sellPriceText != null)
         {
-            sellPriceText.text = "Satış: " + sellUnitPrice + " x " + quantity + " = " + sellTotalPrice;
+            sellPriceText.text = "Satış Fiyatı: " + sellTotalPrice;
         }
+    }
+
+    private void RefreshOwnedQuantityText()
+    {
+        if (ownedQuantityText == null)
+        {
+            return;
+        }
+
+        if (controller == null || controller.ShopManager == null || product == null)
+        {
+            ownedQuantityText.text = "Envanter: -";
+            return;
+        }
+
+        ownedQuantityText.text = "Envanter: " + controller.ShopManager.GetOwnedQuantity(product);
     }
 
     private void OnBuyClicked()
@@ -191,7 +220,7 @@ public class ShopProductItemUI : MonoBehaviour
             return;
         }
 
-        controller.HandleBuyClicked(product, GetRequestedQuantity());
+        controller.HandleBuyClicked(product, GetTransactionQuantity());
     }
 
     private void OnSellClicked()
@@ -201,39 +230,22 @@ public class ShopProductItemUI : MonoBehaviour
             return;
         }
 
-        controller.HandleSellClicked(product, GetRequestedQuantity());
+        controller.HandleSellClicked(product, GetTransactionQuantity());
     }
 
     private int GetRequestedQuantity()
+    {
+        return GetTransactionQuantity();
+    }
+
+    private int GetTransactionQuantity()
     {
         if (product == null)
         {
             return 1;
         }
 
-        if (quantityInputField == null)
-        {
-            return 1;
-        }
-
-        int quantity;
-        bool parseSucceeded = int.TryParse(quantityInputField.text, out quantity);
-        if (!parseSucceeded)
-        {
-            return 1;
-        }
-
-        if (quantity < 1)
-        {
-            quantity = 1;
-        }
-
-        if (quantity > product.MaxTransactionQuantity)
-        {
-            quantity = product.MaxTransactionQuantity;
-        }
-
-        return quantity;
+        return product.TransactionQuantity > 0 ? product.TransactionQuantity : 1;
     }
 
     private void SetButtonState(Button targetButton, bool isEnabled)
