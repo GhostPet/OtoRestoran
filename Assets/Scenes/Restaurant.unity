@@ -1050,7 +1050,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 2112296565}
   m_Direction: 3
   m_Value: 0.99999475
-  m_Size: 0.9465648
+  m_Size: 0.4732824
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -2303,6 +2303,23 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 547.6}
   m_SizeDelta: {x: 815, y: 800}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &715867595 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6004449665243447388, guid: c9c40b011ac74ff4f8256a28efe44786, type: 3}
+  m_PrefabInstance: {fileID: 445717598961317638}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &715867598
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 715867595}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b6e043b940071e4f95bf102ad672f3a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RobotAniControl
 --- !u!1 &763604142
 GameObject:
   m_ObjectHideFlags: 0
@@ -3771,7 +3788,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 10, y: 309.99997}
+  m_AnchoredPosition: {x: 10, y: 310.00003}
   m_SizeDelta: {x: 850, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &1367919871
@@ -5864,7 +5881,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 6004449665243447388, guid: c9c40b011ac74ff4f8256a28efe44786, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 715867598}
   m_SourcePrefab: {fileID: 100100000, guid: c9c40b011ac74ff4f8256a28efe44786, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

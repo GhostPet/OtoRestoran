@@ -1,9 +1,64 @@
 fileFormatVersion: 2
-guid: 0c895b18fcc9fbd468a620d378fcfa84
+guid: f0a80493a260e914c8bd2bf2e147479a
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: arm
+    second: {fileID: -2589440549741384404, guid: 17fd4a8eb83e8b840b2a04469b2b5169, type: 3}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: arm.001
+    second: {fileID: -4598899236615858807, guid: 17fd4a8eb83e8b840b2a04469b2b5169, type: 3}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: arm_leg_joint
+    second: {fileID: 2166011219998401892, guid: 17fd4a8eb83e8b840b2a04469b2b5169, type: 3}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: body
+    second: {fileID: 6719245597448002910, guid: 17fd4a8eb83e8b840b2a04469b2b5169, type: 3}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: face
+    second: {fileID: 7952672690730763922, guid: 17fd4a8eb83e8b840b2a04469b2b5169, type: 3}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: hand
+    second: {fileID: 8225007040244342006, guid: 17fd4a8eb83e8b840b2a04469b2b5169, type: 3}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: head
+    second: {fileID: 2504525506778435629, guid: 17fd4a8eb83e8b840b2a04469b2b5169, type: 3}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: headphone
+    second: {fileID: -9177653032512947136, guid: 17fd4a8eb83e8b840b2a04469b2b5169, type: 3}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: leg
+    second: {fileID: 1474697076949527217, guid: 17fd4a8eb83e8b840b2a04469b2b5169, type: 3}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: shoe
+    second: {fileID: -7227831802559686701, guid: 17fd4a8eb83e8b840b2a04469b2b5169, type: 3}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: shoe.001
+    second: {fileID: -2275547709221524616, guid: 17fd4a8eb83e8b840b2a04469b2b5169, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -30,7 +85,7 @@ ModelImporter:
     extraExposedTransformPaths: []
     extraUserProperties: []
     clipAnimations: []
-    isReadable: 1
+    isReadable: 0
   meshes:
     lODScreenPercentages: []
     globalScale: 1
