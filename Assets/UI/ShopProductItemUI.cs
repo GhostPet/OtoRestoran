@@ -43,26 +43,20 @@ public class ShopProductItemUI : MonoBehaviour
 
         int quantity = GetRequestedQuantity();
 
+        RefreshPricingTexts(quantity);
+
         string purchaseReason;
         bool canPurchase = false;
-        if (controller != null)
+        if (controller != null && controller.ShopManager != null)
         {
-            ShopManager shopManager = FindObjectOfType<ShopManager>();
-            if (shopManager != null)
-            {
-                canPurchase = shopManager.CanPurchase(product, quantity, out purchaseReason);
-            }
+            canPurchase = controller.ShopManager.CanPurchase(product, quantity, out purchaseReason);
         }
 
         string sellReason;
         bool canSell = false;
-        if (controller != null)
+        if (controller != null && controller.ShopManager != null)
         {
-            ShopManager shopManager = FindObjectOfType<ShopManager>();
-            if (shopManager != null)
-            {
-                canSell = shopManager.CanSell(product, quantity, out sellReason);
-            }
+            canSell = controller.ShopManager.CanSell(product, quantity, out sellReason);
         }
 
         SetButtonState(buyButton, canPurchase);
@@ -93,20 +87,7 @@ public class ShopProductItemUI : MonoBehaviour
             descriptionText.text = product != null ? product.Description : string.Empty;
         }
 
-        if (buyPriceText != null)
-        {
-            buyPriceText.text = product != null ? "Alış: " + product.BuyPrice : "Alış: -";
-        }
-
-        if (sellPriceText != null)
-        {
-            sellPriceText.text = product != null ? "Satış: " + product.SellPrice : "Satış: -";
-        }
-
-        if (quantityInfoText != null)
-        {
-            quantityInfoText.text = product != null ? "Maks: " + product.MaxTransactionQuantity : "Maks: -";
-        }
+        RefreshPricingTexts(GetRequestedQuantity());
 
         if (iconImage != null)
         {
@@ -158,6 +139,49 @@ public class ShopProductItemUI : MonoBehaviour
         int quantity = GetRequestedQuantity();
         quantityInputField.text = quantity.ToString();
         RefreshInteractableState();
+    }
+
+    private void RefreshPricingTexts(int quantity)
+    {
+        if (product == null)
+        {
+            if (buyPriceText != null)
+            {
+                buyPriceText.text = "Alış: -";
+            }
+
+            if (sellPriceText != null)
+            {
+                sellPriceText.text = "Satış: -";
+            }
+
+            if (quantityInfoText != null)
+            {
+                quantityInfoText.text = "Adet: -";
+            }
+
+            return;
+        }
+
+        int buyUnitPrice = product.GetBuyUnitPrice(quantity);
+        int sellUnitPrice = product.GetSellUnitPrice(quantity);
+        int buyTotalPrice = product.GetBuyTotalPrice(quantity);
+        int sellTotalPrice = product.GetSellTotalPrice(quantity);
+
+        if (quantityInfoText != null)
+        {
+            quantityInfoText.text = "Adet: " + quantity;
+        }
+
+        if (buyPriceText != null)
+        {
+            buyPriceText.text = "Alış: " + buyUnitPrice + " x " + quantity + " = " + buyTotalPrice;
+        }
+
+        if (sellPriceText != null)
+        {
+            sellPriceText.text = "Satış: " + sellUnitPrice + " x " + quantity + " = " + sellTotalPrice;
+        }
     }
 
     private void OnBuyClicked()

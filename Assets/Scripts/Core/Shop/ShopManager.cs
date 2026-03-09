@@ -6,6 +6,8 @@ public class ShopManager : MonoBehaviour
 {
     [Header("Bağlantılar")]
     [SerializeField] private EconomyManager economyManager;
+    [SerializeField] private InvenyoryManager inventoryManager;
+    [SerializeField] private BuildInventoryManager buildInventoryManager;
     [SerializeField] private ShopCatalogSO catalog;
 
     [Header("Sekme Ayarları")]
@@ -52,6 +54,16 @@ public class ShopManager : MonoBehaviour
         if (economyManager == null)
         {
             economyManager = FindObjectOfType<EconomyManager>();
+        }
+
+        if (inventoryManager == null)
+        {
+            inventoryManager = FindObjectOfType<InvenyoryManager>();
+        }
+
+        if (buildInventoryManager == null)
+        {
+            buildInventoryManager = FindObjectOfType<BuildInventoryManager>();
         }
 
         InitializeSelectedTab();
@@ -138,7 +150,7 @@ public class ShopManager : MonoBehaviour
             return false;
         }
 
-        int totalCost = product.BuyPrice * quantity;
+        int totalCost = product.GetBuyTotalPrice(quantity);
         EconomyTransactionResult economyResult;
         bool spendSucceeded = economyManager.TrySpend(totalCost, "Shop purchase: " + product.DisplayName, out economyResult);
 
@@ -172,7 +184,7 @@ public class ShopManager : MonoBehaviour
             return false;
         }
 
-        int totalRevenue = product.SellPrice * quantity;
+        int totalRevenue = product.GetSellTotalPrice(quantity);
         EconomyTransactionResult economyResult;
         bool earnSucceeded = economyManager.TryEarn(totalRevenue, "Shop sale: " + product.DisplayName, out economyResult);
 
@@ -249,7 +261,7 @@ public class ShopManager : MonoBehaviour
             return false;
         }
 
-        int totalCost = product.BuyPrice * quantity;
+        int totalCost = product.GetBuyTotalPrice(quantity);
         if (!economyManager.CanAfford(totalCost))
         {
             message = "Bu ürün için yeterli paranız yok.";
@@ -273,9 +285,14 @@ public class ShopManager : MonoBehaviour
             return false;
         }
 
-        if (product.SellPrice <= 0)
+        if (product.GetSellUnitPrice(quantity) <= 0)
         {
             message = "Bu ürünün satış değeri tanımlanmamış.";
+            return false;
+        }
+
+        if (!HasEnoughInventoryForSale(product, quantity, out message))
+        {
             return false;
         }
 
@@ -329,6 +346,64 @@ public class ShopManager : MonoBehaviour
     {
         PublishMessage(result.Message);
         OperationProcessed?.Invoke(result);
+    }
+
+    private bool HasEnoughInventoryForSale(ShopProductDefinitionSO product, int quantity, out string message)
+    {
+        switch (product.StorageType)
+        {
+            case ShopProductStorageType.None:
+                message = string.Empty;
+                return true;
+
+            case ShopProductStorageType.ConsumableInventory:
+                if (inventoryManager == null)
+                {
+                    message = "Malzeme envanteri bulunamadı.";
+                    return false;
+                }
+
+                if (product.ConsumableItem == null)
+                {
+                    message = "Bu shop ürünü için malzeme item eşlemesi yapılmamış.";
+                    return false;
+                }
+
+                if (!inventoryManager.HasEnough(product.ConsumableItem, quantity))
+                {
+                    message = "Satmak için yeterli malzeme bulunmuyor.";
+                    return false;
+                }
+
+                message = string.Empty;
+                return true;
+
+            case ShopProductStorageType.BuildInventory:
+                if (buildInventoryManager == null)
+                {
+                    message = "Build envanteri bulunamadı.";
+                    return false;
+                }
+
+                if (product.BuildPlaceableData == null)
+                {
+                    message = "Bu shop ürünü için build placeable eşlemesi yapılmamış.";
+                    return false;
+                }
+
+                if (!buildInventoryManager.HasEnough(product.BuildPlaceableData, quantity))
+                {
+                    message = "Satmak için yeterli build objesi bulunmuyor.";
+                    return false;
+                }
+
+                message = string.Empty;
+                return true;
+
+            default:
+                message = "Bilinmeyen shop ürün tipi.";
+                return false;
+        }
     }
 
     private void PublishMessage(string message)

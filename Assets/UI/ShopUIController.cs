@@ -30,6 +30,10 @@ public class ShopUIController : MonoBehaviour
     private readonly List<ShopTabButtonUI> spawnedTabButtons = new List<ShopTabButtonUI>();
     private readonly List<ShopProductItemUI> spawnedProductItems = new List<ShopProductItemUI>();
 
+    public ShopManager ShopManager => shopManager;
+
+    public EconomyManager EconomyManager => economyManager;
+
     private void Awake()
     {
         ResolveReferences();
@@ -214,6 +218,43 @@ public class ShopUIController : MonoBehaviour
         ShopOperationResult result;
         shopManager.TrySell(product, quantity, out result);
         RefreshProducts();
+    }
+
+    /// <summary>
+    /// Shop penceresini aynı buton ile açıp kapatmak için yazıldı.
+    /// Panel aktif değilken de açılabilmesi için genelde dışarıdaki bir buton tarafından çağrılır.
+    /// </summary>
+    public void ToggleWindow()
+    {
+        bool willOpen = !gameObject.activeSelf;
+        gameObject.SetActive(willOpen);
+
+        if (willOpen)
+        {
+            RebuildAllUI();
+        }
+    }
+
+    public void OpenWindow()
+    {
+        if (gameObject.activeSelf)
+        {
+            RebuildAllUI();
+            return;
+        }
+
+        gameObject.SetActive(true);
+        RebuildAllUI();
+    }
+
+    public void CloseWindow()
+    {
+        if (!gameObject.activeSelf)
+        {
+            return;
+        }
+
+        gameObject.SetActive(false);
     }
 
     private void SubscribeEvents()

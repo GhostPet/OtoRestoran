@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0caf2bc76e6af0d4d9bb50674d750c96, type: 3}
-  m_Name: ShopProduct
+  m_Name: MeatballProduct
   m_EditorClassIdentifier: Assembly-CSharp::ShopProductDefinitionSO
   productId: 
   displayName: 
@@ -22,3 +22,7 @@ MonoBehaviour:
   canBePurchased: 1
   canBeSold: 1
   maxTransactionQuantity: 1
+  storageType: 0
+  consumableItem: {fileID: 0}
+  buildPlaceableData: {fileID: 0}
+  priceTiers: []

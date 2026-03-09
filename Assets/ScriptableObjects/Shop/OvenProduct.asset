@@ -22,3 +22,7 @@ MonoBehaviour:
   canBePurchased: 1
   canBeSold: 1
   maxTransactionQuantity: 1
+  storageType: 2
+  consumableItem: {fileID: 0}
+  buildPlaceableData: {fileID: 0}
+  priceTiers: []
