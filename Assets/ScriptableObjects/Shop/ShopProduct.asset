@@ -10,18 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0caf2bc76e6af0d4d9bb50674d750c96, type: 3}
-  m_Name: MeatballProduct 2
+  m_Name: ShopProduct
   m_EditorClassIdentifier: Assembly-CSharp::ShopProductDefinitionSO
-  productId: meatball
-  displayName: "K\xF6fte"
-  description: "hamburger i\xE7in haz\u0131r k\xF6fte"
+  productId: 
+  displayName: 
+  description: 
   icon: {fileID: 0}
   worldPrefab: {fileID: 0}
-  buyPrice: 400
-  sellPrice: 0
+  buyPrice: 100
+  sellPrice: 50
   canBePurchased: 1
   canBeSold: 0
-  transactionQuantity: 500
+  transactionQuantity: 1
   storageType: 1
-  consumableItem: {fileID: 11400000, guid: 4d3cb230ad3bd4a4581f3c399d79643e, type: 2}
+  consumableItem: {fileID: 0}
   buildPlaceableData: {fileID: 0}

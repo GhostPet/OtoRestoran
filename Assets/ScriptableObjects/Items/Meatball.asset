@@ -16,4 +16,4 @@ MonoBehaviour:
   displayName: "K\xF6fte"
   description: "hamburger i\xE7in haz\u0131r k\xF6fte"
   icon: {fileID: 0}
-  maxStack: 9999
+  maxStack: 1000
