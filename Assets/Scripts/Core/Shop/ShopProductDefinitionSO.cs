@@ -28,7 +28,7 @@ public class ShopProductDefinitionSO : ScriptableObject
     [Header("Envanter Hedefi")]
     [SerializeField] private ShopProductStorageType storageType = ShopProductStorageType.None;
     [SerializeField] private ItemSO consumableItem;
-    [SerializeField] private PlaceableData buildPlaceableData;
+	[SerializeField] private PlaceableObjectSO buildPlaceableData;
 
     /// <summary>
     /// Kod tarafında güvenilir ve sabit kimlik olarak kullanılabilir.
@@ -78,7 +78,7 @@ public class ShopProductDefinitionSO : ScriptableObject
     /// <summary>
     /// Bu ürün build inventory'ye gidiyorsa grid tarafında kullanılacak placeable verisini tutar.
     /// </summary>
-    public PlaceableData BuildPlaceableData => buildPlaceableData;
+	public PlaceableObjectSO BuildPlaceableData => buildPlaceableData;
 
     public int GetBuyUnitPrice(int quantity)
     {

@@ -8,7 +8,7 @@ public class PlacementController : MonoBehaviour {
 	[HideInInspector]
 	public bool editMode = false;
 
-	private PlaceableData currentData;
+	private PlaceableObjectSO currentData;
 	private GameObject previewInstance;
 	private GameObject autoChairPreviewInstance;
 	private int rotationIndex = 0; // 0..3
@@ -23,6 +23,7 @@ public class PlacementController : MonoBehaviour {
 	private Vector2Int lastAutoChairBaseCell = new(-999, -999);
 
 	private GridManager grid;
+	private BuildInventoryManager buildInventoryManager;
 	private int objectsLayerMask = ~0;
 
 	// hover/remove support
@@ -31,6 +32,7 @@ public class PlacementController : MonoBehaviour {
 
 	void Start() {
 		grid = GridManager.Instance;
+		buildInventoryManager = FindFirstObjectByType<BuildInventoryManager>();
 		if (sceneCamera == null) sceneCamera = Camera.main;
 		int layerIndex = LayerMask.NameToLayer("Objects");
 		objectsLayerMask = layerIndex >= 0 ? (1 << layerIndex) : ~0;
@@ -44,8 +46,14 @@ public class PlacementController : MonoBehaviour {
 		// ensure grid and camera references
 		if (grid == null) grid = GridManager.Instance;
 		if (grid == null) return;
+		if (buildInventoryManager == null) buildInventoryManager = FindFirstObjectByType<BuildInventoryManager>();
 		if (sceneCamera == null) sceneCamera = Camera.main;
 		if (sceneCamera == null) return;
+
+		if (currentData != null && !HasAvailableStock(currentData)) {
+			ClearSelection();
+			return;
+		}
 
 		// cancel: if there's an active selection, right-click cancels it
 		if (Input.GetMouseButtonDown(1) && currentData != null) {
@@ -93,8 +101,11 @@ public class PlacementController : MonoBehaviour {
 
 			if (Input.GetMouseButtonDown(0) && hovered == null && hasAutoChairPreview) {
 				var autoChairData = grid.AutoChairData;
-				if (autoChairData != null)
-					grid.Place(autoChairData, autoChairPreviewBaseCell, autoChairPreviewSize, autoChairPreviewRotation);
+				if (autoChairData != null && TryConsumeForPlacement(autoChairData)) {
+					var placedChair = grid.Place(autoChairData, autoChairPreviewBaseCell, autoChairPreviewSize, autoChairPreviewRotation);
+					if (placedChair == null && buildInventoryManager != null)
+						buildInventoryManager.AddPlaceable(autoChairData, 1);
+				}
 			}
 
 			// handle removal on right click when nothing is selected
@@ -176,14 +187,29 @@ public class PlacementController : MonoBehaviour {
 
 		if (Input.GetMouseButtonDown(0)) {
 			if (canPlace) {
-				grid.Place(currentData, baseCell, size, rot);
+				if (!TryConsumeForPlacement(currentData))
+					return;
+
+				var placedObject = grid.Place(currentData, baseCell, size, rot);
+				if (placedObject == null) {
+					if (buildInventoryManager != null)
+						buildInventoryManager.AddPlaceable(currentData, 1);
+					return;
+				}
+
+				if (!HasAvailableStock(currentData))
+					ClearSelection();
 			}
 		}
 	}
 
-	public void Select(PlaceableData data) {
+	public void Select(PlaceableObjectSO data) {
 		if (!editMode) {
 			Debug.Log("Select ignored because edit mode is off.");
+			return;
+		}
+		if (!HasAvailableStock(data)) {
+			Debug.Log("Select ignored because there is no stock for the selected item.");
 			return;
 		}
 		currentData = data;
@@ -218,6 +244,11 @@ public class PlacementController : MonoBehaviour {
 
 		var autoChairData = grid.AutoChairData;
 		if (autoChairData == null || autoChairData.prefab == null) {
+			ClearAutoChairPreview();
+			return;
+		}
+
+		if (!HasAvailableStock(autoChairData)) {
 			ClearAutoChairPreview();
 			return;
 		}
@@ -358,5 +389,17 @@ public class PlacementController : MonoBehaviour {
 		}
 		lastHoverOriginalMats.Clear();
 		lastHovered = null;
+	}
+
+	private bool HasAvailableStock(PlaceableObjectSO data) {
+		if (data == null) return false;
+		if (buildInventoryManager == null) return true;
+		return buildInventoryManager.GetQuantity(data) > 0;
+	}
+
+	private bool TryConsumeForPlacement(PlaceableObjectSO data) {
+		if (data == null) return false;
+		if (buildInventoryManager == null) return true;
+		return buildInventoryManager.TryConsumeForPlacement(data);
 	}
 }

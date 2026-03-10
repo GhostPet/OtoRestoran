@@ -2,18 +2,18 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class PlaceableObject : MonoBehaviour {
-	public PlaceableData Data { get; private set; }
+	public PlaceableObjectSO Data { get; private set; }
 	public Vector2Int OriginCell { get; private set; }
 	public List<Vector2Int> OccupiedCells { get; private set; } = new List<Vector2Int>();
 
 	private GridManager grid;
 
-	public void Initialize(GridManager gridManager, PlaceableData data, Vector2Int originCell) {
+	public void Initialize(GridManager gridManager, PlaceableObjectSO data, Vector2Int originCell) {
 		// legacy overload: forward to new overload using data.size and default rotation (-90deg)
 		Initialize(gridManager, data, originCell, data.size, Quaternion.Euler(0f, -90f, 0f));
 	}
 
-	public void Initialize(GridManager gridManager, PlaceableData data, Vector2Int originCell, Vector2Int size, Quaternion rotation) {
+	public void Initialize(GridManager gridManager, PlaceableObjectSO data, Vector2Int originCell, Vector2Int size, Quaternion rotation) {
 		grid = gridManager;
 		Data = data;
 		OriginCell = originCell;

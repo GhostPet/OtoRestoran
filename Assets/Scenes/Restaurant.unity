@@ -237,6 +237,54 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 32053637}
   m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &32101817
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 32101818}
+  - component: {fileID: 32101819}
+  m_Layer: 0
+  m_Name: InventoryManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &32101818
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 32101817}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 422882684}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &32101819
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 32101817}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca086789eb2be774c8ccf43a2bb95be3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InventoryManager
+  shopManager: {fileID: 0}
+  startingItems:
+  - item: {fileID: 11400000, guid: 4d3cb230ad3bd4a4581f3c399d79643e, type: 2}
+    quantity: 5
 --- !u!1 &35359180
 GameObject:
   m_ObjectHideFlags: 0
@@ -1049,8 +1097,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2112296566}
   m_HandleRect: {fileID: 2112296565}
   m_Direction: 3
-  m_Value: 0.99999475
-  m_Size: 0.4732824
+  m_Value: 1.0000018
+  m_Size: 0.9465648
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -1537,6 +1585,58 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 30, y: 135, z: 0}
+--- !u!1 &339111310
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 339111311}
+  - component: {fileID: 339111312}
+  m_Layer: 0
+  m_Name: BuildInventoryManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &339111311
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 339111310}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 422882684}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &339111312
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 339111310}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06c198dd3b8ff5447b3497139d178801, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BuildInventoryManager
+  shopManager: {fileID: 0}
+  startingItems:
+  - placeableData: {fileID: 11400000, guid: 5232892cb6dfe1d41b60530a572e2727, type: 2}
+    quantity: 4
+  - placeableData: {fileID: 11400000, guid: 7d34609a203708145acccb37c2b8a417, type: 2}
+    quantity: 3
+  - placeableData: {fileID: 11400000, guid: 3d8bf5eaad54d2d43a5d1a58a582d37b, type: 2}
+    quantity: 2
 --- !u!1001 &380187547
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1944,6 +2044,8 @@ Transform:
   - {fileID: 2056589360}
   - {fileID: 1420258223}
   - {fileID: 1321138862}
+  - {fileID: 32101818}
+  - {fileID: 339111311}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &426230943
@@ -3788,7 +3890,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 10, y: 310.00003}
+  m_AnchoredPosition: {x: 10, y: 309.99994}
   m_SizeDelta: {x: 850, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &1367919871
@@ -4560,6 +4662,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 7d34609a203708145acccb37c2b8a417, type: 2}
   - {fileID: 11400000, guid: 3d8bf5eaad54d2d43a5d1a58a582d37b, type: 2}
   controller: {fileID: 1669716843}
+  buildInventoryManager: {fileID: 339111312}
   editButton: {fileID: 1789894455}
   editButtonText: {fileID: 417159967}
   itemList: {fileID: 561886585}
@@ -4597,6 +4700,7 @@ MonoBehaviour:
   origin: {x: -10, y: 0, z: -10}
   showGizmos: 1
   autoChairData: {fileID: 11400000, guid: 7d34609a203708145acccb37c2b8a417, type: 2}
+  buildInventoryManager: {fileID: 339111312}
 --- !u!224 &1681731544 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 2519103812781853093, guid: 83e2d985ccb5f414c84ba0e89eb9abc0, type: 3}

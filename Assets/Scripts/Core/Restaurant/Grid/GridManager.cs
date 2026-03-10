@@ -8,13 +8,17 @@ public class GridManager : MonoBehaviour {
 	public Vector3 origin = Vector3.zero;
 	public bool showGizmos = true;
 	[Header("Auto Placement")]
-	[SerializeField] private PlaceableData autoChairData;
+	[SerializeField] private PlaceableObjectSO autoChairData;
+	[SerializeField] private BuildInventoryManager buildInventoryManager;
 
 	// map from grid coordinate to occupying PlaceableObject
 	private readonly Dictionary<Vector2Int, PlaceableObject> occupied = new();
+	private readonly Dictionary<PlaceableObjectSO, int> placedCounts = new();
 
 	public static GridManager Instance { get; private set; }
-	public PlaceableData AutoChairData => autoChairData;
+	public PlaceableObjectSO AutoChairData => autoChairData;
+	public event System.Action PlacedObjectsChanged;
+	public event System.Action<PlaceableObjectSO, int> PlacedObjectCountChanged;
 
 	private void Awake() {
 		if (Instance != null && Instance != this) {
@@ -23,6 +27,13 @@ public class GridManager : MonoBehaviour {
 			return;
 		}
 		Instance = this;
+		if (buildInventoryManager == null)
+			buildInventoryManager = FindFirstObjectByType<BuildInventoryManager>();
+	}
+
+	public int GetPlacedCount(PlaceableObjectSO data) {
+		if (data == null) return 0;
+		return placedCounts.TryGetValue(data, out int count) ? count : 0;
 	}
 
 	public Vector3 GetWorldPositionForCell(Vector2Int cell, Vector2Int size) {
@@ -49,7 +60,7 @@ public class GridManager : MonoBehaviour {
 		return cell.x >= 0 && cell.y >= 0 && cell.x < width && cell.y < height;
 	}
 
-	public bool CanPlace(PlaceableData data, Vector2Int at) {
+	public bool CanPlace(PlaceableObjectSO data, Vector2Int at) {
 		// forward to sized overload using data.size and pivot-converted base cell
 		if (data == null) return false;
 		Vector2Int baseCell = new(at.x - data.pivot.x, at.y - data.pivot.y);
@@ -91,7 +102,7 @@ public class GridManager : MonoBehaviour {
 		return indices.ToArray();
 	}
 
-	public int[] GetValidChairRotationIndices(PlaceableData data, Vector2Int baseCell, Vector2Int size) {
+	public int[] GetValidChairRotationIndices(PlaceableObjectSO data, Vector2Int baseCell, Vector2Int size) {
 		if (data == null || data.prefab == null) return new int[0];
 		if (!data.prefab.TryGetComponent<ChairBehavior>(out _)) return new int[0];
 
@@ -107,7 +118,7 @@ public class GridManager : MonoBehaviour {
 		return validIndices.ToArray();
 	}
 
-	private bool CanPlaceInternal(PlaceableData data, Vector2Int baseCell, Vector2Int size, Quaternion rotation, PlaceableObject ignoredObject) {
+	private bool CanPlaceInternal(PlaceableObjectSO data, Vector2Int baseCell, Vector2Int size, Quaternion rotation, PlaceableObject ignoredObject) {
 		if (data == null || data.prefab == null) return false;
 
 		for (int x = 0; x < size.x; x++)
@@ -134,18 +145,18 @@ public class GridManager : MonoBehaviour {
 	/// Check placement using an explicit base cell and size (size should already account for rotation).
 	/// baseCell is the bottom-left / origin cell for the object.
 	/// </summary>
-	public bool CanPlace(PlaceableData data, Vector2Int baseCell, Vector2Int size) {
+	public bool CanPlace(PlaceableObjectSO data, Vector2Int baseCell, Vector2Int size) {
 		return CanPlaceInternal(data, baseCell, size, Quaternion.Euler(0f, -90f, 0f), null);
 	}
 
 	/// <summary>
 	/// Rotation-aware placement check. For chairs, ensure the given rotation faces one of the adjacent tables.
 	/// </summary>
-	public bool CanPlace(PlaceableData data, Vector2Int baseCell, Vector2Int size, Quaternion rotation) {
+	public bool CanPlace(PlaceableObjectSO data, Vector2Int baseCell, Vector2Int size, Quaternion rotation) {
 		return CanPlaceInternal(data, baseCell, size, rotation, null);
 	}
 
-	public PlaceableObject Place(PlaceableData data, Vector2Int at) {
+	public PlaceableObject Place(PlaceableObjectSO data, Vector2Int at) {
 		// keep old API for compatibility: convert to baseCell + default size/rotation
 		if (data == null) {
 			Debug.LogError("PlaceableData is null");
@@ -160,7 +171,7 @@ public class GridManager : MonoBehaviour {
 	/// Place an object using an explicit base cell and size (size should already account for rotation).
 	/// Rotation is applied to the instantiated GameObject.
 	/// </summary>
-	public PlaceableObject Place(PlaceableData data, Vector2Int baseCell, Vector2Int size, Quaternion rotation) {
+	public PlaceableObject Place(PlaceableObjectSO data, Vector2Int baseCell, Vector2Int size, Quaternion rotation) {
 		if (data == null || data.prefab == null) {
 			Debug.LogError("PlaceableData or its prefab is null");
 			return null;
@@ -177,6 +188,8 @@ public class GridManager : MonoBehaviour {
 		foreach (var cell in po.OccupiedCells) {
 			occupied[cell] = po;
 		}
+
+		ChangePlacedCount(data, 1);
 
 		if (go.TryGetComponent<TableBehavior>(out var table)) {
 			TryAutoPlaceChairsAroundTable(po, table);
@@ -208,7 +221,12 @@ public class GridManager : MonoBehaviour {
 			if (!CanPlace(autoChairData, chairBaseCell, chairSize, chairRotation))
 				continue;
 
-			Place(autoChairData, chairBaseCell, chairSize, chairRotation);
+			if (buildInventoryManager != null && !buildInventoryManager.TryConsumeForPlacement(autoChairData))
+				continue;
+
+			var placedChair = Place(autoChairData, chairBaseCell, chairSize, chairRotation);
+			if (placedChair == null && buildInventoryManager != null)
+				buildInventoryManager.AddPlaceable(autoChairData, 1);
 		}
 	}
 
@@ -304,12 +322,28 @@ public class GridManager : MonoBehaviour {
 			if (occupied.ContainsKey(cell) && occupied[cell] == obj)
 				occupied.Remove(cell);
 		}
+
+		ChangePlacedCount(obj.Data, -1);
+		if (buildInventoryManager != null && obj.Data != null)
+			buildInventoryManager.AddPlaceable(obj.Data, 1);
+
 		Destroy(obj.gameObject);
 	}
 
 	public PlaceableObject GetObjectAt(Vector2Int cell) {
 		occupied.TryGetValue(cell, out var obj);
 		return obj;
+	}
+
+	private void ChangePlacedCount(PlaceableObjectSO data, int delta) {
+		if (data == null || delta == 0) return;
+
+		int nextCount = GetPlacedCount(data) + delta;
+		if (nextCount <= 0) placedCounts.Remove(data);
+		else placedCounts[data] = nextCount;
+
+		PlacedObjectCountChanged?.Invoke(data, Mathf.Max(0, nextCount));
+		PlacedObjectsChanged?.Invoke();
 	}
 
 	private void OnDrawGizmos() {

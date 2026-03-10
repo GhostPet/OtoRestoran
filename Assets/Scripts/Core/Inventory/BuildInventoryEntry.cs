@@ -6,18 +6,16 @@ using UnityEngine;
 /// Grid sistemine bağlanacak yapı bu sınıf üzerinden sade kalır.
 /// </summary>
 [Serializable]
-public class BuildInventoryEntry
-{
-    [SerializeField] private PlaceableData placeableData;
-    [SerializeField] private int quantity;
+public class BuildInventoryEntry {
+	[SerializeField] private PlaceableObjectSO placeableData;
+	[SerializeField] private int quantity;
 
-    public BuildInventoryEntry(PlaceableData placeableData, int quantity)
-    {
-        this.placeableData = placeableData;
-        this.quantity = quantity;
-    }
+	public BuildInventoryEntry(PlaceableObjectSO placeableData, int quantity) {
+		this.placeableData = placeableData;
+		this.quantity = quantity;
+	}
 
-    public PlaceableData PlaceableData => placeableData;
+	public PlaceableObjectSO PlaceableData => placeableData;
 
-    public int Quantity => quantity;
+	public int Quantity => quantity;
 }

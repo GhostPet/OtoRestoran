@@ -12,6 +12,9 @@ public class ShopUIController : MonoBehaviour
     [Header("Sistem Referansları")]
     [SerializeField] private ShopManager shopManager;
     [SerializeField] private EconomyManager economyManager;
+    [SerializeField] private InventoryManager inventoryManager;
+    [SerializeField] private BuildInventoryManager buildInventoryManager;
+    [SerializeField] private GridManager gridManager;
 
     [Header("Sekme UI")]
     [SerializeField] private Transform tabContainer;
@@ -58,12 +61,27 @@ public class ShopUIController : MonoBehaviour
     {
         if (shopManager == null)
         {
-            shopManager = FindObjectOfType<ShopManager>();
+            shopManager = FindAnyObjectByType<ShopManager>();
         }
 
         if (economyManager == null)
         {
-            economyManager = FindObjectOfType<EconomyManager>();
+            economyManager = FindAnyObjectByType<EconomyManager>();
+        }
+
+        if (inventoryManager == null)
+        {
+            inventoryManager = FindAnyObjectByType<InventoryManager>();
+        }
+
+        if (buildInventoryManager == null)
+        {
+            buildInventoryManager = FindAnyObjectByType<BuildInventoryManager>();
+        }
+
+        if (gridManager == null)
+        {
+            gridManager = FindAnyObjectByType<GridManager>();
         }
     }
 
@@ -270,6 +288,21 @@ public class ShopUIController : MonoBehaviour
         {
             economyManager.BalanceChanged += HandleBalanceChanged;
         }
+
+        if (inventoryManager != null)
+        {
+            inventoryManager.InventoryChanged += HandleInventoryChanged;
+        }
+
+        if (buildInventoryManager != null)
+        {
+            buildInventoryManager.InventoryChanged += HandleInventoryChanged;
+        }
+
+        if (gridManager != null)
+        {
+            gridManager.PlacedObjectsChanged += HandlePlacedObjectsChanged;
+        }
     }
 
     private void UnsubscribeEvents()
@@ -284,6 +317,21 @@ public class ShopUIController : MonoBehaviour
         if (economyManager != null)
         {
             economyManager.BalanceChanged -= HandleBalanceChanged;
+        }
+
+        if (inventoryManager != null)
+        {
+            inventoryManager.InventoryChanged -= HandleInventoryChanged;
+        }
+
+        if (buildInventoryManager != null)
+        {
+            buildInventoryManager.InventoryChanged -= HandleInventoryChanged;
+        }
+
+        if (gridManager != null)
+        {
+            gridManager.PlacedObjectsChanged -= HandlePlacedObjectsChanged;
         }
     }
 
@@ -305,6 +353,16 @@ public class ShopUIController : MonoBehaviour
     private void HandleBalanceChanged(int newBalance)
     {
         RefreshBalance();
+        RefreshProductButtonStates();
+    }
+
+    private void HandleInventoryChanged()
+    {
+        RefreshProductButtonStates();
+    }
+
+    private void HandlePlacedObjectsChanged()
+    {
         RefreshProductButtonStates();
     }
 

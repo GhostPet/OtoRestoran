@@ -6,185 +6,152 @@ using UnityEngine;
 /// Grid'e yerleştirilecek objeler için ayrı tutulan build envanteridir.
 /// Bu sistem mutfak malzemelerinden bağımsızdır ve ileride PlacementController ile kolay bağlanacak şekilde yazılmıştır.
 /// </summary>
-public class BuildInventoryManager : MonoBehaviour
-{
-    [Header("Bağlantılar")]
-    [SerializeField] private ShopManager shopManager;
+public class BuildInventoryManager : MonoBehaviour {
+	[Header("Bağlantılar")]
+	[SerializeField] private ShopManager shopManager;
 
-    [Header("Başlangıç Verisi")]
-    [SerializeField] private List<BuildInventoryEntry> startingItems = new List<BuildInventoryEntry>();
+	[Header("Başlangıç Verisi")]
+	[SerializeField] private List<BuildInventoryEntry> startingItems = new List<BuildInventoryEntry>();
 
-    private readonly Dictionary<PlaceableData, int> placeableQuantities = new Dictionary<PlaceableData, int>();
+	private readonly Dictionary<PlaceableObjectSO, int> placeableQuantities = new Dictionary<PlaceableObjectSO, int>();
 
-    public event Action InventoryChanged;
-    public event Action<PlaceableData, int> BuildItemQuantityChanged;
+	public event Action InventoryChanged;
+	public event Action<PlaceableObjectSO, int> BuildItemQuantityChanged;
 
-    private void Awake()
-    {
-        RebuildRuntimeLookup();
-    }
+	private void Awake() {
+		RebuildRuntimeLookup();
+	}
 
-    private void OnEnable()
-    {
-        if (shopManager == null)
-        {
-            shopManager = FindObjectOfType<ShopManager>();
-        }
+	private void OnEnable() {
+		if (shopManager == null) {
+			shopManager = FindAnyObjectByType<ShopManager>();
+		}
 
-        if (shopManager != null)
-        {
-            shopManager.PurchaseCompleted += HandlePurchaseCompleted;
-            shopManager.SaleCompleted += HandleSaleCompleted;
-        }
-    }
+		if (shopManager != null) {
+			shopManager.PurchaseCompleted += HandlePurchaseCompleted;
+			shopManager.SaleCompleted += HandleSaleCompleted;
+		}
+	}
 
-    private void OnDisable()
-    {
-        if (shopManager != null)
-        {
-            shopManager.PurchaseCompleted -= HandlePurchaseCompleted;
-            shopManager.SaleCompleted -= HandleSaleCompleted;
-        }
-    }
+	private void OnDisable() {
+		if (shopManager != null) {
+			shopManager.PurchaseCompleted -= HandlePurchaseCompleted;
+			shopManager.SaleCompleted -= HandleSaleCompleted;
+		}
+	}
 
-    public int GetQuantity(PlaceableData placeableData)
-    {
-        if (placeableData == null)
-        {
-            return 0;
-        }
+	public int GetQuantity(PlaceableObjectSO placeableData) {
+		if (placeableData == null) {
+			return 0;
+		}
 
-        int quantity;
-        if (placeableQuantities.TryGetValue(placeableData, out quantity))
-        {
-            return quantity;
-        }
+		int quantity;
+		if (placeableQuantities.TryGetValue(placeableData, out quantity)) {
+			return quantity;
+		}
 
-        return 0;
-    }
+		return 0;
+	}
 
-    public bool HasEnough(PlaceableData placeableData, int quantity)
-    {
-        if (quantity <= 0)
-        {
-            return true;
-        }
+	public bool HasEnough(PlaceableObjectSO placeableData, int quantity) {
+		if (quantity <= 0) {
+			return true;
+		}
 
-        return GetQuantity(placeableData) >= quantity;
-    }
+		return GetQuantity(placeableData) >= quantity;
+	}
 
-    public void AddPlaceable(PlaceableData placeableData, int quantity)
-    {
-        if (placeableData == null || quantity <= 0)
-        {
-            return;
-        }
+	public void AddPlaceable(PlaceableObjectSO placeableData, int quantity) {
+		if (placeableData == null || quantity <= 0) {
+			return;
+		}
 
-        int currentQuantity = GetQuantity(placeableData);
-        int newQuantity = currentQuantity + quantity;
-        placeableQuantities[placeableData] = newQuantity;
+		int currentQuantity = GetQuantity(placeableData);
+		int newQuantity = currentQuantity + quantity;
+		placeableQuantities[placeableData] = newQuantity;
 
-        RaiseInventoryEvents(placeableData, newQuantity);
-    }
+		RaiseInventoryEvents(placeableData, newQuantity);
+	}
 
-    public bool TryRemovePlaceable(PlaceableData placeableData, int quantity)
-    {
-        if (placeableData == null || quantity <= 0)
-        {
-            return false;
-        }
+	public bool TryRemovePlaceable(PlaceableObjectSO placeableData, int quantity) {
+		if (placeableData == null || quantity <= 0) {
+			return false;
+		}
 
-        int currentQuantity = GetQuantity(placeableData);
-        if (currentQuantity < quantity)
-        {
-            return false;
-        }
+		int currentQuantity = GetQuantity(placeableData);
+		if (currentQuantity < quantity) {
+			return false;
+		}
 
-        int newQuantity = currentQuantity - quantity;
-        if (newQuantity <= 0)
-        {
-            placeableQuantities.Remove(placeableData);
-            newQuantity = 0;
-        }
-        else
-        {
-            placeableQuantities[placeableData] = newQuantity;
-        }
+		int newQuantity = currentQuantity - quantity;
+		if (newQuantity <= 0) {
+			placeableQuantities.Remove(placeableData);
+			newQuantity = 0;
+		} else {
+			placeableQuantities[placeableData] = newQuantity;
+		}
 
-        RaiseInventoryEvents(placeableData, newQuantity);
-        return true;
-    }
+		RaiseInventoryEvents(placeableData, newQuantity);
+		return true;
+	}
 
-    /// <summary>
-    /// Grid tarafı ileride yerleştirme başarılı olduğunda bu metodu çağırarak envanterden 1 adet düşebilir.
-    /// Böylece placement sistemi ile build inventory arasındaki bağ çok basit kalır.
-    /// </summary>
-    public bool TryConsumeForPlacement(PlaceableData placeableData)
-    {
-        return TryRemovePlaceable(placeableData, 1);
-    }
+	/// <summary>
+	/// Grid tarafı ileride yerleştirme başarılı olduğunda bu metodu çağırarak envanterden 1 adet düşebilir.
+	/// Böylece placement sistemi ile build inventory arasındaki bağ çok basit kalır.
+	/// </summary>
+	public bool TryConsumeForPlacement(PlaceableObjectSO placeableData) {
+		return TryRemovePlaceable(placeableData, 1);
+	}
 
-    public List<BuildInventoryEntry> CreateSnapshot()
-    {
-        var snapshot = new List<BuildInventoryEntry>();
+	public List<BuildInventoryEntry> CreateSnapshot() {
+		var snapshot = new List<BuildInventoryEntry>();
 
-        foreach (KeyValuePair<PlaceableData, int> pair in placeableQuantities)
-        {
-            snapshot.Add(new BuildInventoryEntry(pair.Key, pair.Value));
-        }
+		foreach (KeyValuePair<PlaceableObjectSO, int> pair in placeableQuantities) {
+			snapshot.Add(new BuildInventoryEntry(pair.Key, pair.Value));
+		}
 
-        return snapshot;
-    }
+		return snapshot;
+	}
 
-    private void RebuildRuntimeLookup()
-    {
-        placeableQuantities.Clear();
+	private void RebuildRuntimeLookup() {
+		placeableQuantities.Clear();
 
-        for (int i = 0; i < startingItems.Count; i++)
-        {
-            BuildInventoryEntry entry = startingItems[i];
-            if (entry == null || entry.PlaceableData == null || entry.Quantity <= 0)
-            {
-                continue;
-            }
+		for (int i = 0; i < startingItems.Count; i++) {
+			BuildInventoryEntry entry = startingItems[i];
+			if (entry == null || entry.PlaceableData == null || entry.Quantity <= 0) {
+				continue;
+			}
 
-            AddPlaceable(entry.PlaceableData, entry.Quantity);
-        }
-    }
+			AddPlaceable(entry.PlaceableData, entry.Quantity);
+		}
+	}
 
-    private void HandlePurchaseCompleted(ShopTransactionEventArgs args)
-    {
-        if (args == null || args.Product == null)
-        {
-            return;
-        }
+	private void HandlePurchaseCompleted(ShopTransactionEventArgs args) {
+		if (args == null || args.Product == null) {
+			return;
+		}
 
-        if (args.Product.StorageType != ShopProductStorageType.BuildInventory)
-        {
-            return;
-        }
+		if (args.Product.StorageType != ShopProductStorageType.BuildInventory) {
+			return;
+		}
 
-        AddPlaceable(args.Product.BuildPlaceableData, args.Quantity);
-    }
+		AddPlaceable(args.Product.BuildPlaceableData, args.Quantity);
+	}
 
-    private void HandleSaleCompleted(ShopTransactionEventArgs args)
-    {
-        if (args == null || args.Product == null)
-        {
-            return;
-        }
+	private void HandleSaleCompleted(ShopTransactionEventArgs args) {
+		if (args == null || args.Product == null) {
+			return;
+		}
 
-        if (args.Product.StorageType != ShopProductStorageType.BuildInventory)
-        {
-            return;
-        }
+		if (args.Product.StorageType != ShopProductStorageType.BuildInventory) {
+			return;
+		}
 
-        TryRemovePlaceable(args.Product.BuildPlaceableData, args.Quantity);
-    }
+		TryRemovePlaceable(args.Product.BuildPlaceableData, args.Quantity);
+	}
 
-    private void RaiseInventoryEvents(PlaceableData placeableData, int quantity)
-    {
-        BuildItemQuantityChanged?.Invoke(placeableData, quantity);
-        InventoryChanged?.Invoke();
-    }
+	private void RaiseInventoryEvents(PlaceableObjectSO placeableData, int quantity) {
+		BuildItemQuantityChanged?.Invoke(placeableData, quantity);
+		InventoryChanged?.Invoke();
+	}
 }

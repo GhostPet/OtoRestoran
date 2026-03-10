@@ -6,255 +6,220 @@ using UnityEngine.UI;
 /// Tek bir ürün kartının UI mantığını yönetir.
 /// Görselleri doldurur, adet bilgisini okur ve satın al/sat butonlarını controller'a yönlendirir.
 /// </summary>
-public class ShopProductItemUI : MonoBehaviour
-{
-    [SerializeField] private Image iconImage;
-    [SerializeField] private TMP_Text productNameText;
-    [SerializeField] private TMP_Text descriptionText;
-    [SerializeField] private TMP_Text buyPriceText;
-    [SerializeField] private TMP_Text sellPriceText;
-    [SerializeField] private TMP_Text quantityInfoText;
-    [SerializeField] private TMP_Text ownedQuantityText;
-    [SerializeField] private TMP_Text availabilityText;
-    [SerializeField] private TMP_InputField quantityInputField;
-    [SerializeField] private Button buyButton;
-    [SerializeField] private Button sellButton;
+public class ShopProductItemUI : MonoBehaviour {
+	[SerializeField] private Image iconImage;
+	[SerializeField] private TMP_Text productNameText;
+	[SerializeField] private TMP_Text descriptionText;
+	[SerializeField] private TMP_Text buyPriceText;
+	[SerializeField] private TMP_Text sellPriceText;
+	[SerializeField] private TMP_Text quantityInfoText;
+	[SerializeField] private TMP_Text ownedQuantityText;
+	[SerializeField] private TMP_Text availabilityText;
+	[SerializeField] private TMP_InputField quantityInputField;
+	[SerializeField] private Button buyButton;
+	[SerializeField] private Button sellButton;
 
-    private ShopUIController controller;
-    private ShopProductDefinitionSO product;
+	private ShopUIController controller;
+	private ShopProductDefinitionSO product;
 
-    public void Bind(ShopUIController owner, ShopProductDefinitionSO productDefinition)
-    {
-        controller = owner;
-        product = productDefinition;
+	public void Bind(ShopUIController owner, ShopProductDefinitionSO productDefinition) {
+		controller = owner;
+		product = productDefinition;
 
-        ApplyVisuals();
-        RegisterButtons();
-        RefreshInteractableState();
-    }
+		ApplyVisuals();
+		RegisterButtons();
+		RefreshInteractableState();
+	}
 
-    public void RefreshInteractableState()
-    {
-        if (controller == null || product == null)
-        {
-            SetButtonState(buyButton, false);
-            SetButtonState(sellButton, false);
-            return;
-        }
+	public void RefreshInteractableState() {
+		if (controller == null || product == null) {
+			SetButtonState(buyButton, false);
+			SetButtonState(sellButton, false);
+			return;
+		}
 
-        int quantity = GetTransactionQuantity();
+		int quantity = GetTransactionQuantity();
 
-        RefreshPricingTexts(quantity);
-        RefreshOwnedQuantityText();
+		RefreshPricingTexts(quantity);
+		RefreshOwnedQuantityText();
 
-        string purchaseReason = string.Empty;
-        bool canPurchase = false;
-        if (controller != null && controller.ShopManager != null)
-        {
-            canPurchase = controller.ShopManager.CanPurchase(product, quantity, out purchaseReason);
-        }
+		string purchaseReason = string.Empty;
+		bool canPurchase = false;
+		if (controller != null && controller.ShopManager != null) {
+			canPurchase = controller.ShopManager.CanPurchase(product, quantity, out purchaseReason);
+		}
 
-        string sellReason = string.Empty;
-        bool canSell = false;
-        if (controller != null && controller.ShopManager != null)
-        {
-            canSell = controller.ShopManager.CanSell(product, quantity, out sellReason);
-        }
+		string sellReason = string.Empty;
+		bool canSell = false;
+		if (controller != null && controller.ShopManager != null) {
+			canSell = controller.ShopManager.CanSell(product, quantity, out sellReason);
+		}
 
-        SetButtonState(buyButton, canPurchase);
+		SetButtonState(buyButton, canPurchase);
 
-        if (sellButton != null)
-        {
-            sellButton.gameObject.SetActive(product.CanBeSold);
-            SetButtonState(sellButton, canSell && product.CanBeSold);
-        }
+		if (sellButton != null) {
+			sellButton.gameObject.SetActive(product.CanBeSold);
+			SetButtonState(sellButton, canSell && product.CanBeSold);
+		}
 
-        if (sellPriceText != null)
-        {
-            sellPriceText.gameObject.SetActive(product.CanBeSold);
-        }
+		if (sellPriceText != null) {
+			sellPriceText.gameObject.SetActive(product.CanBeSold);
+		}
 
-        if (availabilityText != null)
-        {
-            if (canPurchase)
-            {
-                availabilityText.text = "Satın alınabilir";
-            }
-            else
-            {
-                availabilityText.text = string.IsNullOrWhiteSpace(purchaseReason) ? "Şu anda satın alınamaz" : purchaseReason;
-            }
-        }
-    }
+		if (availabilityText != null) {
+			if (canPurchase) {
+				availabilityText.text = "Satın alınabilir";
+			} else {
+				availabilityText.text = string.IsNullOrWhiteSpace(purchaseReason) ? "Şu anda satın alınamaz" : purchaseReason;
+			}
+		}
+	}
 
-    private void ApplyVisuals()
-    {
-        if (productNameText != null)
-        {
-            productNameText.text = product != null ? product.DisplayName : "Ürün";
-        }
+	private void ApplyVisuals() {
+		if (productNameText != null) {
+			productNameText.text = product != null ? product.DisplayName : "Ürün";
+		}
 
-        if (descriptionText != null)
-        {
-            descriptionText.text = product != null ? product.Description : string.Empty;
-        }
+		if (descriptionText != null) {
+			descriptionText.text = product != null ? product.Description : string.Empty;
+		}
 
-        RefreshPricingTexts(GetTransactionQuantity());
-        RefreshOwnedQuantityText();
+		RefreshPricingTexts(GetTransactionQuantity());
+		RefreshOwnedQuantityText();
 
-        if (iconImage != null)
-        {
-            if (product != null && product.Icon != null)
-            {
-                iconImage.sprite = product.Icon;
-                iconImage.enabled = true;
-            }
-            else
-            {
-                iconImage.enabled = false;
-            }
-        }
+		if (iconImage != null) {
+			if (product != null && product.Icon != null) {
+				iconImage.sprite = product.Icon;
+				iconImage.enabled = true;
+			} else {
+				iconImage.enabled = false;
+			}
+		}
 
-        if (quantityInputField != null)
-        {
-            quantityInputField.gameObject.SetActive(false);
-        }
-    }
+		if (quantityInputField != null) {
+			quantityInputField.gameObject.SetActive(false);
+		}
+	}
 
-    private void RegisterButtons()
-    {
-        if (buyButton != null)
-        {
-            buyButton.onClick.RemoveListener(OnBuyClicked);
-            buyButton.onClick.AddListener(OnBuyClicked);
-        }
+	private void RegisterButtons() {
+		if (buyButton != null) {
+			buyButton.onClick.RemoveListener(OnBuyClicked);
+			buyButton.onClick.AddListener(OnBuyClicked);
+		}
 
-        if (sellButton != null)
-        {
-            sellButton.onClick.RemoveListener(OnSellClicked);
-            sellButton.onClick.AddListener(OnSellClicked);
-        }
+		if (sellButton != null) {
+			sellButton.onClick.RemoveListener(OnSellClicked);
+			sellButton.onClick.AddListener(OnSellClicked);
+		}
 
-        if (quantityInputField != null)
-        {
-            quantityInputField.onEndEdit.RemoveListener(HandleQuantityEdited);
-            quantityInputField.onEndEdit.AddListener(HandleQuantityEdited);
-        }
-    }
+		if (quantityInputField != null) {
+			quantityInputField.onEndEdit.RemoveListener(HandleQuantityEdited);
+			quantityInputField.onEndEdit.AddListener(HandleQuantityEdited);
+		}
+	}
 
-    private void HandleQuantityEdited(string value)
-    {
-        if (quantityInputField == null)
-        {
-            return;
-        }
+	private void HandleQuantityEdited(string value) {
+		if (quantityInputField == null) {
+			return;
+		}
 
-        int quantity = GetRequestedQuantity();
-        quantityInputField.text = quantity.ToString();
-        RefreshInteractableState();
-    }
+		int quantity = GetRequestedQuantity();
+		quantityInputField.text = quantity.ToString();
+		RefreshInteractableState();
+	}
 
-    private void RefreshPricingTexts(int quantity)
-    {
-        if (product == null)
-        {
-            if (buyPriceText != null)
-            {
-                buyPriceText.text = "Alış: -";
-            }
+	private void RefreshPricingTexts(int quantity) {
+		if (product == null) {
+			if (buyPriceText != null) {
+				buyPriceText.text = "Alış: -";
+			}
 
-            if (sellPriceText != null)
-            {
-                sellPriceText.text = "Satış: -";
-            }
+			if (sellPriceText != null) {
+				sellPriceText.text = "Satış: -";
+			}
 
-            if (quantityInfoText != null)
-            {
-                quantityInfoText.text = "Adet: -";
-            }
+			if (quantityInfoText != null) {
+				quantityInfoText.text = "Adet: -";
+			}
 
-            return;
-        }
+			return;
+		}
 
-        int buyUnitPrice = product.GetBuyUnitPrice(quantity);
-        int sellUnitPrice = product.GetSellUnitPrice(quantity);
-        int buyTotalPrice = product.GetBuyTotalPrice(quantity);
-        int sellTotalPrice = product.GetSellTotalPrice(quantity);
+		int buyUnitPrice = product.GetBuyUnitPrice(quantity);
+		int sellUnitPrice = product.GetSellUnitPrice(quantity);
+		int buyTotalPrice = product.GetBuyTotalPrice(quantity);
+		int sellTotalPrice = product.GetSellTotalPrice(quantity);
 
-        if (quantityInfoText != null)
-        {
-            quantityInfoText.text = product.CanBeSold ? "Al / Sat Miktarı: " + quantity : "Alım Miktarı: " + quantity;
-        }
+		if (quantityInfoText != null) {
+			quantityInfoText.text = product.CanBeSold ? "Al / Sat Miktarı: " + quantity : "Alım Miktarı: " + quantity;
+		}
 
-        if (buyPriceText != null)
-        {
-            buyPriceText.text = "Alış Fiyatı: " + buyTotalPrice;
-        }
+		if (buyPriceText != null) {
+			buyPriceText.text = "Alış Fiyatı: " + buyTotalPrice;
+		}
 
-        if (sellPriceText != null)
-        {
-            sellPriceText.text = "Satış Fiyatı: " + sellTotalPrice;
-        }
-    }
+		if (sellPriceText != null) {
+			sellPriceText.text = "Satış Fiyatı: " + sellTotalPrice;
+		}
+	}
 
-    private void RefreshOwnedQuantityText()
-    {
-        if (ownedQuantityText == null)
-        {
-            return;
-        }
+	private void RefreshOwnedQuantityText() {
+		if (ownedQuantityText == null) {
+			return;
+		}
 
-        if (controller == null || controller.ShopManager == null || product == null)
-        {
-            ownedQuantityText.text = "Envanter: -";
-            return;
-        }
+		if (controller == null || controller.ShopManager == null || product == null) {
+			ownedQuantityText.text = "Envanter: -";
+			return;
+		}
 
-        ownedQuantityText.text = "Envanter: " + controller.ShopManager.GetOwnedQuantity(product);
-    }
+		if (product.StorageType == ShopProductStorageType.BuildInventory) {
+			int stockQuantity = controller.ShopManager.GetOwnedQuantity(product);
+			int placedQuantity = controller.ShopManager.GetPlacedQuantity(product);
+			int ownershipLimit = controller.ShopManager.GetOwnershipLimit(product);
 
-    private void OnBuyClicked()
-    {
-        if (controller == null || product == null)
-        {
-            return;
-        }
+			ownedQuantityText.text = ownershipLimit > 0
+				? "Stok: " + stockQuantity + " | Kullanımda: " + placedQuantity + " / " + ownershipLimit
+				: "Stok: " + stockQuantity + " | Kullanımda: " + placedQuantity;
+			return;
+		}
 
-        controller.HandleBuyClicked(product, GetTransactionQuantity());
-    }
+		ownedQuantityText.text = "Envanter: " + controller.ShopManager.GetOwnedQuantity(product);
+	}
 
-    private void OnSellClicked()
-    {
-        if (controller == null || product == null)
-        {
-            return;
-        }
+	private void OnBuyClicked() {
+		if (controller == null || product == null) {
+			return;
+		}
 
-        controller.HandleSellClicked(product, GetTransactionQuantity());
-    }
+		controller.HandleBuyClicked(product, GetTransactionQuantity());
+	}
 
-    private int GetRequestedQuantity()
-    {
-        return GetTransactionQuantity();
-    }
+	private void OnSellClicked() {
+		if (controller == null || product == null) {
+			return;
+		}
 
-    private int GetTransactionQuantity()
-    {
-        if (product == null)
-        {
-            return 1;
-        }
+		controller.HandleSellClicked(product, GetTransactionQuantity());
+	}
 
-        return product.TransactionQuantity > 0 ? product.TransactionQuantity : 1;
-    }
+	private int GetRequestedQuantity() {
+		return GetTransactionQuantity();
+	}
 
-    private void SetButtonState(Button targetButton, bool isEnabled)
-    {
-        if (targetButton == null)
-        {
-            return;
-        }
+	private int GetTransactionQuantity() {
+		if (product == null) {
+			return 1;
+		}
 
-        targetButton.interactable = isEnabled;
-    }
+		return product.TransactionQuantity > 0 ? product.TransactionQuantity : 1;
+	}
+
+	private void SetButtonState(Button targetButton, bool isEnabled) {
+		if (targetButton == null) {
+			return;
+		}
+
+		targetButton.interactable = isEnabled;
+	}
 }
