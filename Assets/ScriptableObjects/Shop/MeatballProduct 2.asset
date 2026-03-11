@@ -22,6 +22,7 @@ MonoBehaviour:
   canBePurchased: 1
   canBeSold: 0
   transactionQuantity: 500
+  requiredGameScore: 100
   storageType: 1
   consumableItem: {fileID: 11400000, guid: 4d3cb230ad3bd4a4581f3c399d79643e, type: 2}
   buildPlaceableData: {fileID: 0}

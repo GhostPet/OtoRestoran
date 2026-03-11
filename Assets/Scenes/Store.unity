@@ -1722,6 +1722,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShopManager
   economyManager: {fileID: 18762715}
+  gameScoreManager: {fileID: 1680019780}
   inventoryManager: {fileID: 468060992}
   buildInventoryManager: {fileID: 1766432068}
   gridManager: {fileID: 1669716844}
@@ -2204,6 +2205,55 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 135, y: -30, z: 0}
+--- !u!1 &805126658
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 805126660}
+  - component: {fileID: 805126659}
+  m_Layer: 0
+  m_Name: RestaurantRatingManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &805126659
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 805126658}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99d716c31bf30ed41b691a0aa68cae8d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RestaurantRatingManager
+  startingRating: 5
+  initializeOnAwake: 1
+  minimumRating: 1
+  maximumRating: 10
+  initialVirtualVoteCount: 5
+--- !u!4 &805126660
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 805126658}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1132.478, y: 0.00004, z: 4797.446}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &865025561
 GameObject:
   m_ObjectHideFlags: 0
@@ -2297,6 +2347,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopUIController
   shopManager: {fileID: 423598008}
   economyManager: {fileID: 18762715}
+  gameScoreManager: {fileID: 1680019780}
   inventoryManager: {fileID: 468060992}
   buildInventoryManager: {fileID: 1766432068}
   gridManager: {fileID: 1669716844}
@@ -4267,6 +4318,52 @@ MonoBehaviour:
   showGizmos: 1
   autoChairData: {fileID: 11400000, guid: 7d34609a203708145acccb37c2b8a417, type: 2}
   buildInventoryManager: {fileID: 1766432068}
+--- !u!1 &1680019779
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1680019781}
+  - component: {fileID: 1680019780}
+  m_Layer: 0
+  m_Name: GameScoreManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1680019780
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1680019779}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb225f2c66e580e4996ce1cf5cea0e95, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameScoreManager
+  startingScore: 150
+  initializeOnAwake: 1
+--- !u!4 &1680019781
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1680019779}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1132.478, y: 0.00004, z: 4797.446}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1695875243
 GameObject:
   m_ObjectHideFlags: 0
@@ -5762,3 +5859,5 @@ SceneRoots:
   - {fileID: 423598009}
   - {fileID: 468060993}
   - {fileID: 1766432069}
+  - {fileID: 1680019781}
+  - {fileID: 805126660}

@@ -12,6 +12,7 @@ public class ShopUIController : MonoBehaviour
     [Header("Sistem Referansları")]
     [SerializeField] private ShopManager shopManager;
     [SerializeField] private EconomyManager economyManager;
+    [SerializeField] private GameScoreManager gameScoreManager;
     [SerializeField] private InventoryManager inventoryManager;
     [SerializeField] private BuildInventoryManager buildInventoryManager;
     [SerializeField] private GridManager gridManager;
@@ -67,6 +68,11 @@ public class ShopUIController : MonoBehaviour
         if (economyManager == null)
         {
             economyManager = FindAnyObjectByType<EconomyManager>();
+        }
+
+        if (gameScoreManager == null)
+        {
+            gameScoreManager = FindAnyObjectByType<GameScoreManager>();
         }
 
         if (inventoryManager == null)
@@ -289,6 +295,11 @@ public class ShopUIController : MonoBehaviour
             economyManager.BalanceChanged += HandleBalanceChanged;
         }
 
+        if (gameScoreManager != null)
+        {
+            gameScoreManager.ScoreChanged += HandleGameScoreChanged;
+        }
+
         if (inventoryManager != null)
         {
             inventoryManager.InventoryChanged += HandleInventoryChanged;
@@ -317,6 +328,11 @@ public class ShopUIController : MonoBehaviour
         if (economyManager != null)
         {
             economyManager.BalanceChanged -= HandleBalanceChanged;
+        }
+
+        if (gameScoreManager != null)
+        {
+            gameScoreManager.ScoreChanged -= HandleGameScoreChanged;
         }
 
         if (inventoryManager != null)
@@ -353,6 +369,11 @@ public class ShopUIController : MonoBehaviour
     private void HandleBalanceChanged(int newBalance)
     {
         RefreshBalance();
+        RefreshProductButtonStates();
+    }
+
+    private void HandleGameScoreChanged(int newScore)
+    {
         RefreshProductButtonStates();
     }
 

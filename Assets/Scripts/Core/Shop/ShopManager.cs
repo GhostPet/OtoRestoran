@@ -5,6 +5,7 @@ using UnityEngine;
 public class ShopManager : MonoBehaviour {
 	[Header("Bağlantılar")]
 	[SerializeField] private EconomyManager economyManager;
+ [SerializeField] private GameScoreManager gameScoreManager;
 	[SerializeField] private InventoryManager inventoryManager;
 	[SerializeField] private BuildInventoryManager buildInventoryManager;
 	[SerializeField] private GridManager gridManager;
@@ -52,6 +53,10 @@ public class ShopManager : MonoBehaviour {
 	private void Awake() {
 		if (economyManager == null) {
 			economyManager = FindAnyObjectByType<EconomyManager>();
+		}
+
+		if (gameScoreManager == null) {
+			gameScoreManager = FindAnyObjectByType<GameScoreManager>();
 		}
 
 		if (inventoryManager == null) {
@@ -267,6 +272,14 @@ public class ShopManager : MonoBehaviour {
 		return product.BuildPlaceableData.maxOwnedCount;
 	}
 
+	public int GetCurrentGameScore() {
+		if (gameScoreManager == null) {
+			return 0;
+		}
+
+		return gameScoreManager.CurrentScore;
+	}
+
 	private void InitializeSelectedTab() {
 		if (catalog == null) {
 			selectedTabId = string.Empty;
@@ -296,6 +309,10 @@ public class ShopManager : MonoBehaviour {
 
 		if (!product.CanBePurchased) {
 			message = "Bu ürün şu anda satın alınamaz durumda.";
+			return false;
+		}
+
+		if (!HasRequiredGameScore(product, out message)) {
 			return false;
 		}
 
@@ -374,6 +391,31 @@ public class ShopManager : MonoBehaviour {
 	private void PublishOperation(ShopOperationResult result) {
 		PublishMessage(result.Message);
 		OperationProcessed?.Invoke(result);
+	}
+
+	private bool HasRequiredGameScore(ShopProductDefinitionSO product, out string message) {
+		if (product == null) {
+			message = "Ürün bilgisi bulunamadı.";
+			return false;
+		}
+
+		if (product.RequiredGameScore <= 0) {
+			message = string.Empty;
+			return true;
+		}
+
+		if (gameScoreManager == null) {
+			message = "GameScoreManager bulunamadığı için ürün kilidi kontrol edilemedi.";
+			return false;
+		}
+
+		if (!gameScoreManager.HasRequiredScore(product.RequiredGameScore)) {
+			message = "Bu ürünü açmak için en az " + product.RequiredGameScore + " game score gerekiyor.";
+			return false;
+		}
+
+		message = string.Empty;
+		return true;
 	}
 
 	private int ResolveTransactionQuantity(ShopProductDefinitionSO product, int requestedQuantity) {

@@ -24,6 +24,7 @@ public class ShopProductDefinitionSO : ScriptableObject
     [SerializeField] private bool canBePurchased = true;
     [SerializeField] private bool canBeSold = true;
     [SerializeField] private int transactionQuantity = 1;
+    [SerializeField] private int requiredGameScore;
 
     [Header("Envanter Hedefi")]
     [SerializeField] private ShopProductStorageType storageType = ShopProductStorageType.None;
@@ -63,6 +64,12 @@ public class ShopProductDefinitionSO : ScriptableObject
     /// Örnek: 10'lu köfte paketi, 100'lü köfte paketi, 500'lü köfte paketi.
     /// </summary>
     public int TransactionQuantity => transactionQuantity;
+
+    /// <summary>
+    /// Bu ürünün shopta satın alınabilmesi için gereken minimum game score değeridir.
+    /// 0 ise ürün baştan açık kabul edilir.
+    /// </summary>
+    public int RequiredGameScore => requiredGameScore;
 
     /// <summary>
     /// Ürün satın alındığında hangi sisteme gideceğini belirtir.
@@ -125,6 +132,11 @@ public class ShopProductDefinitionSO : ScriptableObject
         if (transactionQuantity < 1)
         {
             transactionQuantity = 1;
+        }
+
+        if (requiredGameScore < 0)
+        {
+            requiredGameScore = 0;
         }
     }
 }

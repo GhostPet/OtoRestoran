@@ -21,8 +21,8 @@ MonoBehaviour:
   sellPrice: 400
   canBePurchased: 1
   canBeSold: 1
-  maxTransactionQuantity: 1
+  transactionQuantity: 1
+  requiredGameScore: 200
   storageType: 2
   consumableItem: {fileID: 0}
   buildPlaceableData: {fileID: 11400000, guid: 3d8bf5eaad54d2d43a5d1a58a582d37b, type: 2}
-  priceTiers: []
