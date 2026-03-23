@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 7547249476997559286}
   - component: {fileID: 6644385458583159251}
   - component: {fileID: 43269038183617936}
+  - component: {fileID: 7137854425254889904}
   m_Layer: 5
   m_Name: CodeWindowPrefab
   m_TagString: Untagged
@@ -119,6 +120,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WindowDrag
   window: {fileID: 7417894309570578174}
   dragSpeed: 1
+--- !u!114 &7137854425254889904
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 377434338903116456}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64bcdf7897f4874439644483b763f3cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaveSystemUI
+  savedListWindow: {fileID: 0}
+  listContentParent: {fileID: 0}
+  savedItemPrefab: {fileID: 8913529804298695752, guid: 4be008df0e41bd447bd02a3641b363fa, type: 3}
+  codeEditorWindow: {fileID: 377434338903116456}
+  taskNameInputField: {fileID: 3011336567516839516}
+  mainCodeInputField: {fileID: 1250714890988883329}
 --- !u!1 &481985354394861090
 GameObject:
   m_ObjectHideFlags: 0
@@ -2765,7 +2784,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9df522510fd7ce14abf6e1ed6ba06e8f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TaskNameValidator
-  input: {fileID: 0}
+  input: {fileID: 3011336567516839516}
   blockLeadingSpecial: 1
   blockDoubleSpecial: 1
 --- !u!114 &4207896567630764004

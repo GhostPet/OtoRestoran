@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -27,7 +26,7 @@ public class OpenCodeEditor : MonoBehaviour {
 		if (!img) {
 			img = window.GetComponentInChildren<Image>(true);
 		}
-		img.sprite = robotSprite;
+		if (img != null) img.sprite = robotSprite;
 
 		// Add the editor and the robot to the GameCodeRunner.
 		CodeEditor editor = window.GetComponentInChildren<CodeEditor>(true);
@@ -43,9 +42,20 @@ public class OpenCodeEditor : MonoBehaviour {
 			runBtn = window.GetComponentInChildren<Button>(true);
 		}
 
-		TMP_InputField input = editor.gameObject.GetComponent<TMP_InputField>();
+		TMP_InputField input = null;
+		if (editor != null) {
+			input = editor.gameObject.GetComponent<TMP_InputField>();
+		}
 
 		// Register the editor with the GameCodeRunner so it wires the run listener now
-		gameCodeRunner.RegisterEditor(input, runBtn, robot);
+		if (gameCodeRunner != null) {
+			gameCodeRunner.RegisterEditor(input, runBtn, robot);
+		}
+
+		SaveSystemUI saveSystemUI = window.GetComponentInChildren<SaveSystemUI>(true);
+		if (saveSystemUI != null) {
+			saveSystemUI.BindRobotContext(gameCodeRunner, robot);
+			saveSystemUI.EnsureLinkedProgramEntry();
+		}
 	}
 }

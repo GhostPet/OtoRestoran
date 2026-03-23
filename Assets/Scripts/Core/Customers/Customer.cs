@@ -1,6 +1,8 @@
-using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.AI;
 
+[RequireComponent(typeof(NavMeshAgent))]
 public class Customer : MonoBehaviour {
 	[Header("Timings")]
 	[SerializeField] private float thinkDuration = 2.0f;   // Oturduktan sonra düşünme
@@ -10,10 +12,13 @@ public class Customer : MonoBehaviour {
 	[SerializeField] private float moveSpeed = 2.5f;
 	[SerializeField] private float rotateSpeed = 10f;
 	[SerializeField] private float seatSnapDistance = 0.05f;
+	[SerializeField] private float seatSnapTriggerDistance = 0.75f;
 	[SerializeField] private List<string> defaultOrderItems = new() { "Meal" };
 
+	private NavMeshAgent agent;
 	private ChairBehavior chair;
 	private TableBehavior table;
+	private Transform spawnPoint;
 
 	private CustomerState state = CustomerState.Seating;
 	private float stateTimer;
@@ -33,11 +38,30 @@ public class Customer : MonoBehaviour {
 	public bool IsOrderTaken => orderTaken;
 	public bool IsOrderServed => orderServed;
 
+	private void Awake() {
+		agent = GetComponent<NavMeshAgent>();
+		if (agent == null)
+			agent = gameObject.AddComponent<NavMeshAgent>();
+
+		agent.speed = moveSpeed;
+		agent.angularSpeed = Mathf.Max(120f, rotateSpeed * 36f);
+		agent.stoppingDistance = seatSnapDistance;
+		agent.updateRotation = true;
+		agent.updatePosition = true;
+	}
+
 	private void Update() {
 		TickMovement();
 		TickState();
 	}
 
+	public void SetSpawnPoint(Transform point) {
+		spawnPoint = point;
+
+		if (spawnPoint != null) {
+			WarpTo(spawnPoint.position, spawnPoint.rotation);
+		}
+	}
 
 	// Spawner -> Assign'ten sonra çağırılmalı
 	public void SetSeat(ChairBehavior chair) {
@@ -133,8 +157,10 @@ public class Customer : MonoBehaviour {
 		state = CustomerState.Leaving;
 		Debug.Log($"[Customer] {name} -> Leaving");
 
-		// Kapı / çıkış noktası daha sonra spawn manager tarafından verilebilir
-		SetMoveTarget(transform.position + transform.forward * 4f);
+		if (spawnPoint != null)
+			SetMoveTarget(spawnPoint.position);
+		else
+			SetMoveTarget(transform.position + transform.forward * 4f);
 	}
 
 
@@ -188,11 +214,24 @@ public class Customer : MonoBehaviour {
 	private void SetMoveTarget(Vector3 worldPos) {
 		moveTarget = worldPos;
 		hasMoveTarget = true;
+
+		if (CanUseNavMeshAgent()) {
+			agent.stoppingDistance = seatSnapDistance;
+			agent.SetDestination(worldPos);
+		}
 	}
 
 	private void TickMovement() {
 		if (!hasMoveTarget)
 			return;
+
+		if (CanUseNavMeshAgent()) {
+			if (HasReachedDestination()) {
+				hasMoveTarget = false;
+				agent.ResetPath();
+			}
+			return;
+		}
 
 		Vector3 to = moveTarget - transform.position;
 		to.y = 0f;
@@ -213,8 +252,56 @@ public class Customer : MonoBehaviour {
 	}
 
 	private void SnapToSeat() {
-		if (chair != null)
-			transform.SetPositionAndRotation(chair.transform.position, chair.transform.rotation);
+		if (chair != null) {
+			WarpTo(chair.transform.position, chair.transform.rotation, true);
+		}
+	}
+
+	private bool CanUseNavMeshAgent() {
+		return agent != null && agent.enabled && agent.isOnNavMesh;
+	}
+
+	private bool HasReachedDestination() {
+		if (state == CustomerState.Seating && IsCloseEnoughToSeat())
+			return true;
+
+		if (!CanUseNavMeshAgent())
+			return false;
+
+		if (agent.pathPending)
+			return false;
+
+		if (agent.remainingDistance > Mathf.Max(agent.stoppingDistance, seatSnapDistance))
+			return false;
+
+		if (agent.hasPath && agent.velocity.sqrMagnitude > 0.01f)
+			return false;
+
+		return true;
+	}
+
+	private bool IsCloseEnoughToSeat() {
+		if (chair == null)
+			return false;
+
+		Vector3 offset = chair.transform.position - transform.position;
+		offset.y = 0f;
+		return offset.sqrMagnitude <= seatSnapTriggerDistance * seatSnapTriggerDistance;
+	}
+
+	private void WarpTo(Vector3 position, Quaternion rotation, bool disableAgentAfterWarp = false) {
+		if (CanUseNavMeshAgent()) {
+			if (disableAgentAfterWarp) {
+				agent.ResetPath();
+				agent.enabled = false;
+			} else {
+				agent.Warp(position);
+				agent.ResetPath();
+				agent.nextPosition = position;
+			}
+		}
+
+		transform.SetPositionAndRotation(position, rotation);
 	}
 
 

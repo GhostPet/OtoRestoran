@@ -8,11 +8,16 @@ public class SavedProgramItem : MonoBehaviour, IPointerClickHandler {
 	[TextArea(3, 10)] // Inspector'da kodun tamamını rahatça görmek için
 	public string programCode;
 
-	private float doubleClickDelay = 0.3f;
+	private SaveSystemUI owner;
 
 	public void Setup(string pName, string pCode) {
+		Setup(pName, pCode, null);
+	}
+
+	public void Setup(string pName, string pCode, SaveSystemUI saveSystem) {
 		programName = pName;
 		programCode = pCode;
+		owner = saveSystem;
 
 		TMP_Text itemText = GetComponentInChildren<TMP_Text>();
 		if (itemText != null) {
@@ -21,27 +26,32 @@ public class SavedProgramItem : MonoBehaviour, IPointerClickHandler {
 	}
 
 	public void OnPointerClick(PointerEventData eventData) {
-		if (eventData.clickCount == 1) {
-			Invoke("SingleClickAction", doubleClickDelay);
-		} else if (eventData.clickCount == 2) {
-			CancelInvoke("SingleClickAction");
+		if (eventData.clickCount == 2) {
 			DoubleClickAction();
 		}
 	}
 
-	private void SingleClickAction() {
-		// 1 KERE TIKLANDI: Sistemi çalıştır
-		SaveSystemUI saveSystem = FindAnyObjectByType<SaveSystemUI>();
+	private void DoubleClickAction() {
+		// 2 KERE TIKLANDI: Bağlı editör penceresini tekrar aç
+		SaveSystemUI saveSystem = ResolveOwner();
 		if (saveSystem != null) {
-			saveSystem.RunProgram(programName, programCode);
+			saveSystem.ShowLinkedProgram();
 		}
 	}
 
-	private void DoubleClickAction() {
-		// 2 KERE TIKLANDI: Kodu düzenlemek için editöre geri yükle
-		SaveSystemUI saveSystem = FindAnyObjectByType<SaveSystemUI>();
+	public void OnRunButtonClicked() {
+		SaveSystemUI saveSystem = ResolveOwner();
 		if (saveSystem != null) {
-			saveSystem.LoadProgramToEditor(programName, programCode);
+			saveSystem.RunCurrentProgram();
 		}
+	}
+
+	private SaveSystemUI ResolveOwner() {
+		if (owner != null) {
+			return owner;
+		}
+
+		owner = GetComponentInParent<SaveSystemUI>();
+		return owner;
 	}
 }

@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d279f190e11ca0f419e3e951c994b0a9, type: 3}
+  m_Name: 004_RobotSpawnPoint
+  m_EditorClassIdentifier: Assembly-CSharp::PlaceableObjectSO
+  id: 4
+  prefab: {fileID: 8554206690560874721, guid: 9e090252842692b40ae37162da5234b7, type: 3}
+  size: {x: 1, y: 1}
+  pivot: {x: 0, y: 0}
+  maxOwnedCount: 1

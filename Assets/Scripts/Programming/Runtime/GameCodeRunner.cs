@@ -10,6 +10,7 @@ public class GameCodeRunner : MonoBehaviour {
 	public List<TMP_InputField> codeInputs;
 	public List<Button> runButtons;
 	public List<RobotExecutor> executors;
+	[SerializeField] private bool executionEnabled = true;
 
 	// Track active interpreters per executor so stopping/starting one does not
 	// affect others.
@@ -20,6 +21,10 @@ public class GameCodeRunner : MonoBehaviour {
 
 	private readonly Dictionary<Button, UnityAction> _buttonListeners
 		= new(EqualityComparer<Button>.Default);
+	private readonly Dictionary<RobotExecutor, int> _editorIndices
+		= new(EqualityComparer<RobotExecutor>.Default);
+
+	public bool ExecutionEnabled => executionEnabled;
 
 	private void OnDestroy() {
 		// Remove listeners added via RegisterEditor
@@ -43,15 +48,26 @@ public class GameCodeRunner : MonoBehaviour {
 		executors.Add(executor);
 
 		int index = codeInputs.Count - 1;
+		if (executor != null) {
+			_editorIndices[executor] = index;
+		}
+
 		void action() => ToggleRunForIndex(index);
 		if (runButton != null) {
 			runButton.onClick.AddListener(action);
 			_buttonListeners[runButton] = action;
 			UpdateButtonLabel(index, "Run");
 		}
+
+		RefreshRunButtonStates();
 	}
 
 	public void ToggleRunForIndex(int index) {
+		if (!executionEnabled) {
+			Debug.LogWarning("GameCodeRunner is disabled because the restaurant is closed.");
+			return;
+		}
+
 		// Validate index
 		if (codeInputs == null || index < 0 || index >= codeInputs.Count) {
 			Debug.LogWarning($"ToggleRunForIndex: invalid index {index}");
@@ -72,7 +88,41 @@ public class GameCodeRunner : MonoBehaviour {
 		StopAllExecution();
 
 		string code = codeInputs[index] != null ? codeInputs[index].text ?? string.Empty : string.Empty;
+		TryStartExecution(index, code);
+	}
 
+	public bool TryRunCode(RobotExecutor executor, string code) {
+		if (!executionEnabled) {
+			Debug.LogWarning("GameCodeRunner is disabled because the restaurant is closed.");
+			return false;
+		}
+
+		if (executor == null) {
+			Debug.LogWarning("TryRunCode: executor is null.");
+			return false;
+		}
+
+		int index = -1;
+		if (_editorIndices.TryGetValue(executor, out int mappedIndex)) {
+			index = mappedIndex;
+		} else if (executors != null) {
+			index = executors.IndexOf(executor);
+		}
+
+		if (index < 0) {
+			Debug.LogWarning("TryRunCode: executor için kayıtlı editör bulunamadı.");
+			return false;
+		}
+
+		if (codeInputs != null && index < codeInputs.Count && codeInputs[index] != null) {
+			codeInputs[index].text = code ?? string.Empty;
+		}
+
+		StopAllExecution();
+		return TryStartExecution(index, code ?? string.Empty);
+	}
+
+	private bool TryStartExecution(int index, string code) {
 		// Tokenize and parse
 		Lexer lexer = new(code);
 		List<Token> tokens;
@@ -80,7 +130,7 @@ public class GameCodeRunner : MonoBehaviour {
 			tokens = lexer.Tokenize();
 		} catch (System.Exception ex) {
 			Debug.LogError($"Lexer error for editor {index}: {ex.Message}");
-			return;
+			return false;
 		}
 
 		Parser parser = new(tokens);
@@ -89,8 +139,10 @@ public class GameCodeRunner : MonoBehaviour {
 			functions = parser.Parse();
 		} catch (System.Exception ex) {
 			Debug.LogError($"Parser error for editor {index}: {ex.Message}");
-			return;
+			return false;
 		}
+
+		RobotExecutor targetExecutor = (executors != null && index < executors.Count) ? executors[index] : null;
 
 		if (targetExecutor != null) {
 			var interpObj = new GameObject($"AstInterpreter_{targetExecutor.name}");
@@ -110,6 +162,7 @@ public class GameCodeRunner : MonoBehaviour {
 		}
 
 		UpdateButtonLabel(index, "Stop");
+		return true;
 	}
 
 	private void UpdateButtonLabel(int index, string label) {
@@ -144,6 +197,41 @@ public class GameCodeRunner : MonoBehaviour {
 			Destroy(_fallbackInterpreter.gameObject);
 			_fallbackInterpreter = null;
 			_fallbackInterpreterIndex = -1;
+		}
+
+		RefreshRunButtonStates();
+	}
+
+	public void SetExecutionEnabled(bool enabled) {
+		executionEnabled = enabled;
+		if (!executionEnabled) {
+			StopAllExecution();
+		}
+
+		RefreshRunButtonStates();
+	}
+
+	public void SetExecutors(List<RobotExecutor> newExecutors) {
+		executors ??= new List<RobotExecutor>();
+		executors.Clear();
+
+		if (newExecutors != null) {
+			for (int i = 0; i < newExecutors.Count; i++) {
+				if (newExecutors[i] != null) executors.Add(newExecutors[i]);
+			}
+		}
+
+		RefreshRunButtonStates();
+	}
+
+	private void RefreshRunButtonStates() {
+		if (runButtons == null) return;
+
+		for (int i = 0; i < runButtons.Count; i++) {
+			var button = runButtons[i];
+			if (button == null) continue;
+			button.interactable = executionEnabled;
+			if (!executionEnabled) UpdateButtonLabel(i, "Run");
 		}
 	}
 

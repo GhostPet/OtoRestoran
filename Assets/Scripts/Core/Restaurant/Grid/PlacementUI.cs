@@ -71,15 +71,21 @@ public class PlacementUI : MonoBehaviour {
 	private void ToggleEditMode() {
 		if (controller == null) controller = FindAnyObjectByType<PlacementController>();
 		if (controller == null) return;
-		bool newMode = !controller.editMode;
-		controller.SetEditMode(newMode);
+        SetEditMode(!controller.editMode);
+	}
 
-		// If edit mode was turned off, rebuild the NavMeshSurface if assigned
-		if (!newMode) {
+	public void SetEditMode(bool enabled) {
+		if (controller == null) controller = FindAnyObjectByType<PlacementController>();
+		if (controller == null) return;
+
+		controller.SetEditMode(enabled);
+
+		if (!enabled) {
 			if (navMeshSurface != null) {
 				navMeshSurface.BuildNavMesh();
 			}
 		}
+
 		UpdateEditButtonVisuals();
 	}
 
