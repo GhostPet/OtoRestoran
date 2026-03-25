@@ -1531,7 +1531,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 786943604}
   m_Father: {fileID: 1767353787}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &216439974 stripped
@@ -3912,6 +3913,22 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 135, y: -30, z: 0}
+--- !u!4 &786943604 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3104333322268429910, guid: c9c40b011ac74ff4f8256a28efe44786, type: 3}
+  m_PrefabInstance: {fileID: 1164815028}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &786943606 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6166403441794107096, guid: c9c40b011ac74ff4f8256a28efe44786, type: 3}
+  m_PrefabInstance: {fileID: 1164815028}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: df4142efe64592444aba5d41bfaf68b8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RestAutoRant.Core::RestAutoRant.Core.Robots.RobotExecutor
 --- !u!4 &797711715 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: e83e7936dc2ef1c409509f2abfced559, type: 3}
@@ -5421,6 +5438,63 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e83e7936dc2ef1c409509f2abfced559, type: 3}
+--- !u!1001 &1164815028
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 215766007}
+    m_Modifications:
+    - target: {fileID: 3104333322268429910, guid: c9c40b011ac74ff4f8256a28efe44786, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 4.999996
+      objectReference: {fileID: 0}
+    - target: {fileID: 3104333322268429910, guid: c9c40b011ac74ff4f8256a28efe44786, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3104333322268429910, guid: c9c40b011ac74ff4f8256a28efe44786, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 3.000006
+      objectReference: {fileID: 0}
+    - target: {fileID: 3104333322268429910, guid: c9c40b011ac74ff4f8256a28efe44786, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071064
+      objectReference: {fileID: 0}
+    - target: {fileID: 3104333322268429910, guid: c9c40b011ac74ff4f8256a28efe44786, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3104333322268429910, guid: c9c40b011ac74ff4f8256a28efe44786, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0.7071072
+      objectReference: {fileID: 0}
+    - target: {fileID: 3104333322268429910, guid: c9c40b011ac74ff4f8256a28efe44786, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3104333322268429910, guid: c9c40b011ac74ff4f8256a28efe44786, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3104333322268429910, guid: c9c40b011ac74ff4f8256a28efe44786, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: -90
+      objectReference: {fileID: 0}
+    - target: {fileID: 3104333322268429910, guid: c9c40b011ac74ff4f8256a28efe44786, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6815218095512038558, guid: c9c40b011ac74ff4f8256a28efe44786, type: 3}
+      propertyPath: m_Name
+      value: Robot_Test
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: c9c40b011ac74ff4f8256a28efe44786, type: 3}
 --- !u!4 &1166710681 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: e83e7936dc2ef1c409509f2abfced559, type: 3}
@@ -6212,7 +6286,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameCodeRunner
   codeInputs: []
   runButtons: []
-  executors: []
+  executors:
+  - {fileID: 786943606}
   executionEnabled: 1
 --- !u!1001 &1324179867
 PrefabInstance:
