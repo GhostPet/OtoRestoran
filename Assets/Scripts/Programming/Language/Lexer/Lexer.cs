@@ -34,6 +34,9 @@ public class Lexer {
 			if (_atLineStart) {
 				HandleIndentation();
 				_atLineStart = false;
+
+				if (IsAtEnd())
+					break;
 			}
 
 			char c = Advance();
@@ -102,7 +105,7 @@ public class Lexer {
 					Add(TokenType.Slash, "/"); break;
 				case '.':
 					// Support numbers starting with a dot like .5
-						if (_index < _source.Length && char.IsDigit(Peek())) {
+					if (_index < _source.Length && char.IsDigit(Peek())) {
 						var sb = new StringBuilder();
 						sb.Append('0');
 						sb.Append(Advance()); // consume '.'
@@ -111,8 +114,8 @@ public class Lexer {
 						_tokens.Add(new Token(TokenType.Number, sb.ToString(), _line));
 						break;
 					}
-						Add(TokenType.Dot, ".");
-						break;
+					Add(TokenType.Dot, ".");
+					break;
 				case '>':
 					if (Peek() == '=') { Advance(); Add(TokenType.GreaterEqual, ">="); } else Add(TokenType.Greater, ">");
 					break;
@@ -149,6 +152,11 @@ public class Lexer {
 		while (i < _source.Length) {
 			char c = _source[i];
 			if (c == ' ') { count++; i++; } else if (c == '\t') { count += 4; i++; } else break;
+		}
+
+		if (i >= _source.Length || _source[i] == '\n') {
+			_index = i;
+			return;
 		}
 
 		int prev = _indentStack.Peek();

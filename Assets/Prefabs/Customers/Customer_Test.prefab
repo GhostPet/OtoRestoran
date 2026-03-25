@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7301965716644268489}
   - component: {fileID: 7964758361271457668}
+  - component: {fileID: 5913061191026844657}
   m_Layer: 0
   m_Name: Customer_Test
   m_TagString: Untagged
@@ -50,8 +51,31 @@ MonoBehaviour:
   moveSpeed: 2.5
   rotateSpeed: 10
   seatSnapDistance: 0.05
+  seatSnapTriggerDistance: 0.75
   defaultOrderItems:
   - Meal
+--- !u!195 &5913061191026844657
+NavMeshAgent:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4810484823212804170}
+  m_Enabled: 1
+  m_AgentTypeID: 0
+  m_Radius: 0.5
+  m_Speed: 3.5
+  m_Acceleration: 8
+  avoidancePriority: 50
+  m_AngularSpeed: 120
+  m_StoppingDistance: 0
+  m_AutoTraverseOffMeshLink: 1
+  m_AutoBraking: 1
+  m_AutoRepath: 1
+  m_Height: 2
+  m_BaseOffset: 0
+  m_WalkableMask: 4294967295
+  m_ObstacleAvoidanceType: 4
 --- !u!1001 &604053104856663435
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -62,15 +86,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: c7c3e7a9230cfb14099d4ce65250c621, type: 3}
       propertyPath: m_LocalScale.x
-      value: 0.7
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: c7c3e7a9230cfb14099d4ce65250c621, type: 3}
       propertyPath: m_LocalScale.y
-      value: 0.7
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: c7c3e7a9230cfb14099d4ce65250c621, type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.7
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: c7c3e7a9230cfb14099d4ce65250c621, type: 3}
       propertyPath: m_LocalPosition.x
