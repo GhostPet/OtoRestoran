@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d279f190e11ca0f419e3e951c994b0a9, type: 3}
-  m_Name: 002_ChairPlaceableData
+  m_Name: 003_Furnace
   m_EditorClassIdentifier: Assembly-CSharp::PlaceableData
-  id: 2
-  prefab: {fileID: 7986310117792019135, guid: f71ee0780027ba643ae39fdc8936d696, type: 3}
+  id: 3
+  prefab: {fileID: 734507576093410180, guid: ee7f1fa4635c3bf4788af0fd45be3c49, type: 3}
   size: {x: 1, y: 1}
   pivot: {x: 0, y: 0}
-  maxOwnedCount: 80
+  maxOwnedCount: 20

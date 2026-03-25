@@ -13,7 +13,7 @@ public class Customer : MonoBehaviour {
 	[SerializeField] private float rotateSpeed = 10f;
 	[SerializeField] private float seatSnapDistance = 0.05f;
 	[SerializeField] private float seatSnapTriggerDistance = 0.75f;
-	[SerializeField] private List<string> defaultOrderItems = new() { "Meal" };
+	[SerializeField] private List<OrderItem> defaultOrderItems = new();
 
 	private NavMeshAgent agent;
 	private ChairBehavior chair;
@@ -37,6 +37,22 @@ public class Customer : MonoBehaviour {
 	public bool IsOrderReady => orderReady;
 	public bool IsOrderTaken => orderTaken;
 	public bool IsOrderServed => orderServed;
+	public Order CurrentOrder => currentOrder;
+
+	private void OnValidate() {
+		if (defaultOrderItems == null) {
+			return;
+		}
+
+		for (int i = 0; i < defaultOrderItems.Count; i++) {
+			OrderItem orderItem = defaultOrderItems[i];
+			if (orderItem == null) {
+				continue;
+			}
+
+			orderItem.ClampQuantity();
+		}
+	}
 
 	private void Awake() {
 		agent = GetComponent<NavMeshAgent>();
@@ -176,20 +192,16 @@ public class Customer : MonoBehaviour {
 		if (orderTaken && currentOrder != null)
 			return currentOrder;
 
-		currentOrder = new Order {
+		Order nextOrder = new Order {
 			Customer = this
 		};
 
-		if (defaultOrderItems != null && defaultOrderItems.Count > 0) {
-			for (int i = 0; i < defaultOrderItems.Count; i++) {
-				var item = defaultOrderItems[i];
-				if (!string.IsNullOrWhiteSpace(item)) currentOrder.Items.Add(item);
-			}
+		if (!TryPopulateOrder(nextOrder)) {
+			Debug.LogWarning($"[Customer] {name} için geçerli ve sipariş verilebilir item bulunamadı.");
+			return null;
 		}
 
-		if (currentOrder.Items.Count == 0) {
-			currentOrder.Items.Add("Meal");
-		}
+		currentOrder = nextOrder;
 
 		orderTaken = true;
 		ActiveOrders.Remember(currentOrder);
@@ -200,14 +212,47 @@ public class Customer : MonoBehaviour {
 	}
 
 	// Robot siparişi teslim ettiğinde çağır
-	public bool TryServeOrder() {
+	public bool TryServeOrder(RobotInventory inventory) {
 		if (state != CustomerState.Waiting)
 			return false;
 
-		orderServed = true;
-		if (currentOrder != null) ActiveOrders.Remove(currentOrder);
-		Debug.Log($"[Customer] {name} order served.");
+		if (currentOrder == null || !currentOrder.TryConsumeFrom(inventory)) {
+			return false;
+		}
+
+     CompleteOrder();
 		return true;
+	}
+
+	public bool TryServeOrderItem(ItemSO item, int quantity, RobotInventory inventory) {
+		if (state != CustomerState.Waiting || item == null || quantity <= 0 || inventory == null || currentOrder == null) {
+			return false;
+		}
+
+		if (currentOrder.GetRemainingQuantity(item) < quantity) {
+			return false;
+		}
+
+		if (!inventory.TryRemoveItem(item, quantity)) {
+			return false;
+		}
+
+		if (!currentOrder.TryConsumeItem(item, quantity)) {
+			inventory.TryAddItem(item, quantity);
+			return false;
+		}
+
+		if (currentOrder.IsCompleted) {
+			CompleteOrder();
+		} else {
+			Debug.Log($"[Customer] {name} partial order served: {item.DisplayName} x{quantity}");
+		}
+
+		return true;
+	}
+
+	public bool TryServeOrder() {
+		return TryServeOrder(null);
 	}
 
 
@@ -310,6 +355,36 @@ public class Customer : MonoBehaviour {
 			table.SetDirty(true);
 			Debug.Log($"[Customer] {name} dirtied table {table.name}");
 		}
+	}
+
+	private bool TryPopulateOrder(Order order) {
+		if (order == null || defaultOrderItems == null) {
+			return false;
+		}
+
+		for (int i = 0; i < defaultOrderItems.Count; i++) {
+			OrderItem orderItem = defaultOrderItems[i];
+			if (orderItem == null || !orderItem.IsValid) {
+				continue;
+			}
+
+			if (!orderItem.Item.Orderable) {
+				Debug.LogWarning($"[Customer] {name} için orderable olmayan item siparişe eklenemedi: {orderItem.Item.name}");
+				continue;
+			}
+
+			order.AddItem(orderItem);
+		}
+
+		return order.Items != null && order.Items.Count > 0;
+	}
+
+	private void CompleteOrder() {
+		orderServed = true;
+		if (currentOrder != null) {
+			ActiveOrders.Remove(currentOrder);
+		}
+		Debug.Log($"[Customer] {name} order served.");
 	}
 
 	private void CleanupAndDestroy() {

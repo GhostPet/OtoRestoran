@@ -19,4 +19,8 @@ public class RobotCommandQueue {
 	public IRobotCommand Peek() {
 		return queue.Count > 0 ? queue.Peek() : null;
 	}
+
+	public void Clear() {
+		queue.Clear();
+	}
 }

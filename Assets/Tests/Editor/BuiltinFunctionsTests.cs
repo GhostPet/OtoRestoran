@@ -1,6 +1,6 @@
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using NUnit.Framework;
 using UnityEngine;
 
 public class BuiltinFunctionsTests {
@@ -55,10 +55,10 @@ public class BuiltinFunctionsTests {
 		var t2 = go2.AddComponent<TableBehavior>();
 
 		try {
-			var res = BuiltinFunctions.Invoke("get_tables", Array.Empty<object>()) as List<TableBehavior>;
+          var res = BuiltinFunctions.Invoke("get_tables", Array.Empty<object>()) as List<object>;
 			Assert.IsNotNull(res);
-			Assert.Contains(t1, res);
-			Assert.Contains(t2, res);
+           Assert.IsTrue(ContainsWrapped<TableBehavior>(res, t1));
+			Assert.IsTrue(ContainsWrapped<TableBehavior>(res, t2));
 		} finally {
 			UnityEngine.Object.DestroyImmediate(go1);
 			UnityEngine.Object.DestroyImmediate(go2);
@@ -73,10 +73,10 @@ public class BuiltinFunctionsTests {
 		var f2 = go2.AddComponent<OvenBehavior>();
 
 		try {
-			var res = BuiltinFunctions.Invoke("get_furnaces", Array.Empty<object>()) as List<OvenBehavior>;
+         var res = BuiltinFunctions.Invoke("get_furnaces", Array.Empty<object>()) as List<object>;
 			Assert.IsNotNull(res);
-			Assert.Contains(f1, res);
-			Assert.Contains(f2, res);
+           Assert.IsTrue(ContainsWrapped<OvenBehavior>(res, f1));
+			Assert.IsTrue(ContainsWrapped<OvenBehavior>(res, f2));
 		} finally {
 			UnityEngine.Object.DestroyImmediate(go1);
 			UnityEngine.Object.DestroyImmediate(go2);
@@ -88,18 +88,43 @@ public class BuiltinFunctionsTests {
 		ActiveOrders.Clear();
 		var customerGo = new GameObject("order_customer_test");
 		var customer = customerGo.AddComponent<Customer>();
+		var item = ScriptableObject.CreateInstance<ItemSO>();
 		var order = new Order { Customer = customer };
-		order.Items.Add("Soup");
+		order.Items.Add(new OrderItem(item, 1));
 		ActiveOrders.Remember(order);
 
 		try {
 			var res = BuiltinFunctions.Invoke("active_orders", Array.Empty<object>()) as List<Order>;
-			Assert.IsNotNull(res);
-			Assert.AreEqual(1, res.Count);
-			Assert.AreEqual(order, res[0]);
+          if (res != null) {
+				Assert.AreEqual(1, res.Count);
+				Assert.AreEqual(order, res[0]);
+			} else {
+				var wrapped = BuiltinFunctions.Invoke("active_orders", Array.Empty<object>()) as List<object>;
+				Assert.IsNotNull(wrapped);
+				Assert.IsTrue(ContainsWrapped<Order>(wrapped, order));
+			}
 		} finally {
 			ActiveOrders.Clear();
+			UnityEngine.Object.DestroyImmediate(item);
 			UnityEngine.Object.DestroyImmediate(customerGo);
 		}
+	}
+
+	private static bool ContainsWrapped<T>(List<object> wrappedObjects, T expected) where T : class {
+		if (wrappedObjects == null || expected == null) {
+			return false;
+		}
+
+		for (int i = 0; i < wrappedObjects.Count; i++) {
+			if (wrappedObjects[i] is not BuiltinObject builtin) {
+				continue;
+			}
+
+			if (ReferenceEquals(builtin.RawInstance, expected)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

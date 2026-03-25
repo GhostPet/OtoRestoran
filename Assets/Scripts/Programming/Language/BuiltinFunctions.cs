@@ -14,8 +14,12 @@ public static class BuiltinFunctions {
 		Register("float", Float);
 		Register("str", Str);
 		Register("get_tables", GetTables);
+      Register("get_customers", GetCustomers);
 		Register("get_furnaces", GetFurnaces);
+       Register("get_fridges", GetFridges);
 		Register("get_orders", ActiveOrdersList);
+       Register("active_orders", ActiveOrdersList);
+		Register("get_robots", GetRobots);
 	}
 
 	public static void Register(string name, Func<object[], int, object> func) {
@@ -69,6 +73,8 @@ public static class BuiltinFunctions {
 	private static object Type(object[] args, int line) {
 		if (args.Length != 1) throw new ValidationError($"type() takes exactly one argument (line {line})", line);
 		var obj = args[0];
+     string builtinTypeName = BuiltinClassRegistry.GetTypeName(obj);
+		if (!string.IsNullOrWhiteSpace(builtinTypeName)) return builtinTypeName;
 		if (obj == null) return "null";
 		if (obj is string) return "string";
 		if (obj is float) return "float";
@@ -106,28 +112,71 @@ public static class BuiltinFunctions {
 		if (args.Length != 0) throw new ValidationError($"get_tables() takes no arguments (line {line})", line);
 
 		var found = UnityEngine.Object.FindObjectsByType<TableBehavior>(FindObjectsSortMode.None);
-		var tables = new List<TableBehavior>(found.Length);
+     var tables = new List<object>(found.Length);
 		for (int i = 0; i < found.Length; i++) {
-			if (found[i] != null) tables.Add(found[i]);
+         if (found[i] != null) tables.Add(BuiltinClassRegistry.WrapValue(found[i], ScriptInvocationContext.Create(null)));
 		}
 
 		return tables;
+	}
+
+	private static object GetCustomers(object[] args, int line) {
+		if (args.Length != 0) throw new ValidationError($"get_customers() takes no arguments (line {line})", line);
+
+		var found = UnityEngine.Object.FindObjectsByType<Customer>(FindObjectsSortMode.None);
+		var customers = new List<object>(found.Length);
+		for (int i = 0; i < found.Length; i++) {
+			if (found[i] != null) customers.Add(BuiltinClassRegistry.WrapValue(found[i], ScriptInvocationContext.Create(null)));
+		}
+
+		return customers;
 	}
 
 	private static object GetFurnaces(object[] args, int line) {
 		if (args.Length != 0) throw new ValidationError($"get_furnaces() takes no arguments (line {line})", line);
 
 		var found = UnityEngine.Object.FindObjectsByType<OvenBehavior>(FindObjectsSortMode.None);
-		var furnaces = new List<OvenBehavior>(found.Length);
+        var furnaces = new List<object>(found.Length);
 		for (int i = 0; i < found.Length; i++) {
-			if (found[i] != null) furnaces.Add(found[i]);
+           if (found[i] != null) furnaces.Add(BuiltinClassRegistry.WrapValue(found[i], ScriptInvocationContext.Create(null)));
 		}
 
 		return furnaces;
 	}
 
+	private static object GetFridges(object[] args, int line) {
+		if (args.Length != 0) throw new ValidationError($"get_fridges() takes no arguments (line {line})", line);
+
+       var found = UnityEngine.Object.FindObjectsByType<FridgeBehavior>(FindObjectsSortMode.None);
+		var fridges = new List<object>(found.Length);
+		for (int i = 0; i < found.Length; i++) {
+			if (found[i] != null) fridges.Add(BuiltinClassRegistry.WrapValue(found[i], ScriptInvocationContext.Create(null)));
+		}
+
+		return fridges;
+	}
+
 	private static object ActiveOrdersList(object[] args, int line) {
-		if (args.Length != 0) throw new ValidationError($"active_orders() takes no arguments (line {line})", line);
-		return ActiveOrders.Snapshot();
+     if (args.Length != 0) throw new ValidationError($"get_orders() takes no arguments (line {line})", line);
+		return BuiltinClassRegistry.WrapValue(ActiveOrders.Snapshot(), ScriptInvocationContext.Create(null));
+	}
+
+	private static object GetRobots(object[] args, int line) {
+		if (args.Length != 0) throw new ValidationError($"get_robots() takes no arguments (line {line})", line);
+
+		var found = UnityEngine.Object.FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
+		var robots = new List<object>();
+		for (int i = 0; i < found.Length; i++) {
+			MonoBehaviour behaviour = found[i];
+			if (behaviour == null) continue;
+			if (behaviour is not IRobot robot) continue;
+
+			object wrapped = BuiltinClassRegistry.WrapValue(robot, ScriptInvocationContext.Create(null));
+			if (!robots.Contains(wrapped)) {
+				robots.Add(wrapped);
+			}
+		}
+
+		return robots;
 	}
 }

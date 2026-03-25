@@ -6,6 +6,7 @@ public class EnqueuedCommand : IRobotCommand, ICompletable {
 	private readonly int _line;
 	private readonly string _contextId;
 	private bool _isCompleted;
+	public string ExecutionError { get; private set; }
 	public bool IsCompleted {
 		get {
 			if (_impl is ICompletable c) return c.IsCompleted;
@@ -43,17 +44,31 @@ public class EnqueuedCommand : IRobotCommand, ICompletable {
 			CommandExecutionContext.CurrentRobot = r;
 		}
 
-		bool done = _impl.Tick(_args);
-		if (done) IsCompleted = true;
+		try {
+			bool done = _impl.Tick(_args);
+			if (done) IsCompleted = true;
+
+			// restore previous
+			CommandExecutionContext.CurrentLine = prevLine;
+			CommandExecutionContext.CurrentContextId = prevContext;
+			return done;
+		} catch (ValidationError vex) {
+			ExecutionError = vex.ToString();
+			IsCompleted = true;
+		} catch (Exception ex) {
+			ExecutionError = $"Runtime error in queued command: {ex.Message}";
+			IsCompleted = true;
+		}
 
 		// restore previous
 		CommandExecutionContext.CurrentLine = prevLine;
 		CommandExecutionContext.CurrentContextId = prevContext;
-		return done;
+		return true;
 	}
 
 	public void Reset() {
 		_impl.Reset();
 		IsCompleted = false;
+		ExecutionError = null;
 	}
 }

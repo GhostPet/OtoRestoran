@@ -38,15 +38,23 @@ public class RobotExecutor : MonoBehaviour {
 		CommandExecutionContext.CurrentRobot = robot;
 
 		if (current != null) {
-			// Execute current; completion is driven by the command's own IsCompleted when available.
-			bool tickResult = current.Tick(robot, Time.deltaTime);
-			if (current is ICompletable comp) {
-				if (comp.IsCompleted) {
-					current = null;
+			try {
+				// Execute current; completion is driven by the command's own IsCompleted when available.
+				bool tickResult = current.Tick(robot, Time.deltaTime);
+				if (current is ICompletable comp) {
+					if (comp.IsCompleted) {
+						current = null;
+					}
+				} else {
+					// legacy commands: if Tick returned true, consider completed
+					if (tickResult) current = null;
 				}
-			} else {
-				// legacy commands: if Tick returned true, consider completed
-				if (tickResult) current = null;
+			} catch (ValidationError vex) {
+				Debug.LogWarning($"[RobotExecutor] {vex}");
+				CancelAll();
+			} catch (System.Exception ex) {
+				Debug.LogWarning($"[RobotExecutor] Runtime error: {ex.Message}");
+				CancelAll();
 			}
 		}
 
@@ -58,5 +66,12 @@ public class RobotExecutor : MonoBehaviour {
 	// Allow enqueuing EnqueuedCommand wrappers
 	public void Enqueue(IRobotCommand cmd) {
 		queue.Enqueue(cmd);
+	}
+
+	public void CancelAll() {
+		current = null;
+		if (queue != null) {
+			queue.Clear();
+		}
 	}
 }

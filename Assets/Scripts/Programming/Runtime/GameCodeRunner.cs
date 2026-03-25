@@ -129,7 +129,7 @@ public class GameCodeRunner : MonoBehaviour {
 		try {
 			tokens = lexer.Tokenize();
 		} catch (System.Exception ex) {
-			Debug.LogError($"Lexer error for editor {index}: {ex.Message}");
+			Debug.LogWarning($"Lexer error for editor {index}: {ex.Message}");
 			return false;
 		}
 
@@ -138,7 +138,7 @@ public class GameCodeRunner : MonoBehaviour {
 		try {
 			functions = parser.Parse();
 		} catch (System.Exception ex) {
-			Debug.LogError($"Parser error for editor {index}: {ex.Message}");
+			Debug.LogWarning($"Parser error for editor {index}: {ex.Message}");
 			return false;
 		}
 
@@ -149,6 +149,7 @@ public class GameCodeRunner : MonoBehaviour {
 			var interp = interpObj.AddComponent<AstInterpreter>();
 			interp.Executor = targetExecutor;
 			interp.ExecutionFinished += OnInterpreterFinished;
+			interp.ExecutionFailed += OnInterpreterFailed;
 			_interpreters[targetExecutor] = interp;
 			interp.StartExecution(functions, "main");
 		} else {
@@ -156,6 +157,7 @@ public class GameCodeRunner : MonoBehaviour {
 			var fallbackObj = new GameObject($"AstInterpreter_editor_{index}");
 			var fallbackInterp = fallbackObj.AddComponent<AstInterpreter>();
 			fallbackInterp.ExecutionFinished += OnInterpreterFinished;
+			fallbackInterp.ExecutionFailed += OnInterpreterFailed;
 			_fallbackInterpreter = fallbackInterp;
 			_fallbackInterpreterIndex = index;
 			fallbackInterp.StartExecution(functions, "main");
@@ -185,6 +187,7 @@ public class GameCodeRunner : MonoBehaviour {
 			var interp = kv.Value;
 			if (interp != null) {
 				interp.ExecutionFinished -= OnInterpreterFinished;
+				interp.ExecutionFailed -= OnInterpreterFailed;
 				if (!string.IsNullOrEmpty(interp.ContextId)) CommandExecutionContext.ClearVariables(interp.ContextId);
 				Destroy(interp.gameObject);
 			}
@@ -193,6 +196,7 @@ public class GameCodeRunner : MonoBehaviour {
 
 		if (_fallbackInterpreter != null) {
 			_fallbackInterpreter.ExecutionFinished -= OnInterpreterFinished;
+			_fallbackInterpreter.ExecutionFailed -= OnInterpreterFailed;
 			if (!string.IsNullOrEmpty(_fallbackInterpreter.ContextId)) CommandExecutionContext.ClearVariables(_fallbackInterpreter.ContextId);
 			Destroy(_fallbackInterpreter.gameObject);
 			_fallbackInterpreter = null;
@@ -240,6 +244,7 @@ public class GameCodeRunner : MonoBehaviour {
 		if (executor == null) return;
 		if (_interpreters.TryGetValue(executor, out var interp)) {
 			interp.ExecutionFinished -= OnInterpreterFinished;
+			interp.ExecutionFailed -= OnInterpreterFailed;
 			if (!string.IsNullOrEmpty(interp.ContextId)) CommandExecutionContext.ClearVariables(interp.ContextId);
 			if (interp != null) Destroy(interp.gameObject);
 			_interpreters.Remove(executor);
@@ -259,6 +264,7 @@ public class GameCodeRunner : MonoBehaviour {
 
 		if (matchedExecutor != null) {
 			finishedInterpreter.ExecutionFinished -= OnInterpreterFinished;
+			finishedInterpreter.ExecutionFailed -= OnInterpreterFailed;
 			_interpreters.Remove(matchedExecutor);
 
 			if (executors != null) {
@@ -274,11 +280,20 @@ public class GameCodeRunner : MonoBehaviour {
 
 		if (_fallbackInterpreter == finishedInterpreter) {
 			finishedInterpreter.ExecutionFinished -= OnInterpreterFinished;
+			finishedInterpreter.ExecutionFailed -= OnInterpreterFailed;
 			_fallbackInterpreter = null;
 			if (_fallbackInterpreterIndex >= 0) {
 				UpdateButtonLabel(_fallbackInterpreterIndex, "Run");
 			}
 			_fallbackInterpreterIndex = -1;
 		}
+	}
+
+	private void OnInterpreterFailed(AstInterpreter interpreter, string warningMessage) {
+		if (interpreter == null || string.IsNullOrWhiteSpace(warningMessage)) {
+			return;
+		}
+
+		Debug.LogWarning($"Script execution stopped: {warningMessage}");
 	}
 }

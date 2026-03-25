@@ -10,10 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 36429427e0f8a8e4cbda44fba19fd67c, type: 3}
-  m_Name: Meatball
+  m_Name: Meatball_Burned
   m_EditorClassIdentifier: Assembly-CSharp::ItemSO
-  itemId: meatball
-  displayName: "K\xF6fte"
+  itemId: meatball_burned
+  displayName: "K\xF6fte (Yanm\u0131\u015F)"
   description: "hamburger i\xE7in haz\u0131r k\xF6fte"
   icon: {fileID: 0}
+  prefab: {fileID: 919132149155446097, guid: 0c7b42020208d764497d870ffb2a184c, type: 3}
+  orderable: 0
   maxStack: 1000

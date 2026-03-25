@@ -66,6 +66,7 @@ GameObject:
   - component: {fileID: 8105374130439678878}
   - component: {fileID: 6166403441794107096}
   - component: {fileID: 1009001585196924712}
+  - component: {fileID: 2594464567475000308}
   m_Layer: 0
   m_Name: Robot_Test
   m_TagString: Untagged
@@ -138,6 +139,27 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
+--- !u!114 &2594464567475000308
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6815218095512038558}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d3a1afb83ed192047ab82578185f725e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RobotInventory
+  slots:
+  - item: {fileID: 0}
+    quantity: 0
+  - item: {fileID: 0}
+    quantity: 0
+  - item: {fileID: 0}
+    quantity: 0
+  - item: {fileID: 0}
+    quantity: 0
 --- !u!1 &8185339317516274827
 GameObject:
   m_ObjectHideFlags: 0

@@ -36,7 +36,20 @@ public class ServeOrderCommand : IRobotCommand {
 				return false;
 			}
 
-			bool served = order.Customer.TryServeOrder();
+			RobotInventory inventory = ResolveInventory(robot);
+			if (inventory == null) {
+				Debug.Log($"[ServeOrderCommand] Serve skipped: robot inventory missing (line {line})");
+				_done = true;
+				return false;
+			}
+
+			if (!order.IsFulfilledBy(inventory)) {
+				Debug.Log($"[ServeOrderCommand] Serve skipped: robot inventory does not satisfy order for {order.Customer.name} (line {line})");
+				_done = true;
+				return false;
+			}
+
+			bool served = order.Customer.TryServeOrder(inventory);
 			if (!served) {
 				Debug.Log($"[ServeOrderCommand] Customer not ready for serving: {order.Customer.name} (line {line})");
 				_done = true;
@@ -54,5 +67,14 @@ public class ServeOrderCommand : IRobotCommand {
 
 	public void Reset() {
 		_done = false;
+	}
+
+	private static RobotInventory ResolveInventory(IRobot robot) {
+		Component robotComponent = robot as Component;
+		if (robotComponent == null) {
+			return null;
+		}
+
+		return robotComponent.GetComponent<RobotInventory>();
 	}
 }

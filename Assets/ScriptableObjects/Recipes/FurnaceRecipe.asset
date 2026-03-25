@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51efe4a5715aa3a4ca46560ddf343c61, type: 3}
+  m_Name: FurnaceRecipe
+  m_EditorClassIdentifier: Assembly-CSharp::FurnaceRecipeSO
+  recipeId: meatball_recipe
+  displayName: "K\xF6fte Tarifi"
+  description: "F\u0131r\u0131n'da k\xF6ftenin pi\u015Fmesini sa\u011Flayan tarif"
+  inputItems:
+  - item: {fileID: 11400000, guid: 4d3cb230ad3bd4a4581f3c399d79643e, type: 2}
+    quantity: 1
+  outputItems:
+  - item: {fileID: 11400000, guid: 58e63c4976416564f8d7f85d6f594685, type: 2}
+    quantity: 1
+  cookingDuration: 5
+  burnDuration: 3
+  burnedOutputItems:
+  - item: {fileID: 11400000, guid: df50cd7b482d74b469966b90ebad6cd9, type: 2}
+    quantity: 1

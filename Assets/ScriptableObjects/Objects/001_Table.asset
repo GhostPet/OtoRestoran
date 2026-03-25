@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d279f190e11ca0f419e3e951c994b0a9, type: 3}
-  m_Name: 001_TablePlaceableData
+  m_Name: 001_Table
   m_EditorClassIdentifier: Assembly-CSharp::PlaceableData
   id: 1
   prefab: {fileID: 7856934089734427276, guid: 431f5c44f520d0241b27c60059f602d3, type: 3}
