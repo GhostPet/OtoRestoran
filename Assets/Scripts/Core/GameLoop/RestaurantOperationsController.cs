@@ -8,7 +8,6 @@ public class RestaurantOperationsController : MonoBehaviour {
 	[Header("References")]
 	[SerializeField] private PhaseStateMachine phaseStateMachine;
 	[SerializeField] private PlacementController placementController;
-	[SerializeField] private PlacementUI placementUI;
 	[SerializeField] private CustomerSpawner customerSpawner;
 	[SerializeField] private GameCodeRunner gameCodeRunner;
 	[SerializeField] private RobotSpawnManager robotSpawnManager;
@@ -50,7 +49,6 @@ public class RestaurantOperationsController : MonoBehaviour {
 	private void ResolveReferences() {
 		if (phaseStateMachine == null) phaseStateMachine = FindAnyObjectByType<PhaseStateMachine>();
 		if (placementController == null) placementController = FindAnyObjectByType<PlacementController>();
-		if (placementUI == null) placementUI = FindAnyObjectByType<PlacementUI>();
 		if (customerSpawner == null) customerSpawner = FindAnyObjectByType<CustomerSpawner>();
 		if (gameCodeRunner == null) gameCodeRunner = FindAnyObjectByType<GameCodeRunner>();
 		if (robotSpawnManager == null) robotSpawnManager = FindAnyObjectByType<RobotSpawnManager>();
@@ -63,9 +61,7 @@ public class RestaurantOperationsController : MonoBehaviour {
 		CurrentMode = mode;
 		bool isOpen = mode == RestaurantOperationMode.Open;
 
-		if (placementUI != null) {
-			placementUI.SetEditMode(!isOpen);
-		} else if (placementController != null) {
+		if (placementController != null) {
 			placementController.SetEditMode(!isOpen);
 		}
 

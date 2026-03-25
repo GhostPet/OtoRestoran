@@ -9,6 +9,7 @@ public class RobotSpawnManager : MonoBehaviour {
 	private readonly Dictionary<RobotSpawnPoint, GameObject> spawnedRobots = new();
 
 	public int SpawnedRobotCount => spawnedRobots.Count;
+	public event System.Action SpawnedRobotsChanged;
 
 	public void SpawnRobots() {
 		CleanupDestroyedEntries();
@@ -19,6 +20,7 @@ public class RobotSpawnManager : MonoBehaviour {
 		}
 
 		var spawnPoints = RobotSpawnPoint.AllSpawnPoints;
+		bool changed = false;
 		for (int i = 0; i < spawnPoints.Count; i++) {
 			var spawnPoint = spawnPoints[i];
 			if (spawnPoint == null) continue;
@@ -26,11 +28,18 @@ public class RobotSpawnManager : MonoBehaviour {
 
 			Transform parent = spawnedRobotParent != null ? spawnedRobotParent : null;
 			var robotInstance = Instantiate(robotPrefab, spawnPoint.SpawnPosition, spawnPoint.SpawnRotation, parent);
+			robotInstance.name = spawnPoint.DisplayName + "_Robot";
 			spawnedRobots[spawnPoint] = robotInstance;
+			changed = true;
+		}
+
+		if (changed) {
+			SpawnedRobotsChanged?.Invoke();
 		}
 	}
 
 	public void DespawnRobots() {
+		bool changed = spawnedRobots.Count > 0;
 		foreach (var pair in spawnedRobots) {
 			if (pair.Value != null) {
 				Destroy(pair.Value);
@@ -38,6 +47,9 @@ public class RobotSpawnManager : MonoBehaviour {
 		}
 
 		spawnedRobots.Clear();
+		if (changed) {
+			SpawnedRobotsChanged?.Invoke();
+		}
 	}
 
 	public List<RobotExecutor> GetActiveExecutors() {
@@ -54,6 +66,26 @@ public class RobotSpawnManager : MonoBehaviour {
 		return executors;
 	}
 
+	public bool TryGetExecutor(RobotSpawnPoint spawnPoint, out RobotExecutor executor) {
+		executor = null;
+		if (spawnPoint == null) {
+			return false;
+		}
+
+		CleanupDestroyedEntries();
+
+		GameObject robotInstance;
+		if (!spawnedRobots.TryGetValue(spawnPoint, out robotInstance) || robotInstance == null) {
+			return false;
+		}
+
+		if (!robotInstance.TryGetComponent<RobotExecutor>(out executor)) {
+			executor = robotInstance.GetComponentInChildren<RobotExecutor>();
+		}
+
+		return executor != null;
+	}
+
 	private void CleanupDestroyedEntries() {
 		var removedKeys = new List<RobotSpawnPoint>();
 		foreach (var pair in spawnedRobots) {
@@ -64,6 +96,10 @@ public class RobotSpawnManager : MonoBehaviour {
 
 		for (int i = 0; i < removedKeys.Count; i++) {
 			spawnedRobots.Remove(removedKeys[i]);
+		}
+
+		if (removedKeys.Count > 0) {
+			SpawnedRobotsChanged?.Invoke();
 		}
 	}
 }

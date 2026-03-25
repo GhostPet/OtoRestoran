@@ -228,6 +228,14 @@ public class GameCodeRunner : MonoBehaviour {
 		RefreshRunButtonStates();
 	}
 
+	public bool IsExecutionRunning(RobotExecutor executor) {
+		if (executor == null) {
+			return false;
+		}
+
+		return _interpreters.ContainsKey(executor);
+	}
+
 	private void RefreshRunButtonStates() {
 		if (runButtons == null) return;
 

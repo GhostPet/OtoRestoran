@@ -10,7 +10,6 @@ public class ShopProductDefinitionSO : ScriptableObject
     [Header("Kimlik Bilgileri")]
     [SerializeField] private string productId;
     [SerializeField] private string displayName;
-    [SerializeField] [TextArea(2, 5)] private string description;
 
     [Header("Görsel ve Dünya Objesi")]
     [SerializeField] private Sprite icon;
@@ -41,8 +40,6 @@ public class ShopProductDefinitionSO : ScriptableObject
     /// UI'de kullanıcıya gösterilecek ürün adı.
     /// </summary>
     public string DisplayName => displayName;
-
-    public string Description => description;
 
     public Sprite Icon => icon;
 

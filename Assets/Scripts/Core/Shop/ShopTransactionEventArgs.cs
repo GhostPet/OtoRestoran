@@ -5,33 +5,27 @@ using System;
 /// Böylece inventory, placement veya UI sistemleri gereken aksiyonu alabilir.
 /// </summary>
 [Serializable]
-public sealed class ShopTransactionEventArgs
-{
-    public ShopTransactionEventArgs(
-        ShopProductDefinitionSO product,
-        int quantity,
-        int totalPrice,
-        int balanceAfterTransaction,
-        string tabId,
-        ShopTransactionType transactionType)
-    {
-        Product = product;
-        Quantity = quantity;
-        TotalPrice = totalPrice;
-        BalanceAfterTransaction = balanceAfterTransaction;
-        TabId = tabId;
-        TransactionType = transactionType;
-    }
+public sealed class ShopTransactionEventArgs {
+	public ShopTransactionEventArgs(
+		ShopProductDefinitionSO product,
+		int quantity,
+		int totalPrice,
+		string tabId,
+		ShopTransactionType transactionType) {
+		Product = product;
+		Quantity = quantity;
+		TotalPrice = totalPrice;
+		TabId = tabId;
+		TransactionType = transactionType;
+	}
 
-    public ShopProductDefinitionSO Product { get; }
+	public ShopProductDefinitionSO Product { get; }
 
-    public int Quantity { get; }
+	public int Quantity { get; }
 
-    public int TotalPrice { get; }
+	public int TotalPrice { get; }
 
-    public int BalanceAfterTransaction { get; }
+	public string TabId { get; }
 
-    public string TabId { get; }
-
-    public ShopTransactionType TransactionType { get; }
+	public ShopTransactionType TransactionType { get; }
 }

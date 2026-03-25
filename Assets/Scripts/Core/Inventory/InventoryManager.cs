@@ -11,17 +11,10 @@ public class InventoryManager : MonoBehaviour {
 	[Header("Bağlantılar")]
 	[SerializeField] private ShopManager shopManager;
 
-	[Header("Başlangıç Verisi")]
-	[SerializeField] private List<InventoryItemEntry> startingItems = new List<InventoryItemEntry>();
-
 	private readonly Dictionary<ItemSO, int> itemQuantities = new Dictionary<ItemSO, int>();
 
 	public event Action InventoryChanged;
 	public event Action<ItemSO, int> ItemQuantityChanged;
-
-	protected virtual void Awake() {
-		RebuildRuntimeLookup();
-	}
 
 	protected virtual void OnEnable() {
 		if (shopManager == null) {
@@ -134,19 +127,6 @@ public class InventoryManager : MonoBehaviour {
 		}
 
 		return snapshot;
-	}
-
-	private void RebuildRuntimeLookup() {
-		itemQuantities.Clear();
-
-		for (int i = 0; i < startingItems.Count; i++) {
-			InventoryItemEntry entry = startingItems[i];
-			if (entry == null || entry.Item == null || entry.Quantity <= 0) {
-				continue;
-			}
-
-			AddItem(entry.Item, entry.Quantity);
-		}
 	}
 
 	private void HandlePurchaseCompleted(ShopTransactionEventArgs args) {

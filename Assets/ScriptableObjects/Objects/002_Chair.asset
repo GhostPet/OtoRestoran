@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d279f190e11ca0f419e3e951c994b0a9, type: 3}
   m_Name: 002_Chair
   m_EditorClassIdentifier: Assembly-CSharp::PlaceableData
-  id: 2
+  id: Chair
   prefab: {fileID: 7986310117792019135, guid: f71ee0780027ba643ae39fdc8936d696, type: 3}
   size: {x: 1, y: 1}
   pivot: {x: 0, y: 0}

@@ -1,13 +1,18 @@
+using UnityEngine.Serialization;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "PlaceableObject", menuName = "OtoRestoran/Storage/Placeable Object")]
 public class PlaceableObjectSO : ScriptableObject {
-	public string id;
+   [FormerlySerializedAs("id")]
+	[SerializeField] private string itemName;
+	[SerializeField] private bool showInStorage = true;
 	public GameObject prefab;
 	public Vector2Int size = new(1, 1);
 	public Vector2Int pivot = Vector2Int.zero;
 	[Min(0)] public int maxOwnedCount;
 
+ public string Name => string.IsNullOrWhiteSpace(itemName) ? name : itemName;
+	public bool ShowInStorage => showInStorage;
 	public bool HasOwnershipLimit => maxOwnedCount > 0;
 
 	private void OnValidate() {

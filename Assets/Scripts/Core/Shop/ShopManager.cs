@@ -5,7 +5,7 @@ using UnityEngine;
 public class ShopManager : MonoBehaviour {
 	[Header("Bağlantılar")]
 	[SerializeField] private EconomyManager economyManager;
- [SerializeField] private GameScoreManager gameScoreManager;
+	[SerializeField] private GameScoreManager gameScoreManager;
 	[SerializeField] private InventoryManager inventoryManager;
 	[SerializeField] private BuildInventoryManager buildInventoryManager;
 	[SerializeField] private GridManager gridManager;
@@ -148,7 +148,7 @@ public class ShopManager : MonoBehaviour {
 
 		int totalCost = product.GetBuyTotalPrice(quantity);
 		EconomyTransactionResult economyResult;
-		bool spendSucceeded = economyManager.TrySpend(totalCost, "Shop purchase: " + product.DisplayName, out economyResult);
+		bool spendSucceeded = economyManager.TrySpend(totalCost, EconomyTransactionType.ShopPurchase, "Shop purchase: " + product.DisplayName, out economyResult);
 
 		if (!spendSucceeded) {
 			result = ShopOperationResult.CreateFailure(ShopTransactionType.Purchase, totalCost, economyResult.Message);
@@ -158,7 +158,7 @@ public class ShopManager : MonoBehaviour {
 
 		result = ShopOperationResult.CreateSuccess(ShopTransactionType.Purchase, totalCost, "Satın alma işlemi başarılı.");
 
-		var eventArgs = new ShopTransactionEventArgs(product, quantity, totalCost, economyResult.CurrentBalance, selectedTabId, ShopTransactionType.Purchase);
+		var eventArgs = new ShopTransactionEventArgs(product, quantity, totalCost, selectedTabId, ShopTransactionType.Purchase);
 		PurchaseCompleted?.Invoke(eventArgs);
 		PublishOperation(result);
 		return true;
@@ -181,7 +181,7 @@ public class ShopManager : MonoBehaviour {
 
 		int totalRevenue = product.GetSellTotalPrice(quantity);
 		EconomyTransactionResult economyResult;
-		bool earnSucceeded = economyManager.TryEarn(totalRevenue, "Shop sale: " + product.DisplayName, out economyResult);
+		bool earnSucceeded = economyManager.TryEarn(totalRevenue, EconomyTransactionType.ShopSale, "Shop sale: " + product.DisplayName, out economyResult);
 
 		if (!earnSucceeded) {
 			result = ShopOperationResult.CreateFailure(ShopTransactionType.Sale, totalRevenue, economyResult.Message);
@@ -191,7 +191,7 @@ public class ShopManager : MonoBehaviour {
 
 		result = ShopOperationResult.CreateSuccess(ShopTransactionType.Sale, totalRevenue, "Satış işlemi başarılı.");
 
-		var eventArgs = new ShopTransactionEventArgs(product, quantity, totalRevenue, economyResult.CurrentBalance, selectedTabId, ShopTransactionType.Sale);
+		var eventArgs = new ShopTransactionEventArgs(product, quantity, totalRevenue, selectedTabId, ShopTransactionType.Sale);
 		SaleCompleted?.Invoke(eventArgs);
 		PublishOperation(result);
 		return true;

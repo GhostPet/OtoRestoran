@@ -12,8 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d279f190e11ca0f419e3e951c994b0a9, type: 3}
   m_Name: 004_RobotSpawnPoint
   m_EditorClassIdentifier: Assembly-CSharp::PlaceableObjectSO
-  id: 4
+  itemName: Robot Spawn Point
+  showInStorage: 1
   prefab: {fileID: 8554206690560874721, guid: 9e090252842692b40ae37162da5234b7, type: 3}
   size: {x: 1, y: 1}
   pivot: {x: 0, y: 0}
-  maxOwnedCount: 1
+  maxOwnedCount: 5
