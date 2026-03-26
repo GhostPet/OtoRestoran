@@ -38,6 +38,14 @@ public class Customer : MonoBehaviour {
 	public bool IsOrderTaken => orderTaken;
 	public bool IsOrderServed => orderServed;
 	public Order CurrentOrder => currentOrder;
+	public bool IsSeating => state == CustomerState.Seating;
+	public bool IsThinking => state == CustomerState.Thinking;
+	public bool IsOrdering => state == CustomerState.Ordering;
+	public bool IsWaiting => state == CustomerState.Waiting;
+	public bool IsEating => state == CustomerState.Eating;
+	public bool IsLeaving => state == CustomerState.Leaving;
+	public bool IsMoving => hasMoveTarget;
+	public bool IsApproachingSeat => state == CustomerState.Seating && hasMoveTarget && IsCloseEnoughToSeat();
 
 	private void OnValidate() {
 		if (defaultOrderItems == null) {
@@ -220,7 +228,7 @@ public class Customer : MonoBehaviour {
 			return false;
 		}
 
-     CompleteOrder();
+		CompleteOrder();
 		return true;
 	}
 

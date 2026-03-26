@@ -11,10 +11,10 @@ GameObject:
   - component: {fileID: 7301965716644268489}
   - component: {fileID: 7964758361271457668}
   - component: {fileID: 5913061191026844657}
-  - component: {fileID: 1251358515888738969}
-  - component: {fileID: 5011635391234962736}
+  - component: {fileID: 4051722557570245900}
+  - component: {fileID: 856337335002055456}
   m_Layer: 0
-  m_Name: Customer_Test
+  m_Name: Customer_2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -79,7 +79,7 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!95 &1251358515888738969
+--- !u!95 &4051722557570245900
 Animator:
   serializedVersion: 7
   m_ObjectHideFlags: 0
@@ -101,7 +101,7 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &5011635391234962736
+--- !u!114 &856337335002055456
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -114,7 +114,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CustomerAnimationControl
   customer: {fileID: 7964758361271457668}
-  animator: {fileID: 1251358515888738969}
+  animator: {fileID: 4051722557570245900}
   seatingParameter: IsSeating
   thinkingParameter: IsThinking
   orderingParameter: IsOrdering
@@ -183,6 +183,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 33608ad1391c14d4dbc4c94de03f8c07, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: bcc882fde8677a44b849d36c210b93dc, type: 2}
     - target: {fileID: 919132149155446097, guid: 33608ad1391c14d4dbc4c94de03f8c07, type: 3}
       propertyPath: m_Name
       value: customer_1

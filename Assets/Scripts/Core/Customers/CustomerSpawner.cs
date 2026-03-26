@@ -2,7 +2,9 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class CustomerSpawner : MonoBehaviour {
-	public Customer customerPrefab;
+	[Header("Prefabs")]
+	[SerializeField] private Customer[] customerPrefabs;
+	public Customer[] CustomerPrefabs => customerPrefabs;
 
 	[Header("Spawning")]
 	[SerializeField] private bool spawningEnabled = true;
@@ -20,11 +22,11 @@ public class CustomerSpawner : MonoBehaviour {
 	/// Public read-only access to whether spawning is enabled.
 	/// </summary>
 	public bool SpawningEnabled => spawningEnabled;
-    public bool RestaurantOpen => restaurantOpen;
+	public bool RestaurantOpen => restaurantOpen;
 	private float timer;
 
 	private void Update() {
-		if (customerPrefab == null)
+		if (customerPrefabs == null || customerPrefabs.Length == 0)
 			return;
 
 		if (!spawningEnabled)
@@ -86,11 +88,18 @@ public class CustomerSpawner : MonoBehaviour {
 		Vector3 spawnPosition = customerSpawnPoint != null ? customerSpawnPoint.position : transform.position;
 		Quaternion spawnRotation = customerSpawnPoint != null ? customerSpawnPoint.rotation : transform.rotation;
 
+		// Choose a random prefab from the available customer prefabs
+		var selectedPrefab = customerPrefabs[Random.Range(0, customerPrefabs.Length)];
+		if (selectedPrefab == null) {
+			Debug.LogWarning("[Spawner] Selected customer prefab is null. Spawn skipped.");
+			return;
+		}
+
 		GameObject customerGO;
 		if (spawnParent != null) {
-			customerGO = Instantiate(customerPrefab.gameObject, spawnPosition, spawnRotation, spawnParent);
+			customerGO = Instantiate(selectedPrefab.gameObject, spawnPosition, spawnRotation, spawnParent);
 		} else {
-			customerGO = Instantiate(customerPrefab.gameObject, spawnPosition, spawnRotation);
+			customerGO = Instantiate(selectedPrefab.gameObject, spawnPosition, spawnRotation);
 		}
 		if (!customerGO.TryGetComponent<Customer>(out var customer)) {
 			Debug.LogWarning("[Spawner] Spawned object does not contain a Customer component.");
