@@ -31,6 +31,7 @@ public class Customer : MonoBehaviour {
 	private bool orderTaken;   // Robot siparişi aldı
 	private bool orderServed;  // Robot siparişi teslim etti
 	private Order currentOrder;
+	private bool isCleaningUp;
 
 	public CustomerState State => state;
 	public TableBehavior Table => table;
@@ -263,6 +264,10 @@ public class Customer : MonoBehaviour {
 		return TryServeOrder(null);
 	}
 
+	public void DespawnImmediately() {
+		CleanupAndDestroy();
+	}
+
 
 	private void SetMoveTarget(Vector3 worldPos) {
 		moveTarget = worldPos;
@@ -396,6 +401,12 @@ public class Customer : MonoBehaviour {
 	}
 
 	private void CleanupAndDestroy() {
+		if (isCleaningUp) {
+			return;
+		}
+
+		isCleaningUp = true;
+
 		if (currentOrder != null) ActiveOrders.Remove(currentOrder);
 		else ActiveOrders.RemoveByCustomer(this);
 

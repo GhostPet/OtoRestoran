@@ -5,21 +5,19 @@ using System;
 /// Bu yapı sayesinde UI, save veya analytics sistemleri aynı veri modelini kullanabilir.
 /// </summary>
 [Serializable]
-public readonly struct GameScoreChangeResult
-{
-    public GameScoreChangeResult(int previousScore, int currentScore, int delta, string reason)
-    {
-        PreviousScore = previousScore;
-        CurrentScore = currentScore;
-        Delta = delta;
-        Reason = reason;
-    }
+public readonly struct GameScoreChangeResult {
+	public GameScoreChangeResult(int previousScore, int currentScore, int delta, string reason) {
+		PreviousScore = previousScore;
+		CurrentScore = currentScore;
+		Delta = delta;
+		Reason = reason;
+	}
 
-    public int PreviousScore { get; }
+	public int PreviousScore { get; }
 
-    public int CurrentScore { get; }
+	public int CurrentScore { get; }
 
-    public int Delta { get; }
+	public int Delta { get; }
 
-    public string Reason { get; }
+	public string Reason { get; }
 }

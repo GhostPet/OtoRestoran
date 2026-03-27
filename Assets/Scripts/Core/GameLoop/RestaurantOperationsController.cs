@@ -1,4 +1,5 @@
 using System;
+using Unity.AI.Navigation;
 using UnityEngine;
 
 public class RestaurantOperationsController : MonoBehaviour {
@@ -11,6 +12,7 @@ public class RestaurantOperationsController : MonoBehaviour {
 	[SerializeField] private CustomerSpawner customerSpawner;
 	[SerializeField] private GameCodeRunner gameCodeRunner;
 	[SerializeField] private RobotSpawnManager robotSpawnManager;
+	[SerializeField] private NavMeshSurface navigationSurface;
 
 	public RestaurantOperationMode CurrentMode { get; private set; } = RestaurantOperationMode.Closed;
 	public bool IsRestaurantOpen => CurrentMode == RestaurantOperationMode.Open;
@@ -19,6 +21,14 @@ public class RestaurantOperationsController : MonoBehaviour {
 
 	private void Awake() {
 		ResolveReferences();
+	}
+
+	private void OnEnable() {
+		Subscribe();
+	}
+
+	private void OnDisable() {
+		Unsubscribe();
 	}
 
 	private void Start() {
@@ -54,7 +64,29 @@ public class RestaurantOperationsController : MonoBehaviour {
 		if (robotSpawnManager == null) robotSpawnManager = FindAnyObjectByType<RobotSpawnManager>();
 	}
 
+	private void Subscribe() {
+		ResolveReferences();
+		if (!isActiveAndEnabled) {
+			return;
+		}
+
+		if (phaseStateMachine != null) {
+			phaseStateMachine.PhaseChanged -= HandlePhaseChanged;
+			phaseStateMachine.PhaseChanged += HandlePhaseChanged;
+		}
+	}
+
+	private void Unsubscribe() {
+		if (phaseStateMachine != null) {
+			phaseStateMachine.PhaseChanged -= HandlePhaseChanged;
+		}
+	}
+
 	private void ApplyMode(RestaurantOperationMode mode, bool force) {
+		ApplyMode(mode, force, true);
+	}
+
+	private void ApplyMode(RestaurantOperationMode mode, bool force, bool syncPhaseState) {
 		if (!force && CurrentMode == mode) return;
 
 		ResolveReferences();
@@ -62,10 +94,10 @@ public class RestaurantOperationsController : MonoBehaviour {
 		bool isOpen = mode == RestaurantOperationMode.Open;
 
 		if (placementController != null) {
-			placementController.SetEditMode(!isOpen);
+			placementController.SetEditMode(false);
 		}
 
-		if (phaseStateMachine != null) {
+		if (syncPhaseState && phaseStateMachine != null) {
 			if (isOpen) phaseStateMachine.StartService();
 			else phaseStateMachine.StartPreparation();
 		}
@@ -75,31 +107,53 @@ public class RestaurantOperationsController : MonoBehaviour {
 		}
 
 		if (robotSpawnManager != null) {
-			if (isOpen) robotSpawnManager.SpawnRobots();
-			else robotSpawnManager.DespawnRobots();
+			robotSpawnManager.SyncSpawnedRobots();
+			robotSpawnManager.SetRobotsVisible(isOpen);
 		}
 
-		if (isOpen && gameCodeRunner != null && robotSpawnManager != null) {
-			if (!HasActiveExecutors(gameCodeRunner.executors)) {
-				gameCodeRunner.SetExecutors(robotSpawnManager.GetActiveExecutors());
-			}
+		if (gameCodeRunner != null && robotSpawnManager != null) {
+			gameCodeRunner.SetExecutors(robotSpawnManager.GetActiveExecutors());
 		}
 
 		if (customerSpawner != null) {
 			customerSpawner.SetRestaurantOpen(isOpen);
 		}
 
+		RebuildNavigation();
+
 		ModeChanged?.Invoke(CurrentMode);
 		Debug.Log($"[RestaurantOperations] Mode -> {CurrentMode}");
 	}
 
-	private bool HasActiveExecutors(System.Collections.Generic.List<RobotExecutor> executors) {
-		if (executors == null) return false;
+	public void RequestNavigationRebuild() {
+		RebuildNavigation();
+	}
 
-		for (int i = 0; i < executors.Count; i++) {
-			if (executors[i] != null) return true;
+	private void HandlePhaseChanged(PhaseStateMachine.Phase phase) {
+		switch (phase) {
+			case PhaseStateMachine.Phase.Preparation:
+				ApplyMode(RestaurantOperationMode.Closed, false, false);
+				break;
+			case PhaseStateMachine.Phase.Service:
+				ApplyMode(RestaurantOperationMode.Open, false, false);
+				break;
+			case PhaseStateMachine.Phase.DayEnd:
+				if (CurrentMode != RestaurantOperationMode.Closed) {
+					ApplyMode(RestaurantOperationMode.Closed, true, false);
+				}
+				break;
+		}
+	}
+
+	private void RebuildNavigation() {
+		if (navigationSurface == null) {
+			navigationSurface = FindAnyObjectByType<NavMeshSurface>();
 		}
 
-		return false;
+		if (navigationSurface == null) return;
+
+		// Directly invoke the editor-equivalent bake
+		navigationSurface.BuildNavMesh();
 	}
+
 }

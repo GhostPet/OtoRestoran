@@ -62,12 +62,12 @@ public class GameplayUIRoot : MonoBehaviour {
 
 	private void InitializeUi() {
 		if (hudUI != null) {
-         hudUI.SetReferences(economyManager, gameScoreManager, phaseStateMachine);
+			hudUI.SetReferences(economyManager, gameScoreManager, phaseStateMachine);
 		}
 
 		if (buildPaletteUI != null) {
 			buildPaletteUI.SetReferences(buildInventoryManager, placementController);
-           buildPaletteUI.SetVisible(false);
+			buildPaletteUI.SetVisible(false);
 		}
 
 		if (codeEditorWindowUI != null) {
@@ -168,6 +168,10 @@ public class GameplayUIRoot : MonoBehaviour {
 		placementController.SetEditMode(nextState);
 		if (buildPaletteUI != null) {
 			buildPaletteUI.SetVisible(nextState);
+		}
+
+		if (operationsController != null) {
+			operationsController.RequestNavigationRebuild();
 		}
 	}
 

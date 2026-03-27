@@ -1,7 +1,5 @@
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class WindowAreaUI : MonoBehaviour {
 	[SerializeField] private RectTransform windowRoot;
@@ -24,8 +22,7 @@ public class WindowAreaUI : MonoBehaviour {
 		if (singletonWindows.TryGetValue(windowKey, out frame)) {
 			if (frame == null) {
 				singletonWindows.Remove(windowKey);
-			}
-			else {
+			} else {
 				frame.SetTitle(title);
 				frame.BringToFront();
 				T existingContent = frame.GetContent<T>();

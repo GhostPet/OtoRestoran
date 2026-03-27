@@ -34,6 +34,7 @@ public class Parser {
 		var name = Consume(TokenType.Identifier, "Expected function name");
 
 		Consume(TokenType.LParen, "Expected '('");
+		List<string> parameters = ParseParameterNames();
 		Consume(TokenType.RParen, "Expected ')'");
 		Consume(TokenType.Colon, "Expected ':'");
 		Consume(TokenType.NewLine, "Expected newline after function declaration");
@@ -42,9 +43,24 @@ public class Parser {
 		var fn = new FunctionDefNode {
 			Name = name.Lexeme,
 			Line = defToken.Line,
+			Parameters = parameters,
 			Body = ParseBlock().Statements
 		};
 		return fn;
+	}
+
+	private List<string> ParseParameterNames() {
+		var parameters = new List<string>();
+		if (Check(TokenType.RParen)) {
+			return parameters;
+		}
+
+		do {
+			Token parameter = Consume(TokenType.Identifier, "Expected parameter name");
+			parameters.Add(parameter.Lexeme);
+		} while (Match(TokenType.Comma));
+
+		return parameters;
 	}
 
 	private BlockNode ParseBlock() {

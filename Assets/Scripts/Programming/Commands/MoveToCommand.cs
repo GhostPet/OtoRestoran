@@ -27,32 +27,33 @@ public class MoveToCommand : IRobotCommand, ICompletable {
 
 		Vector3 target;
 		if (args.Length == 1) {
-			var arg = args[0];
+			var arg = BuiltinClassRegistry.UnwrapValue(args[0]);
 
-		if (arg is IList rawList) {
-			int count = rawList.Count;
-			if (count < 2 || count > 3) {
-				int line = GetExecutionLine();
-				throw new InvalidArgumentCountError("move_to", 2, count, line);
-			}
+			if (arg is IList rawList) {
+				int count = rawList.Count;
+				if (count < 2 || count > 3) {
+					int line = GetExecutionLine();
+					throw new InvalidArgumentCountError("move_to", 2, count, line);
+				}
 
-			int lineForErr = GetExecutionLine();
-			float ToFloat(object o) {
-				if (o is float f) return f;
-				if (o is int i) return (float)i;
-				if (o is double d) return (float)d;
-				throw new InvalidAssignmentError("move_to", "coordinates must be numbers", lineForErr);
-			}
+				int lineForErr = GetExecutionLine();
+				float ToFloat(object o) {
+					o = BuiltinClassRegistry.UnwrapValue(o);
+					if (o is float f) return f;
+					if (o is int i) return (float)i;
+					if (o is double d) return (float)d;
+					throw new InvalidAssignmentError("move_to", "coordinates must be numbers", lineForErr);
+				}
 
-			float x = ToFloat(rawList[0]);
-			if (count == 2) {
-				float z = ToFloat(rawList[1]);
-				target = new Vector3(x, 0f, z);
-			} else {
-				float y = ToFloat(rawList[1]);
-				float z = ToFloat(rawList[2]);
-				target = new Vector3(x, y, z);
-			}
+				float x = ToFloat(rawList[0]);
+				if (count == 2) {
+					float z = ToFloat(rawList[1]);
+					target = new Vector3(x, 0f, z);
+				} else {
+					float y = ToFloat(rawList[1]);
+					float z = ToFloat(rawList[2]);
+					target = new Vector3(x, y, z);
+				}
 			} else if (arg is Vector3 vec) {
 				target = vec;
 			} else if (arg is TableBehavior table) {
@@ -87,6 +88,7 @@ public class MoveToCommand : IRobotCommand, ICompletable {
 			// args.Length == 2 or 3 -> expect numeric coordinate arguments
 			int lineForErr = GetExecutionLine();
 			float ToFloatObj(object o) {
+				o = BuiltinClassRegistry.UnwrapValue(o);
 				if (o is float f) return f;
 				if (o is int i) return (float)i;
 				if (o is double d) return (float)d;

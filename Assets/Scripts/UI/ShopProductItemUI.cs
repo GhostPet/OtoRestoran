@@ -80,7 +80,7 @@ public class ShopProductItemUI : MonoBehaviour {
 
 	private void RefreshButtons() {
 		if (owner == null || owner.ShopManager == null || product == null) {
-            SetButtonState(false, false);
+			SetButtonState(false, false);
 			return;
 		}
 
@@ -100,7 +100,7 @@ public class ShopProductItemUI : MonoBehaviour {
 		}
 	}
 
-    private void SetButtonState(bool canBuy, bool canSell) {
+	private void SetButtonState(bool canBuy, bool canSell) {
 		if (buyButton != null) {
 			buyButton.interactable = canBuy;
 		}

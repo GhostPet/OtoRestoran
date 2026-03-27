@@ -24,6 +24,7 @@ public class CustomerSpawner : MonoBehaviour {
 	public bool SpawningEnabled => spawningEnabled;
 	public bool RestaurantOpen => restaurantOpen;
 	private float timer;
+	private readonly System.Collections.Generic.List<Customer> spawnedCustomers = new System.Collections.Generic.List<Customer>();
 
 	private void Update() {
 		if (customerPrefabs == null || customerPrefabs.Length == 0)
@@ -76,12 +77,27 @@ public class CustomerSpawner : MonoBehaviour {
 		restaurantOpen = open;
 		if (restaurantOpen)
 			timer = 0f;
+		else
+			ClearSpawnedCustomers();
+	}
+
+	public void ClearSpawnedCustomers() {
+		CleanupDestroyedCustomers();
+
+		for (int i = spawnedCustomers.Count - 1; i >= 0; i--) {
+			Customer customer = spawnedCustomers[i];
+			if (customer != null) {
+				customer.DespawnImmediately();
+			}
+		}
+
+		spawnedCustomers.Clear();
 	}
 
 	private void TrySpawnCustomer() {
 		var freeChair = ChairBehavior.FindAnyFreeChair();
 		if (freeChair == null) {
-			Debug.Log("[Spawner] No free seat. Spawn skipped.");
+			//Debug.Log("[Spawner] No free seat. Spawn skipped.");
 			return;
 		}
 
@@ -107,6 +123,8 @@ public class CustomerSpawner : MonoBehaviour {
 			return;
 		}
 
+		spawnedCustomers.Add(customer);
+
 		customer.SetSpawnPoint(customerSpawnPoint);
 
 		// Parent assignment (in case prefab was instantiated without parent)
@@ -122,5 +140,13 @@ public class CustomerSpawner : MonoBehaviour {
 			tableName = freeChair.Table.name;
 
 		Debug.Log($"[Spawner] Customer spawned and seated at {freeChair.name} (Table: {tableName})");
+	}
+
+	private void CleanupDestroyedCustomers() {
+		for (int i = spawnedCustomers.Count - 1; i >= 0; i--) {
+			if (spawnedCustomers[i] == null) {
+				spawnedCustomers.RemoveAt(i);
+			}
+		}
 	}
 }

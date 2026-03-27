@@ -59,6 +59,7 @@ public class GameplayActionPanelUI : MonoBehaviour {
 	private readonly HashSet<string> expandedRobotKeys = new HashSet<string>(StringComparer.Ordinal);
 	private RestaurantOperationMode currentMode = RestaurantOperationMode.Closed;
 	private bool collapsed;
+	private bool codingSectionExpanded = true;
 
 	public event Action<GameplayUIActionType> ActionInvoked;
 	public event Action<bool, float> CollapseChanged;
@@ -79,7 +80,7 @@ public class GameplayActionPanelUI : MonoBehaviour {
 	private void OnEnable() {
 		RegisterButtons();
 		Subscribe();
-		Refresh(currentMode);
+		Refresh(operationsController != null ? operationsController.CurrentMode : currentMode);
 	}
 
 	private void OnDisable() {
@@ -201,6 +202,11 @@ public class GameplayActionPanelUI : MonoBehaviour {
 			robotSpawnManager.SpawnedRobotsChanged -= HandleSpawnedRobotsChanged;
 			robotSpawnManager.SpawnedRobotsChanged += HandleSpawnedRobotsChanged;
 		}
+
+		if (operationsController != null) {
+			operationsController.ModeChanged -= HandleModeChanged;
+			operationsController.ModeChanged += HandleModeChanged;
+		}
 	}
 
 	private void Unsubscribe() {
@@ -210,6 +216,10 @@ public class GameplayActionPanelUI : MonoBehaviour {
 
 		if (robotSpawnManager != null) {
 			robotSpawnManager.SpawnedRobotsChanged -= HandleSpawnedRobotsChanged;
+		}
+
+		if (operationsController != null) {
+			operationsController.ModeChanged -= HandleModeChanged;
 		}
 	}
 
@@ -226,9 +236,33 @@ public class GameplayActionPanelUI : MonoBehaviour {
 			binding.Button.interactable = shouldEnable;
 
 			if (binding.LabelText != null) {
-				string label = isService ? binding.ServiceLabel : binding.PreparationLabel;
+				string label = ResolveActionLabel(binding, isService);
 				binding.LabelText.text = string.IsNullOrWhiteSpace(label) ? binding.ActionType.ToString() : label;
 			}
+		}
+	}
+
+	private string ResolveActionLabel(GameplayActionBinding binding, bool isService) {
+		if (binding == null) {
+			return string.Empty;
+		}
+
+		string label = isService ? binding.ServiceLabel : binding.PreparationLabel;
+		if (!string.IsNullOrWhiteSpace(label)) {
+			return label;
+		}
+
+		switch (binding.ActionType) {
+			case GameplayUIActionType.OpenShop:
+				return "Mağazayı Aç";
+			case GameplayUIActionType.ToggleBuildMode:
+				return "Restoranı Düzenle";
+			case GameplayUIActionType.OpenDocumentation:
+				return "Dokümantasyonu Aç";
+			case GameplayUIActionType.ToggleRestaurantMode:
+				return isService ? "Servisi Sonlandır" : "Restoranı Aç";
+			default:
+				return binding.ActionType.ToString();
 		}
 	}
 
@@ -239,6 +273,24 @@ public class GameplayActionPanelUI : MonoBehaviour {
 
 		if (codingToggleButtonText != null) {
 			codingToggleButtonText.text = "Robotlar";
+		}
+
+		IReadOnlyList<RobotSpawnPoint> spawnPoints = RobotSpawnPoint.AllSpawnPoints;
+		bool hasRobots = spawnPoints != null && spawnPoints.Count > 0;
+		if (hasRobots) {
+			codingSectionExpanded = true;
+			for (int i = 0; i < spawnPoints.Count; i++) {
+				RobotSpawnPoint spawnPoint = spawnPoints[i];
+				if (spawnPoint == null) {
+					continue;
+				}
+
+				expandedRobotKeys.Add(spawnPoint.ProgramBindingKey);
+			}
+		}
+
+		if (codingContentRoot != null) {
+			codingContentRoot.SetActive(!collapsed && codingSectionExpanded && hasRobots);
 		}
 
 		RebuildRobotList();
@@ -275,9 +327,10 @@ public class GameplayActionPanelUI : MonoBehaviour {
 			return;
 		}
 
-		bool newState = !codingContentRoot.activeSelf;
-		codingContentRoot.SetActive(newState);
-		if (newState) {
+		codingSectionExpanded = !codingSectionExpanded;
+		bool hasRobots = RobotSpawnPoint.AllSpawnPoints.Count > 0;
+		codingContentRoot.SetActive(!collapsed && codingSectionExpanded && hasRobots);
+		if (codingContentRoot.activeSelf) {
 			RebuildRobotList();
 		}
 	}
@@ -299,6 +352,9 @@ public class GameplayActionPanelUI : MonoBehaviour {
 
 		if (collapsed && codingContentRoot != null) {
 			codingContentRoot.SetActive(false);
+		} else if (!collapsed && codingContentRoot != null) {
+			bool hasRobots = RobotSpawnPoint.AllSpawnPoints.Count > 0;
+			codingContentRoot.SetActive(codingSectionExpanded && hasRobots);
 		}
 
 		if (forceEvent || CollapseChanged != null) {
@@ -315,7 +371,12 @@ public class GameplayActionPanelUI : MonoBehaviour {
 	}
 
 	private void HandleSpawnedRobotsChanged() {
+		RefreshCodingSection();
 		RebuildRobotList();
+	}
+
+	private void HandleModeChanged(RestaurantOperationMode mode) {
+		Refresh(mode);
 	}
 
 	private void ClearRobotItems() {

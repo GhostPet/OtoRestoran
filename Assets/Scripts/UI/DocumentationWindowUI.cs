@@ -11,7 +11,7 @@ public class DocumentationTopicBinding {
 	[SerializeField] private Button button;
 	[SerializeField] private TMP_Text buttonLabel;
 	[SerializeField] private TextAsset contentAsset;
-	[SerializeField] [TextArea(5, 30)] private string fallbackContent;
+	[SerializeField][TextArea(5, 30)] private string fallbackContent;
 
 	public string TopicId => topicId;
 	public string Title => title;
@@ -99,8 +99,7 @@ public class DocumentationWindowUI : WindowContentUI {
 		if (contentText != null) {
 			if (topic.ContentAsset != null) {
 				contentText.text = topic.ContentAsset.text;
-			}
-			else {
+			} else {
 				contentText.text = string.IsNullOrWhiteSpace(topic.FallbackContent)
 					? "Bu başlık için içerik atanmadı."
 					: topic.FallbackContent;

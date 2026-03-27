@@ -1,5 +1,5 @@
-﻿using UnityEngine;
-using System.Text;
+﻿using System.Text;
+using UnityEngine;
 
 public class LexerDebug : MonoBehaviour {
 	[TextArea(5, 20)]

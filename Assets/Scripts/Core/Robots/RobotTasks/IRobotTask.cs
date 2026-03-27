@@ -1,6 +1,3 @@
-using UnityEngine;
-
-public interface IRobotTask
-{
+public interface IRobotTask {
 
 }

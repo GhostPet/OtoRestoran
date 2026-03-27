@@ -1,5 +1,5 @@
-﻿using UnityEngine;
-using System;
+﻿using System;
+using UnityEngine;
 
 public class WaitCommand : IRobotCommand {
 	public int ExpectedArgumentCount => 1;

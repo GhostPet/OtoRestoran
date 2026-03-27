@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 public static class BuiltinClassRegistry {
- public static object UnwrapValue(object value) {
+	public static object UnwrapValue(object value) {
 		if (value is BuiltinObject builtin) {
 			return builtin.RawInstance;
 		}
@@ -76,7 +76,7 @@ public static class BuiltinClassRegistry {
 			case TableBehavior table:
 				builtin = new TableBuiltinClass(table, context);
 				return true;
-         case FridgeBehavior fridgeBehavior:
+			case FridgeBehavior fridgeBehavior:
 				builtin = new FridgeBuiltinClass(fridgeBehavior, context);
 				return true;
 			case Customer customer:
@@ -91,7 +91,7 @@ public static class BuiltinClassRegistry {
 			case OvenBehavior oven:
 				builtin = new FurnaceBuiltinClass(oven, context);
 				return true;
-           case StorageInventory fridge:
+			case StorageInventory fridge:
 				FridgeBehavior attachedFridge = null;
 				if (fridge != null) {
 					attachedFridge = fridge.GetComponent<FridgeBehavior>();

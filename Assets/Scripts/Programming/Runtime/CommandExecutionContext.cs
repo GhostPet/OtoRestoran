@@ -1,4 +1,6 @@
 public static class CommandExecutionContext {
+	public static event System.Action<string, string, bool> StatusMessagePublished;
+
 	// Context scoping: support multiple interpreters (contexts) running concurrently.
 	// CurrentContextId selects which variable set and robot the static accessors operate on.
 	public static string CurrentContextId { get; set; } = "default";
@@ -45,6 +47,11 @@ public static class CommandExecutionContext {
 		vars[name] = value;
 	}
 
+	public static bool RemoveVariable(string name) {
+		var vars = VarsForCurrent();
+		return vars.Remove(name);
+	}
+
 	public static bool TryGetVariable(string name, out object value) {
 		var vars = VarsForCurrent();
 		return vars.TryGetValue(name, out value);
@@ -61,6 +68,14 @@ public static class CommandExecutionContext {
 		} else {
 			_contexts.Remove(contextId);
 		}
+	}
+
+	public static void PublishStatusMessage(string message, bool isError = false) {
+		if (string.IsNullOrWhiteSpace(message)) {
+			return;
+		}
+
+		StatusMessagePublished?.Invoke(CurrentContextId, message, isError);
 	}
 
 	private static int GetIntForCurrentContext(string key) {

@@ -1,5 +1,4 @@
-public enum ShopTransactionType
-{
-    Purchase = 0,
-    Sale = 1
+public enum ShopTransactionType {
+	Purchase = 0,
+	Sale = 1
 }

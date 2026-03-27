@@ -23,7 +23,10 @@ public static class BuiltinCommandRegistry {
 	public static IRobotCommand GetCommand(string name) {
 		if (!_commands.ContainsKey(name))
 			throw new Exception($"Command '{name}' not registered.");
-		return _commands[name];
+
+		IRobotCommand prototype = _commands[name];
+		IRobotCommand instance = Activator.CreateInstance(prototype.GetType()) as IRobotCommand;
+		return instance ?? prototype;
 	}
 
 	public static List<string> GetAllCommandNames() => new(_commands.Keys);

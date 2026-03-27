@@ -5,22 +5,12 @@ public class ChairBehavior : BaseRestaurantObject, IPlaceableLifecycle {
 	private static readonly List<ChairBehavior> allChairs = new();
 	public static IReadOnlyList<ChairBehavior> AllChairs => allChairs;
 
-	public bool occupied = false;
-
 	private TableBehavior attachedTable;
 	private Vector2Int attachedCell;
 	private Customer currentCustomer;
 
 	public TableBehavior Table => attachedTable;
 	public Customer CurrentCustomer => currentCustomer;
-
-	public void Sit() {
-		occupied = true;
-	}
-
-	public void Leave() {
-		occupied = false;
-	}
 
 	public void OnPlaced(PlaceableObject placedObject) {
 		Vector2Int chairCell = placedObject.OriginCell;

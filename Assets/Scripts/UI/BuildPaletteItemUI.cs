@@ -16,7 +16,7 @@ public class BuildPaletteItemUI : MonoBehaviour {
 		placeableData = data;
 
 		if (titleText != null) {
-           titleText.text = data != null ? data.Name : "Eşya";
+			titleText.text = data != null ? data.Name : "Eşya";
 		}
 
 		if (quantityText != null) {

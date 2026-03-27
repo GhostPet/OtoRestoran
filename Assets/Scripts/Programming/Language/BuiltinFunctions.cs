@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using UnityEngine;
 
 public static class BuiltinFunctions {
@@ -14,11 +15,11 @@ public static class BuiltinFunctions {
 		Register("float", Float);
 		Register("str", Str);
 		Register("get_tables", GetTables);
-      Register("get_customers", GetCustomers);
+		Register("get_customers", GetCustomers);
 		Register("get_furnaces", GetFurnaces);
-       Register("get_fridges", GetFridges);
+		Register("get_fridges", GetFridges);
 		Register("get_orders", ActiveOrdersList);
-       Register("active_orders", ActiveOrdersList);
+		Register("active_orders", ActiveOrdersList);
 		Register("get_robots", GetRobots);
 	}
 
@@ -73,7 +74,7 @@ public static class BuiltinFunctions {
 	private static object Type(object[] args, int line) {
 		if (args.Length != 1) throw new ValidationError($"type() takes exactly one argument (line {line})", line);
 		var obj = args[0];
-     string builtinTypeName = BuiltinClassRegistry.GetTypeName(obj);
+		string builtinTypeName = BuiltinClassRegistry.GetTypeName(obj);
 		if (!string.IsNullOrWhiteSpace(builtinTypeName)) return builtinTypeName;
 		if (obj == null) return "null";
 		if (obj is string) return "string";
@@ -89,7 +90,7 @@ public static class BuiltinFunctions {
 		var o = args[0];
 		if (o is int i) return i;
 		if (o is float f) return (int)f;
-		if (o is string s && int.TryParse(s, out var pi)) return pi;
+		if (o is string s && int.TryParse(s, NumberStyles.Integer, CultureInfo.InvariantCulture, out var pi)) return pi;
 		throw new ValidationError($"int() cannot convert given value to int (line {line})", line);
 	}
 
@@ -98,7 +99,7 @@ public static class BuiltinFunctions {
 		var o = args[0];
 		if (o is float f) return f;
 		if (o is int i) return (float)i;
-		if (o is string s && float.TryParse(s, out var pf)) return pf;
+		if (o is string s && float.TryParse(s, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out var pf)) return pf;
 		throw new ValidationError($"float() cannot convert given value to float (line {line})", line);
 	}
 
@@ -112,9 +113,9 @@ public static class BuiltinFunctions {
 		if (args.Length != 0) throw new ValidationError($"get_tables() takes no arguments (line {line})", line);
 
 		var found = UnityEngine.Object.FindObjectsByType<TableBehavior>(FindObjectsSortMode.None);
-     var tables = new List<object>(found.Length);
+		var tables = new List<object>(found.Length);
 		for (int i = 0; i < found.Length; i++) {
-         if (found[i] != null) tables.Add(BuiltinClassRegistry.WrapValue(found[i], ScriptInvocationContext.Create(null)));
+			if (found[i] != null) tables.Add(BuiltinClassRegistry.WrapValue(found[i], ScriptInvocationContext.Create(null)));
 		}
 
 		return tables;
@@ -136,9 +137,9 @@ public static class BuiltinFunctions {
 		if (args.Length != 0) throw new ValidationError($"get_furnaces() takes no arguments (line {line})", line);
 
 		var found = UnityEngine.Object.FindObjectsByType<OvenBehavior>(FindObjectsSortMode.None);
-        var furnaces = new List<object>(found.Length);
+		var furnaces = new List<object>(found.Length);
 		for (int i = 0; i < found.Length; i++) {
-           if (found[i] != null) furnaces.Add(BuiltinClassRegistry.WrapValue(found[i], ScriptInvocationContext.Create(null)));
+			if (found[i] != null) furnaces.Add(BuiltinClassRegistry.WrapValue(found[i], ScriptInvocationContext.Create(null)));
 		}
 
 		return furnaces;
@@ -147,7 +148,7 @@ public static class BuiltinFunctions {
 	private static object GetFridges(object[] args, int line) {
 		if (args.Length != 0) throw new ValidationError($"get_fridges() takes no arguments (line {line})", line);
 
-       var found = UnityEngine.Object.FindObjectsByType<FridgeBehavior>(FindObjectsSortMode.None);
+		var found = UnityEngine.Object.FindObjectsByType<FridgeBehavior>(FindObjectsSortMode.None);
 		var fridges = new List<object>(found.Length);
 		for (int i = 0; i < found.Length; i++) {
 			if (found[i] != null) fridges.Add(BuiltinClassRegistry.WrapValue(found[i], ScriptInvocationContext.Create(null)));
@@ -157,7 +158,7 @@ public static class BuiltinFunctions {
 	}
 
 	private static object ActiveOrdersList(object[] args, int line) {
-     if (args.Length != 0) throw new ValidationError($"get_orders() takes no arguments (line {line})", line);
+		if (args.Length != 0) throw new ValidationError($"get_orders() takes no arguments (line {line})", line);
 		return BuiltinClassRegistry.WrapValue(ActiveOrders.Snapshot(), ScriptInvocationContext.Create(null));
 	}
 

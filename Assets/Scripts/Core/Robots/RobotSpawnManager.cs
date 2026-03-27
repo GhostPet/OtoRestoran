@@ -7,11 +7,17 @@ public class RobotSpawnManager : MonoBehaviour {
 	[SerializeField] private Transform spawnedRobotParent;
 
 	private readonly Dictionary<RobotSpawnPoint, GameObject> spawnedRobots = new();
+	private bool robotsVisible;
 
 	public int SpawnedRobotCount => spawnedRobots.Count;
 	public event System.Action SpawnedRobotsChanged;
 
 	public void SpawnRobots() {
+		SetRobotsVisible(true);
+		SyncSpawnedRobots();
+	}
+
+	public void SyncSpawnedRobots() {
 		CleanupDestroyedEntries();
 
 		if (robotPrefab == null) {
@@ -20,20 +26,53 @@ public class RobotSpawnManager : MonoBehaviour {
 		}
 
 		var spawnPoints = RobotSpawnPoint.AllSpawnPoints;
+		var activeSpawnPoints = new HashSet<RobotSpawnPoint>(spawnPoints);
 		bool changed = false;
+
+		var removedSpawnPoints = new List<RobotSpawnPoint>();
+		foreach (var pair in spawnedRobots) {
+			if (pair.Key == null || activeSpawnPoints.Contains(pair.Key)) {
+				continue;
+			}
+
+			removedSpawnPoints.Add(pair.Key);
+		}
+
+		for (int i = 0; i < removedSpawnPoints.Count; i++) {
+			if (RemoveRobotForSpawnPoint(removedSpawnPoints[i])) {
+				changed = true;
+			}
+		}
+
 		for (int i = 0; i < spawnPoints.Count; i++) {
 			var spawnPoint = spawnPoints[i];
-			if (spawnPoint == null) continue;
-			if (spawnedRobots.ContainsKey(spawnPoint) && spawnedRobots[spawnPoint] != null) continue;
-
-			Transform parent = spawnedRobotParent != null ? spawnedRobotParent : null;
-			var robotInstance = Instantiate(robotPrefab, spawnPoint.SpawnPosition, spawnPoint.SpawnRotation, parent);
-			robotInstance.name = spawnPoint.DisplayName + "_Robot";
-			spawnedRobots[spawnPoint] = robotInstance;
-			changed = true;
+			if (EnsureRobotForSpawnPoint(spawnPoint)) {
+				changed = true;
+			}
 		}
 
 		if (changed) {
+			SpawnedRobotsChanged?.Invoke();
+		}
+	}
+
+	public void SetRobotsVisible(bool isVisible) {
+		robotsVisible = isVisible;
+		CleanupDestroyedEntries();
+
+		foreach (var pair in spawnedRobots) {
+			ApplyVisibility(pair.Value, isVisible);
+		}
+	}
+
+	public void HandleSpawnPointPlaced(RobotSpawnPoint spawnPoint) {
+		if (EnsureRobotForSpawnPoint(spawnPoint)) {
+			SpawnedRobotsChanged?.Invoke();
+		}
+	}
+
+	public void HandleSpawnPointRemoved(RobotSpawnPoint spawnPoint) {
+		if (RemoveRobotForSpawnPoint(spawnPoint)) {
 			SpawnedRobotsChanged?.Invoke();
 		}
 	}
@@ -100,6 +139,84 @@ public class RobotSpawnManager : MonoBehaviour {
 
 		if (removedKeys.Count > 0) {
 			SpawnedRobotsChanged?.Invoke();
+		}
+	}
+
+	private bool EnsureRobotForSpawnPoint(RobotSpawnPoint spawnPoint) {
+		if (spawnPoint == null || robotPrefab == null) {
+			return false;
+		}
+
+		GameObject robotInstance;
+		if (spawnedRobots.TryGetValue(spawnPoint, out robotInstance) && robotInstance != null) {
+			UpdateRobotTransform(robotInstance, spawnPoint);
+			ApplyVisibility(robotInstance, robotsVisible);
+			return false;
+		}
+
+		Transform parent = spawnedRobotParent != null ? spawnedRobotParent : null;
+		robotInstance = Instantiate(robotPrefab, spawnPoint.SpawnPosition, spawnPoint.SpawnRotation, parent);
+		robotInstance.name = spawnPoint.DisplayName + "_Robot";
+		spawnedRobots[spawnPoint] = robotInstance;
+		BindRobot(robotInstance, spawnPoint);
+		ApplyVisibility(robotInstance, robotsVisible);
+		return true;
+	}
+
+	private bool RemoveRobotForSpawnPoint(RobotSpawnPoint spawnPoint) {
+		if (spawnPoint == null) {
+			return false;
+		}
+
+		GameObject robotInstance;
+		if (!spawnedRobots.TryGetValue(spawnPoint, out robotInstance)) {
+			return false;
+		}
+
+		spawnedRobots.Remove(spawnPoint);
+		if (robotInstance != null) {
+			Destroy(robotInstance);
+		}
+
+		return true;
+	}
+
+	private void BindRobot(GameObject robotInstance, RobotSpawnPoint spawnPoint) {
+		if (robotInstance == null || spawnPoint == null) {
+			return;
+		}
+
+		Robot robot;
+		if (!robotInstance.TryGetComponent<Robot>(out robot)) {
+			robot = robotInstance.GetComponentInChildren<Robot>(true);
+		}
+
+		if (robot != null) {
+			robot.BindSpawnPoint(spawnPoint);
+		}
+	}
+
+	private void UpdateRobotTransform(GameObject robotInstance, RobotSpawnPoint spawnPoint) {
+		if (robotInstance == null || spawnPoint == null) {
+			return;
+		}
+
+		robotInstance.transform.SetPositionAndRotation(spawnPoint.SpawnPosition, spawnPoint.SpawnRotation);
+		BindRobot(robotInstance, spawnPoint);
+	}
+
+	private void ApplyVisibility(GameObject robotInstance, bool isVisible) {
+		if (robotInstance == null) {
+			return;
+		}
+
+		Robot robot;
+		if (!robotInstance.TryGetComponent<Robot>(out robot)) {
+			robot = robotInstance.GetComponentInChildren<Robot>(true);
+		}
+
+		if (robot != null) {
+			robot.SetVisible(isVisible);
 		}
 	}
 }

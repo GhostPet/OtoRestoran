@@ -7,7 +7,7 @@ public class GameWindowDragHandleUI : MonoBehaviour, IPointerDownHandler, IBegin
 	[SerializeField] private GameWindowUI window;
 
 	private void Awake() {
-       Image image = GetComponent<Image>();
+		Image image = GetComponent<Image>();
 		if (image != null) {
 			image.color = new Color(1f, 1f, 1f, 0.001f);
 			image.raycastTarget = true;

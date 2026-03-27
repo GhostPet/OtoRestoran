@@ -10,6 +10,7 @@ public class CodeEditorWindowUI : MonoBehaviour {
 	[SerializeField] private RobotProgramWindowUI codeWindowContentPrefab;
 
 	private readonly Dictionary<string, RobotProgramWindowUI> openCodeWindows = new Dictionary<string, RobotProgramWindowUI>();
+	private readonly Dictionary<string, string> codeStatuses = new Dictionary<string, string>();
 
 	public bool IsRestaurantOpen => operationsController != null && operationsController.IsRestaurantOpen;
 
@@ -68,6 +69,10 @@ public class CodeEditorWindowUI : MonoBehaviour {
 		}
 
 		content.Bind(this, spawnPoint, codeEntry);
+		string statusMessage;
+		if (codeStatuses.TryGetValue(codeId, out statusMessage)) {
+			content.SetStatusMessage(statusMessage);
+		}
 		openCodeWindows[codeId] = content;
 	}
 
@@ -91,16 +96,17 @@ public class CodeEditorWindowUI : MonoBehaviour {
 
 		RobotExecutor executor;
 		if (!TryResolveExecutor(spawnPoint, out executor)) {
+			SetCodeStatus(codeId, "Aktif robot bulunamadı.");
 			return false;
 		}
 
-		if (gameCodeRunner.IsExecutionRunning(executor)) {
-			gameCodeRunner.StopExecutionFor(executor);
-			RefreshOpenWindows();
-			return true;
+		bool wasRunning = gameCodeRunner.IsExecutionRunning(codeId);
+		bool started = gameCodeRunner.TryRunCode(codeId, executor, codeEntry.Code);
+		if (started) {
+			SetCodeStatus(codeId, wasRunning ? "Kod durduruldu." : "Kod çalıştırılıyor...");
+		} else if (!gameCodeRunner.IsExecutionRunning(codeId) && !codeStatuses.ContainsKey(codeId)) {
+			SetCodeStatus(codeId, "Kod çalıştırılamadı.");
 		}
-
-		bool started = gameCodeRunner.TryRunCode(executor, codeEntry.Code);
 		RefreshOpenWindows();
 		return started;
 	}
@@ -108,6 +114,10 @@ public class CodeEditorWindowUI : MonoBehaviour {
 	public void DeleteCode(string codeId) {
 		if (robotCodeRegistry == null || string.IsNullOrWhiteSpace(codeId)) {
 			return;
+		}
+
+		if (gameCodeRunner != null && gameCodeRunner.IsExecutionRunning(codeId)) {
+			gameCodeRunner.StopExecution(codeId);
 		}
 
 		if (!robotCodeRegistry.DeleteCode(codeId)) {
@@ -119,6 +129,7 @@ public class CodeEditorWindowUI : MonoBehaviour {
 			content.Window.CloseWindow();
 		}
 
+		codeStatuses.Remove(codeId);
 		openCodeWindows.Remove(codeId);
 	}
 
@@ -131,17 +142,12 @@ public class CodeEditorWindowUI : MonoBehaviour {
 		return TryResolveExecutor(spawnPoint, out executor);
 	}
 
-	public bool IsCodeRunning(RobotSpawnPoint spawnPoint) {
+	public bool IsCodeRunning(string codeId) {
 		if (gameCodeRunner == null) {
 			return false;
 		}
 
-		RobotExecutor executor;
-		if (!TryResolveExecutor(spawnPoint, out executor)) {
-			return false;
-		}
-
-		return gameCodeRunner.IsExecutionRunning(executor);
+		return gameCodeRunner.IsExecutionRunning(codeId);
 	}
 
 	private bool TryResolveExecutor(RobotSpawnPoint spawnPoint, out RobotExecutor executor) {
@@ -164,6 +170,11 @@ public class CodeEditorWindowUI : MonoBehaviour {
 			return;
 		}
 
+		if (gameCodeRunner != null) {
+			gameCodeRunner.StatusMessageReceived -= HandleStatusMessageReceived;
+			gameCodeRunner.StatusMessageReceived += HandleStatusMessageReceived;
+		}
+
 		if (robotCodeRegistry != null) {
 			robotCodeRegistry.CodesChanged -= HandleCodesChanged;
 			robotCodeRegistry.CodesChanged += HandleCodesChanged;
@@ -176,6 +187,10 @@ public class CodeEditorWindowUI : MonoBehaviour {
 	}
 
 	private void Unsubscribe() {
+		if (gameCodeRunner != null) {
+			gameCodeRunner.StatusMessageReceived -= HandleStatusMessageReceived;
+		}
+
 		if (robotCodeRegistry != null) {
 			robotCodeRegistry.CodesChanged -= HandleCodesChanged;
 		}
@@ -191,6 +206,14 @@ public class CodeEditorWindowUI : MonoBehaviour {
 
 	private void HandleSpawnedRobotsChanged() {
 		RefreshOpenWindows();
+	}
+
+	private void HandleStatusMessageReceived(string codeId, string message, bool isError) {
+		if (string.IsNullOrWhiteSpace(codeId) || string.IsNullOrWhiteSpace(message)) {
+			return;
+		}
+
+		SetCodeStatus(codeId, message);
 	}
 
 	private void RefreshOpenWindows() {
@@ -225,6 +248,10 @@ public class CodeEditorWindowUI : MonoBehaviour {
 			}
 
 			content.RefreshFromCode(codeEntry);
+			string statusMessage;
+			if (codeStatuses.TryGetValue(pair.Key, out statusMessage)) {
+				content.SetStatusMessage(statusMessage);
+			}
 		}
 
 		if (removedKeys == null) {
@@ -235,4 +262,18 @@ public class CodeEditorWindowUI : MonoBehaviour {
 			openCodeWindows.Remove(removedKeys[i]);
 		}
 	}
+
+	private void SetCodeStatus(string codeId, string message) {
+		if (string.IsNullOrWhiteSpace(codeId) || string.IsNullOrWhiteSpace(message)) {
+			return;
+		}
+
+		codeStatuses[codeId] = message;
+
+		RobotProgramWindowUI content;
+		if (openCodeWindows.TryGetValue(codeId, out content) && content != null) {
+			content.SetStatusMessage(message);
+		}
+	}
+
 }

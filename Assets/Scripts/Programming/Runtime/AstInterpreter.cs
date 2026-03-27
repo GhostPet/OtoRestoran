@@ -51,7 +51,7 @@ public class AstInterpreter : MonoBehaviour {
 		RuntimeWarningMessage = string.IsNullOrWhiteSpace(message)
 			? "Kod çalıştırılırken bilinmeyen bir hata oluştu."
 			: message;
-		Debug.LogWarning($"[AstInterpreter] {RuntimeWarningMessage}");
+		CommandExecutionContext.PublishStatusMessage(RuntimeWarningMessage, true);
 
 		if (Executor != null) {
 			Executor.CancelAll();
@@ -78,7 +78,6 @@ public class AstInterpreter : MonoBehaviour {
 					int idx = idxVal is float ff ? (int)ff : idxVal is int ii ? ii : -1;
 					if (idx < 0 || idx >= list.Count) throw new ValidationError($"Index out of range for '{baseName}' (line {line})", line);
 					list[idx] = val;
-					Debug.Log($"[AstInterpreter] Assigned {baseName}[{idx}] = {val} (line {line})");
 					return;
 				}
 				throw new ValidationError($"Cannot index assign to non-list variable '{baseName}' (line {line})", line);
@@ -104,7 +103,6 @@ public class AstInterpreter : MonoBehaviour {
 					int idx = idxVal is float ff ? (int)ff : idxVal is int ii ? ii : -1;
 					if (idx < 0 || idx >= list2.Count) throw new ValidationError($"Index out of range for '{baseName}' (line {line})", line);
 					list2[idx] = v;
-					Debug.Log($"[AstInterpreter] Assigned {baseName}[{idx}] = {v} (line {line})");
 					continue;
 				}
 				throw new ValidationError($"Cannot index assign to non-list variable '{baseName}' (line {line})", line);
@@ -114,6 +112,10 @@ public class AstInterpreter : MonoBehaviour {
 	}
 
 	private IEnumerator RunFunction(string name) {
+		yield return StartCoroutine(RunFunction(name, null, -1));
+	}
+
+	private IEnumerator RunFunction(string name, IList<object> arguments, int callLine) {
 		if (HasRuntimeError) {
 			yield break;
 		}
@@ -124,14 +126,22 @@ public class AstInterpreter : MonoBehaviour {
 			yield break;
 		}
 
-		for (int i = 0; i < fn.Body.Count; i++) {
-			if (HasRuntimeError) {
-				yield break;
-			}
+		if (!TryBindFunctionArguments(fn, arguments, callLine, out List<string> newVariables, out Dictionary<string, object> previousValues, out HashSet<string> overwrittenNames)) {
+			yield break;
+		}
 
-			var stmt = fn.Body[i];
-			// Delegate handling to ExecuteStatement which handles nested blocks properly
-			yield return StartCoroutine(ExecuteStatement(stmt));
+		try {
+			for (int i = 0; i < fn.Body.Count; i++) {
+				if (HasRuntimeError) {
+					yield break;
+				}
+
+				var stmt = fn.Body[i];
+				// Delegate handling to ExecuteStatement which handles nested blocks properly
+				yield return StartCoroutine(ExecuteStatement(stmt));
+			}
+		} finally {
+			RestoreFunctionArguments(newVariables, previousValues, overwrittenNames);
 		}
 	}
 
@@ -310,10 +320,61 @@ public class AstInterpreter : MonoBehaviour {
 			}
 
 			// Set current line for the call then execute the function body
+			int previousLine = CommandExecutionContext.CurrentLine;
 			CommandExecutionContext.CurrentLine = call.Line;
-			yield return StartCoroutine(RunFunction(call.FunctionName));
-			CommandExecutionContext.CurrentLine = -1;
+			yield return StartCoroutine(RunFunction(call.FunctionName, runtimeArgs, call.Line));
+			CommandExecutionContext.CurrentLine = previousLine;
 			yield break;
+		}
+	}
+
+	private bool TryBindFunctionArguments(FunctionDefNode function, IList<object> arguments, int callLine, out List<string> newVariables, out Dictionary<string, object> previousValues, out HashSet<string> overwrittenNames) {
+		newVariables = new List<string>();
+		previousValues = new Dictionary<string, object>(System.StringComparer.OrdinalIgnoreCase);
+		overwrittenNames = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+
+		IList<object> invocationArguments = arguments ?? System.Array.Empty<object>();
+		int expectedCount = function != null && function.Parameters != null ? function.Parameters.Count : 0;
+		if (invocationArguments.Count != expectedCount) {
+			int line = callLine >= 0 ? callLine : (function != null ? function.Line : -1);
+			RequestStopWithWarning($"Function '{function?.Name}' expects {expectedCount} argument(s) but got {invocationArguments.Count} (line {line})");
+			return false;
+		}
+
+		if (function == null || function.Parameters == null) {
+			return true;
+		}
+
+		for (int i = 0; i < function.Parameters.Count; i++) {
+			string parameterName = function.Parameters[i];
+			object parameterValue = invocationArguments[i];
+
+			if (!overwrittenNames.Contains(parameterName) && CommandExecutionContext.TryGetVariable(parameterName, out object previousValue)) {
+				previousValues[parameterName] = previousValue;
+				overwrittenNames.Add(parameterName);
+			} else if (!newVariables.Contains(parameterName)) {
+				newVariables.Add(parameterName);
+			}
+
+			CommandExecutionContext.SetVariable(parameterName, parameterValue);
+		}
+
+		return true;
+	}
+
+	private void RestoreFunctionArguments(List<string> newVariables, Dictionary<string, object> previousValues, HashSet<string> overwrittenNames) {
+		if (newVariables != null) {
+			for (int i = 0; i < newVariables.Count; i++) {
+				CommandExecutionContext.RemoveVariable(newVariables[i]);
+			}
+		}
+
+		if (previousValues == null) {
+			return;
+		}
+
+		foreach (KeyValuePair<string, object> pair in previousValues) {
+			CommandExecutionContext.SetVariable(pair.Key, pair.Value);
 		}
 	}
 
@@ -348,7 +409,7 @@ public class AstInterpreter : MonoBehaviour {
 	}
 
 	private object EvaluateExpression(ExpressionNode expr) {
-     ScriptInvocationContext invocationContext = ScriptInvocationContext.Create(Executor);
+		ScriptInvocationContext invocationContext = ScriptInvocationContext.Create(Executor);
 
 		switch (expr) {
 			case NumberLiteralExpression n:
@@ -357,7 +418,7 @@ public class AstInterpreter : MonoBehaviour {
 				return s.Value;
 			case IdentifierExpression id:
 				// Try variable lookup first
-               if (CommandExecutionContext.TryGetVariable(id.Name, out var v)) return BuiltinClassRegistry.WrapValue(v, invocationContext);
+				if (CommandExecutionContext.TryGetVariable(id.Name, out var v)) return BuiltinClassRegistry.WrapValue(v, invocationContext);
 				throw new ValidationError($"Unknown variable '{id.Name}' (line {GetLine(id)})", GetLine(id));
 			case ListLiteralExpression list:
 				// Beklenen: move_to((0,0,5)) gibi; elemanlar sayı ise List<float>
@@ -449,7 +510,7 @@ public class AstInterpreter : MonoBehaviour {
 				// Accept any non-string IList (List<object>, List<float>, arrays, etc.)
 				if (target is System.Collections.IList listTarget) {
 					if (ii < 0 || ii >= listTarget.Count) throw new ValidationError($"Index out of range (line {GetLine(idxExpr)})", GetLine(idxExpr));
-                  return BuiltinClassRegistry.WrapValue(listTarget[ii], invocationContext);
+					return BuiltinClassRegistry.WrapValue(listTarget[ii], invocationContext);
 				}
 				throw new ValidationError($"Cannot index non-list value (line {GetLine(idxExpr)})", GetLine(idxExpr));
 			default:
@@ -459,7 +520,7 @@ public class AstInterpreter : MonoBehaviour {
 
 	private object EvaluateMemberAccess(MemberAccessExpression memberExpr) {
 		var target = EvaluateExpression(memberExpr.Target) ?? throw new ValidationError($"Cannot access member '{memberExpr.MemberName}' of null (line {GetLine(memberExpr)})", GetLine(memberExpr));
-        ScriptInvocationContext context = ScriptInvocationContext.Create(Executor);
+		ScriptInvocationContext context = ScriptInvocationContext.Create(Executor);
 		if (BuiltinClassRegistry.TryGetMember(target, memberExpr.MemberName, context, out object builtinResult)) {
 			return builtinResult;
 		}
@@ -468,20 +529,20 @@ public class AstInterpreter : MonoBehaviour {
 
 		var prop = type.GetProperty(memberExpr.MemberName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
 		if (prop != null) {
-           return BuiltinClassRegistry.WrapValue(prop.GetValue(target), context);
+			return BuiltinClassRegistry.WrapValue(prop.GetValue(target), context);
 		}
 
 		var field = type.GetField(memberExpr.MemberName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
 		if (field != null) {
-          return BuiltinClassRegistry.WrapValue(field.GetValue(target), context);
+			return BuiltinClassRegistry.WrapValue(field.GetValue(target), context);
 		}
 
 		// Unity-style convenience mappings for scripting names
 		if (target is TableBehavior table && string.Equals(memberExpr.MemberName, "customers", System.StringComparison.OrdinalIgnoreCase)) {
-         return BuiltinClassRegistry.WrapValue(table.Customers, context);
+			return BuiltinClassRegistry.WrapValue(table.Customers, context);
 		}
 		if (target is Customer customer && string.Equals(memberExpr.MemberName, "table", System.StringComparison.OrdinalIgnoreCase)) {
-          return BuiltinClassRegistry.WrapValue(customer.Table, context);
+			return BuiltinClassRegistry.WrapValue(customer.Table, context);
 		}
 
 		throw new ValidationError($"Unknown member '{memberExpr.MemberName}' on type '{type.Name}' (line {GetLine(memberExpr)})", GetLine(memberExpr));
@@ -496,7 +557,7 @@ public class AstInterpreter : MonoBehaviour {
 			}
 
 			ScriptInvocationContext context = ScriptInvocationContext.Create(Executor);
-           if (BuiltinClassRegistry.TryInvoke(instance, memberTarget.MemberName, evaluatedArgs, context, GetLine(invocationExpr), out object routedResult)) {
+			if (BuiltinClassRegistry.TryInvoke(instance, memberTarget.MemberName, evaluatedArgs, context, GetLine(invocationExpr), out object routedResult)) {
 				return routedResult;
 			}
 
@@ -508,7 +569,7 @@ public class AstInterpreter : MonoBehaviour {
 				if (parameters.Length != evaluatedArgs.Length) continue;
 
 				try {
-                   return BuiltinClassRegistry.WrapValue(m.Invoke(instance, evaluatedArgs), context);
+					return BuiltinClassRegistry.WrapValue(m.Invoke(instance, evaluatedArgs), context);
 				} catch (System.Exception ex) {
 					throw new ValidationError($"Method call '{memberTarget.MemberName}' failed: {ex.Message} (line {GetLine(invocationExpr)})", GetLine(invocationExpr));
 				}

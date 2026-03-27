@@ -7,7 +7,7 @@ public sealed class RobotCodeEntry {
 	[SerializeField] private string codeId;
 	[SerializeField] private string robotBindingKey;
 	[SerializeField] private string displayName;
-	[SerializeField] [TextArea(5, 20)] private string code;
+	[SerializeField][TextArea(5, 20)] private string code;
 
 	public string CodeId => codeId;
 	public string RobotBindingKey => robotBindingKey;
@@ -27,9 +27,21 @@ public sealed class RobotCodeEntry {
 	}
 }
 
+internal sealed class ArchivedRobotCodeEntry {
+	public ArchivedRobotCodeEntry(string displayName, string code) {
+		DisplayName = displayName;
+		Code = code;
+	}
+
+	public string DisplayName { get; }
+	public string Code { get; }
+}
+
 public class RobotCodeRegistry : MonoBehaviour {
 	[SerializeField] private List<RobotCodeEntry> codes = new List<RobotCodeEntry>();
 	[SerializeField] private string defaultCodePrefix = "Yeni Kod";
+
+	private readonly List<ArchivedRobotCodeEntry> archivedCodes = new List<ArchivedRobotCodeEntry>();
 
 	public event Action CodesChanged;
 
@@ -89,6 +101,69 @@ public class RobotCodeRegistry : MonoBehaviour {
 		}
 
 		entry.UpdateContent(displayName, code);
+		CodesChanged?.Invoke();
+	}
+
+	public void HandleSpawnPointPlaced(RobotSpawnPoint spawnPoint) {
+		if (spawnPoint == null || archivedCodes.Count == 0) {
+			return;
+		}
+
+		string robotBindingKey = spawnPoint.ProgramBindingKey;
+		if (string.IsNullOrWhiteSpace(robotBindingKey) || GetCodesForRobot(robotBindingKey).Count > 0) {
+			return;
+		}
+
+		for (int i = 0; i < archivedCodes.Count; i++) {
+			ArchivedRobotCodeEntry archivedEntry = archivedCodes[i];
+			if (archivedEntry == null) {
+				continue;
+			}
+
+			RobotCodeEntry entry = new RobotCodeEntry();
+			entry.Initialize(Guid.NewGuid().ToString("N"), robotBindingKey, GenerateCodeName(robotBindingKey, archivedEntry.DisplayName));
+			entry.UpdateContent(archivedEntry.DisplayName, archivedEntry.Code);
+			codes.Add(entry);
+		}
+
+		archivedCodes.Clear();
+		CodesChanged?.Invoke();
+	}
+
+	public void HandleSpawnPointRemoved(RobotSpawnPoint spawnPoint) {
+		archivedCodes.Clear();
+		if (spawnPoint == null) {
+			return;
+		}
+
+		string robotBindingKey = spawnPoint.ProgramBindingKey;
+		if (string.IsNullOrWhiteSpace(robotBindingKey)) {
+			return;
+		}
+
+		List<int> removedIndices = null;
+		for (int i = 0; i < codes.Count; i++) {
+			RobotCodeEntry entry = codes[i];
+			if (entry == null || entry.RobotBindingKey != robotBindingKey) {
+				continue;
+			}
+
+			archivedCodes.Add(new ArchivedRobotCodeEntry(entry.DisplayName, entry.Code));
+			if (removedIndices == null) {
+				removedIndices = new List<int>();
+			}
+
+			removedIndices.Add(i);
+		}
+
+		if (removedIndices == null) {
+			return;
+		}
+
+		for (int i = removedIndices.Count - 1; i >= 0; i--) {
+			codes.RemoveAt(removedIndices[i]);
+		}
+
 		CodesChanged?.Invoke();
 	}
 

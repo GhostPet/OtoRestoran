@@ -46,7 +46,7 @@ public sealed class FurnaceBuiltinClass : BuiltinObject {
 		}
 
 		if (string.Equals(memberName, "place", System.StringComparison.OrdinalIgnoreCase)) {
-            if (args == null || args.Length == 0) {
+			if (args == null || args.Length == 0) {
 				result = oven.Place(Context.RobotInventory);
 				return true;
 			}

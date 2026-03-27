@@ -22,7 +22,7 @@ public class ShopWindowUI : WindowContentUI {
 	}
 
 	protected override void OnWindowBound(GameWindowUI ownerWindow) {
-      ResolveShopManager();
+		ResolveShopManager();
 		if (ownerWindow != null) {
 			ownerWindow.SetTitle("Shop");
 		}
@@ -31,7 +31,7 @@ public class ShopWindowUI : WindowContentUI {
 	}
 
 	public void RefreshAll() {
-        ResolveShopManager();
+		ResolveShopManager();
 		BuildTabs();
 		RefreshProducts();
 		RefreshSelectedTabTitle();

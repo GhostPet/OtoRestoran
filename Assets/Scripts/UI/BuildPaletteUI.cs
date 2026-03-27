@@ -13,6 +13,7 @@ public class BuildPaletteUI : MonoBehaviour {
 	[SerializeField] private bool startHidden = true;
 
 	private readonly List<BuildPaletteItemUI> spawnedItems = new List<BuildPaletteItemUI>();
+	private bool visibilityInitialized;
 
 	public void SetReferences(BuildInventoryManager buildInventory, PlacementController placement) {
 		Unsubscribe();
@@ -21,13 +22,13 @@ public class BuildPaletteUI : MonoBehaviour {
 		placementController = placement;
 
 		Subscribe();
-      if (gameObject.activeSelf) {
+		if (gameObject.activeSelf) {
 			Refresh();
 		}
 	}
 
 	private void Start() {
-		if (startHidden) {
+		if (startHidden && !visibilityInitialized) {
 			gameObject.SetActive(false);
 		}
 	}
@@ -42,6 +43,7 @@ public class BuildPaletteUI : MonoBehaviour {
 	}
 
 	public void SetVisible(bool isVisible) {
+		visibilityInitialized = true;
 		gameObject.SetActive(isVisible);
 		if (isVisible) {
 			Refresh();
@@ -67,7 +69,7 @@ public class BuildPaletteUI : MonoBehaviour {
 		List<BuildInventoryEntry> snapshot = buildInventoryManager.CreateSnapshot();
 		for (int i = 0; i < snapshot.Count; i++) {
 			BuildInventoryEntry entry = snapshot[i];
-          if (entry == null || entry.PlaceableData == null || entry.Quantity <= 0 || !entry.PlaceableData.ShowInStorage) {
+			if (entry == null || entry.PlaceableData == null || entry.Quantity <= 0 || !entry.PlaceableData.ShowInStorage) {
 				continue;
 			}
 

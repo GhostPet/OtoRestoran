@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using UnityEngine;
 
 public class PrintCommand : IRobotCommand {
 	public int ExpectedArgumentCount => 1;
@@ -38,7 +37,7 @@ public class PrintCommand : IRobotCommand {
 			outStr = value.ToString();
 		}
 
-		Debug.Log($"[Print] (line {line}) {outStr}");
+		CommandExecutionContext.PublishStatusMessage(outStr);
 		return true;
 	}
 

@@ -18,12 +18,7 @@ public class TableBehavior : BaseRestaurantObject, IPlaceableLifecycle {
 	public IReadOnlyList<Transform> ServePoints => servePoints;
 	public Transform Location => transform;
 	public IReadOnlyList<Vector2Int> SeatCellOffsets => seatCellOffsets;
-	public IReadOnlyList<Customer> Customers {
-		get {
-			RefreshCustomersFromAttachedChairs();
-			return customers;
-		}
-	}
+	public IReadOnlyList<Customer> Customers => customers;
 
 	public void OnPlaced(PlaceableObject placedObject) {
 		if (placedObject != null) originCell = placedObject.OriginCell;
@@ -53,21 +48,6 @@ public class TableBehavior : BaseRestaurantObject, IPlaceableLifecycle {
 		}
 
 		return best != null ? best : transform;
-	}
-
-	private void RefreshCustomersFromAttachedChairs() {
-		customers.Clear();
-
-		var allChairs = ChairBehavior.AllChairs;
-		for (int i = 0; i < allChairs.Count; i++) {
-			var chair = allChairs[i];
-			if (chair == null) continue;
-			if (chair.Table != this) continue;
-
-			var customer = chair.CurrentCustomer;
-			if (customer == null) continue;
-			if (!customers.Contains(customer)) customers.Add(customer);
-		}
 	}
 
 	// Minimal customer/dirty helpers (kept small to avoid coupling)

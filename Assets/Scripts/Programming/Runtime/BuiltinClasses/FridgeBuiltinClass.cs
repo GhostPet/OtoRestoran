@@ -1,10 +1,8 @@
-using UnityEngine;
-
 public sealed class FridgeBuiltinClass : BuiltinObject {
-   private readonly FridgeBehavior fridge;
+	private readonly FridgeBehavior fridge;
 
- public FridgeBuiltinClass(FridgeBehavior fridge, ScriptInvocationContext context)
-		: base(fridge, context) {
+	public FridgeBuiltinClass(FridgeBehavior fridge, ScriptInvocationContext context)
+		   : base(fridge, context) {
 		this.fridge = fridge;
 	}
 

@@ -1233,7 +1233,6 @@ MonoBehaviour:
   rightStretchTargets:
   - {fileID: 752243039}
   - {fileID: 736615810}
-  - {fileID: 809685685}
   actionPanelExpandedInset: 800
   actionPanelCollapsedInset: 0
 --- !u!1001 &117418201
@@ -1564,7 +1563,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 4ae07c792cb3dac4b9740b9e365bc311, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1885,7 +1884,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 4ae07c792cb3dac4b9740b9e365bc311, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2457,7 +2456,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 0272a39812947544e97fd65f900e3532, type: 3}
       propertyPath: m_Layer
-      value: 0
+      value: 7
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2996,7 +2995,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "Kod D\xF6k\xFCmantasyonu"
+  m_text: Open Docs
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -3802,6 +3801,7 @@ MonoBehaviour:
   customerSpawner: {fileID: 130777906}
   gameCodeRunner: {fileID: 1321138863}
   robotSpawnManager: {fileID: 862310065}
+  navigationSurface: {fileID: 1623948301}
 --- !u!114 &317971576
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3814,10 +3814,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4ffe7da659ecae4c8d02d9c8cad0fd9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PhaseStateMachine
-  preparationDuration: 120
+  preparationDuration: 300
   serviceDuration: 180
-  prepPhase: {fileID: 0}
-  servPhase: {fileID: 0}
 --- !u!1001 &324150726
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4718,7 +4716,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 4ae07c792cb3dac4b9740b9e365bc311, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -7015,7 +7013,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 4ae07c792cb3dac4b9740b9e365bc311, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -9179,8 +9177,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -400, y: -100.000244}
-  m_SizeDelta: {x: -800, y: -200}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &809685686
 MonoBehaviour:
@@ -10644,8 +10642,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 981137921}
-  m_Layer: 0
-  m_Name: dekor
+  m_Layer: 7
+  m_Name: Decoration
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -11500,7 +11498,7 @@ MonoBehaviour:
   actions:
   - actionType: 4
     button: {fileID: 365346856}
-    labelText: {fileID: 258140583}
+    labelText: {fileID: 1939002270}
     preparationLabel: "Restoran\u0131 A\xE7"
     serviceLabel: "Servisi Sonland\u0131r"
     visibleInPreparation: 1
@@ -11544,7 +11542,7 @@ MonoBehaviour:
   codingToggleButtonText: {fileID: 1153746213}
   codingContentRoot: {fileID: 1423343278}
   robotItemContainer: {fileID: 1423343279}
-  robotItemPrefab: {fileID: 0}
+  robotItemPrefab: {fileID: 502225652058320561, guid: cc3b50bbf6d873749aacb11c040d29e9, type: 3}
   robotCodeRegistry: {fileID: 2081993349}
   robotSpawnManager: {fileID: 862310065}
   codeEditorWindowUI: {fileID: 1599570869}
@@ -15016,7 +15014,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 4ae07c792cb3dac4b9740b9e365bc311, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -15542,8 +15540,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1423343279}
+  - component: {fileID: 1423343280}
   m_Layer: 0
-  m_Name: Robots
+  m_Name: RobotList
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -15568,6 +15567,32 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: -50}
   m_SizeDelta: {x: -40, y: -100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1423343280
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1423343278}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59f8146938fff824cb5fd77236b75775, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.VerticalLayoutGroup
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 20
+    m_Bottom: 0
+  m_ChildAlignment: 1
+  m_Spacing: 0
+  m_ChildForceExpandWidth: 0
+  m_ChildForceExpandHeight: 0
+  m_ChildControlWidth: 0
+  m_ChildControlHeight: 0
+  m_ChildScaleWidth: 0
+  m_ChildScaleHeight: 0
+  m_ReverseArrangement: 0
 --- !u!1001 &1435073847
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -15956,7 +15981,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 9da3ad5994736a844b9a10f75fcb94e1, type: 3}
       propertyPath: m_Layer
-      value: 0
+      value: 7
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -15965,6 +15990,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 9da3ad5994736a844b9a10f75fcb94e1, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1481417154}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 9da3ad5994736a844b9a10f75fcb94e1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1481417157}
   m_SourcePrefab: {fileID: 100100000, guid: 9da3ad5994736a844b9a10f75fcb94e1, type: 3}
 --- !u!4 &1481417153 stripped
 Transform:
@@ -15983,6 +16011,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7900a7012060e0e4fb2ddad00974eb3f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlaceableObject
+--- !u!65 &1481417157
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 286295174}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.98491067, y: 1.448294, z: 2}
+  m_Center: {x: 0.003238231, y: 0.724147, z: 0.0012678206}
 --- !u!1001 &1481532796
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -17028,7 +17077,7 @@ MonoBehaviour:
   operationsController: {fileID: 317971575}
   robotCodeRegistry: {fileID: 2081993349}
   windowArea: {fileID: 809685686}
-  codeWindowContentPrefab: {fileID: 0}
+  codeWindowContentPrefab: {fileID: 8762226372903695607, guid: df49b4bbb241a92409264cac6d26dcb1, type: 3}
 --- !u!1 &1599851890
 GameObject:
   m_ObjectHideFlags: 0
@@ -17086,7 +17135,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "Ma\u011Faza"
+  m_text: Open Shop
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -17295,8 +17344,8 @@ MonoBehaviour:
   m_OverrideTileSize: 0
   m_TileSize: 256
   m_OverrideVoxelSize: 0
-  m_VoxelSize: 0.11666667
-  m_MinRegionArea: 2
+  m_VoxelSize: 0.1
+  m_MinRegionArea: 1
   m_NavMeshData: {fileID: 23800000, guid: 6e789652a1adddb47b50443ae6e309b3, type: 2}
   m_BuildHeightMesh: 0
 --- !u!1001 &1654337701
@@ -17564,7 +17613,7 @@ MonoBehaviour:
   width: 10
   height: 6
   cellSize: 1
-  origin: {x: -4, y: 0, z: -3}
+  origin: {x: -4, y: 0, z: -2.9}
   showGizmos: 1
   autoChairData: {fileID: 11400000, guid: 7d34609a203708145acccb37c2b8a417, type: 2}
   buildInventoryManager: {fileID: 339111312}
@@ -20718,7 +20767,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "Restoran\u0131 A\xE7"
+  m_text: Open Restaurant
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -21120,7 +21169,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 4ae07c792cb3dac4b9740b9e365bc311, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -21726,7 +21775,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "Restoran\u0131 D\xFCzenle"
+  m_text: Toggle Build Mode
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -21926,7 +21975,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: ab3999e48186f5140b5b5082f728baa1, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -23072,7 +23121,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 4ae07c792cb3dac4b9740b9e365bc311, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using UnityEngine;
 
 public sealed class TableBuiltinClass : BuiltinObject {
 	private readonly TableBehavior table;

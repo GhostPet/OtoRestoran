@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 8032999848833532685}
   - component: {fileID: 4712848649188138503}
   m_Layer: 0
-  m_Name: ShopUIContentPrefab
+  m_Name: Window_ShopUIContentPrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -67,8 +67,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b5550c985adf2c3409a70f9b46c7b479, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::OvenBehavior
-  cookTime: 5
-  burnAfterReadyTime: 4
+  recipes: []
 --- !u!1001 &6008442788063942162
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -120,6 +119,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 2aef12d84416e1442b4e26b609b01817, type: 3}
       propertyPath: m_Name
       value: oven_1x1
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 2aef12d84416e1442b4e26b609b01817, type: 3}
+      propertyPath: m_Layer
+      value: 7
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

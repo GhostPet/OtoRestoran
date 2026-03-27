@@ -11,7 +11,7 @@ public class GameWindowResizeHandleUI : MonoBehaviour, IPointerDownHandler, IDra
 	[SerializeField] private bool resizeTop;
 
 	private void Awake() {
-       Image image = GetComponent<Image>();
+		Image image = GetComponent<Image>();
 		if (image != null) {
 			image.color = new Color(1f, 1f, 1f, 0.001f);
 			image.raycastTarget = true;
