@@ -1418,9 +1418,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CustomerSpawner
   customerPrefabs:
-  - {fileID: 7964758361271457668, guid: 4d5299022b578494ba17009ce4ed1d2d, type: 3}
-  - {fileID: 7964758361271457668, guid: 3ccc5383f41320f419b8de3101c7da61, type: 3}
-  - {fileID: 7964758361271457668, guid: 61e36d08920ceff49b44e7121b8a4157, type: 3}
+  - {fileID: 3139418177077522112, guid: 4d5299022b578494ba17009ce4ed1d2d, type: 3}
   spawningEnabled: 1
   spawnInterval: 3
   customerSpawnPoint: {fileID: 130777905}
@@ -1439,7 +1437,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0acfe89cd700b9944b167fc9e86df1dd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SingleCustomerSpawner
-  customerPrefab: {fileID: 7964758361271457668, guid: 4d5299022b578494ba17009ce4ed1d2d, type: 3}
+  customerPrefab: {fileID: 3139418177077522112, guid: 4d5299022b578494ba17009ce4ed1d2d, type: 3}
   spawnOnStart: 0
   spawnKey: 115
 --- !u!1001 &135304362
@@ -9181,7 +9179,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -400, y: -100}
+  m_AnchoredPosition: {x: -400, y: -100.000244}
   m_SizeDelta: {x: -800, y: -200}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &809685686

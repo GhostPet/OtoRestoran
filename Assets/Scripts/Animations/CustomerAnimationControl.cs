@@ -75,10 +75,6 @@ public class CustomerAnimationControl : MonoBehaviour {
 			return;
 		}
 
-		if (!availableParameters.Contains(parameterName)) {
-			return;
-		}
-
 		animator.SetBool(parameterName, value);
 	}
 }
