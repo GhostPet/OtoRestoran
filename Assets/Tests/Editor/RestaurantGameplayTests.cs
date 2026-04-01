@@ -37,6 +37,28 @@ public class RestaurantGameplayTests {
 	}
 
 	[Test]
+	public void Customer_GetOrder_FallsBackToLoadedOrderableItems_WhenConfiguredOrderIsEmpty() {
+		var customerGo = new GameObject("customer_order_fallback_test");
+		var customer = customerGo.AddComponent<Customer>();
+		var fallbackItem = EditorTestUtility.CreateItem("fallback_soup", "Fallback Soup", true, 10);
+
+		try {
+			EditorTestUtility.SetPrivateField(customer, "state", CustomerState.Ordering);
+			EditorTestUtility.SetPrivateField(customer, "orderReady", true);
+			EditorTestUtility.SetPrivateField(customer, "defaultOrderItems", new List<OrderItem>());
+
+			Order order = customer.GetOrder();
+
+			Assert.IsNotNull(order);
+			Assert.IsNotNull(order.Items);
+			Assert.Greater(order.Items.Count, 0);
+			Assert.IsTrue(order.Items[0].Item.Orderable);
+		} finally {
+			EditorTestUtility.DestroyAll(fallbackItem, customerGo);
+		}
+	}
+
+	[Test]
 	public void Order_TryConsumeItem_RemovesCompletedEntries() {
 		var item = EditorTestUtility.CreateItem("soup", "Soup", true, 10);
 		var order = new Order();

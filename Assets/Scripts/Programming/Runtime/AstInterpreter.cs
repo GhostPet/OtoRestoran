@@ -1,5 +1,7 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Reflection;
 using UnityEngine;
 
@@ -11,24 +13,62 @@ public class AstInterpreter : MonoBehaviour {
 	public event System.Action<AstInterpreter, string> ExecutionFailed;
 	// If set, builtin commands will be enqueued to this executor instead of run inline
 	public RobotExecutor Executor;
+	public IDslWorldAdapter WorldAdapter { get; set; }
 	// Assigned unique context id for this interpreter so multiple interpreters
 	// can run concurrently without sharing variables/state.
 	public string ContextId { get; private set; }
 	public bool HasRuntimeError { get; private set; }
 	public string RuntimeWarningMessage { get; private set; }
+	private DslBuiltinRuntime _builtinRuntime;
+	private DslExecutionGuard _executionGuard;
+	private DslFacadeFactory _facadeFactory;
 
 	// Başlatmak için çağırın: interpreter.StartExecution(functions);
 	public void StartExecution(List<FunctionDefNode> functions, string entryFunctionName = "main") {
 		Functions = functions;
 		ContextId = System.Guid.NewGuid().ToString();
-		// Ensure context exists and clear any previous context state
 		CommandExecutionContext.ClearVariables(ContextId);
+		_facadeFactory = new DslFacadeFactory();
+		_builtinRuntime = CreateBuiltinRuntime();
+		_executionGuard = new DslExecutionGuard();
 		StartCoroutine(RunExecution(entryFunctionName));
 	}
 
 	private IEnumerator RunExecution(string entryFunctionName) {
+		string previousContextId = CommandExecutionContext.CurrentContextId;
+		int previousLine = CommandExecutionContext.CurrentLine;
+		IRobot previousRobot = CommandExecutionContext.CurrentRobot;
+
+		CommandExecutionContext.CurrentContextId = ContextId;
+		CommandExecutionContext.CurrentLine = -1;
+		CommandExecutionContext.CurrentRobot = null;
+		InitializeGlobalScope();
+
 		yield return StartCoroutine(RunFunction(entryFunctionName));
+
+		CommandExecutionContext.CurrentRobot = previousRobot;
+		CommandExecutionContext.CurrentLine = previousLine;
+		CommandExecutionContext.CurrentContextId = previousContextId;
 		FinishExecution();
+	}
+
+	private void InitializeGlobalScope() {
+		if (_builtinRuntime == null) {
+			return;
+		}
+
+		foreach (KeyValuePair<string, object> entry in _builtinRuntime.CreateGlobalScope()) {
+			CommandExecutionContext.SetVariable(entry.Key, entry.Value);
+		}
+	}
+
+	private DslBuiltinRuntime CreateBuiltinRuntime() {
+		IDslWorldAdapter world = WorldAdapter;
+		if (world == null) {
+			world = Executor != null ? new CurrentGameDslWorldAdapter(Executor) : new NullDslWorldAdapter();
+		}
+
+		return new DslBuiltinRuntime(world, new InterpreterOutputSink(), _facadeFactory ?? new DslFacadeFactory());
 	}
 
 	private void FinishExecution() {
@@ -151,6 +191,8 @@ public class AstInterpreter : MonoBehaviour {
 			yield break;
 		}
 
+		_executionGuard?.EnterStatement(GetLine(stmt));
+
 		if (stmt is CallNode call) {
 			yield return StartCoroutine(ExecuteCall(call));
 			yield break;
@@ -205,6 +247,8 @@ public class AstInterpreter : MonoBehaviour {
 			yield break;
 		} else if (stmt is WhileNode wn) {
 			while (true) {
+				_executionGuard?.EnterLoopIteration(GetLine(wn));
+
 				if (HasRuntimeError) {
 					break;
 				}
@@ -235,6 +279,8 @@ public class AstInterpreter : MonoBehaviour {
 			}
 			if (iterableVal is IEnumerable ie) {
 				foreach (var item in ie) {
+					_executionGuard?.EnterLoopIteration(GetLine(fnn));
+
 					if (HasRuntimeError) {
 						yield break;
 					}
@@ -265,8 +311,6 @@ public class AstInterpreter : MonoBehaviour {
 			yield break;
 		}
 
-		// ExecuteCall invoked
-		// Argümanları değerlendirme
 		var runtimeArgs = new List<object>();
 		for (int i = 0; i < call.Arguments.Count; i++) {
 			if (!TryEvaluateExpression(call.Arguments[i], out object argValue)) {
@@ -276,55 +320,36 @@ public class AstInterpreter : MonoBehaviour {
 			runtimeArgs.Add(argValue);
 		}
 
-		// Komutu bul
-		if (BuiltinCommandRegistry.IsBuiltin(call.FunctionName)) {
-			IRobotCommand command = BuiltinCommandRegistry.GetCommand(call.FunctionName);
-			command.Reset();
-
-			if (Executor != null) {
-				// Enqueue to executor and wait for completion
-				var enq = new EnqueuedCommand(command, runtimeArgs.ToArray(), call.Line, ContextId);
-				Executor.Enqueue(enq);
-
-				// wait until executor runs and completes this command
-				while (!enq.IsCompleted) yield return null;
-				if (enq.ExecutionError != null) {
-					RequestStopWithWarning(enq.ExecutionError);
-				}
-				yield break;
-			} else {
-				// fallback to inline execution (existing behavior)
-				// Use this interpreter's context for inline execution
-				var prevContext = CommandExecutionContext.CurrentContextId;
-				CommandExecutionContext.CurrentContextId = ContextId;
-				CommandExecutionContext.CurrentLine = call.Line;
-
-				while (true) {
-					if (!TryTickInlineCommand(command, runtimeArgs, call, out bool done)) {
-						yield break;
-					}
-
-					if (done) break;
-					yield return null;
-				}
-				CommandExecutionContext.CurrentLine = -1;
-				CommandExecutionContext.CurrentContextId = prevContext;
-				yield break;
+		if (TryInvokeBuiltin(call.FunctionName, runtimeArgs, call.Line, out DslBuiltinInvocation builtinInvocation)) {
+			if (builtinInvocation.IsAsync) {
+				yield return StartCoroutine(ExecuteBuiltinInvocationAsync(builtinInvocation));
 			}
-		} else {
-			// Not a builtin: try to find a user-defined function
-			var fn = Functions?.Find(f => f.Name == call.FunctionName);
-			if (fn == null) {
-				RequestStopWithWarning($"Unknown command or function '{call.FunctionName}' (line {call.Line})");
-				yield break;
-			}
-
-			// Set current line for the call then execute the function body
-			int previousLine = CommandExecutionContext.CurrentLine;
-			CommandExecutionContext.CurrentLine = call.Line;
-			yield return StartCoroutine(RunFunction(call.FunctionName, runtimeArgs, call.Line));
-			CommandExecutionContext.CurrentLine = previousLine;
 			yield break;
+		}
+
+		var fn = Functions?.Find(f => f.Name == call.FunctionName);
+		if (fn == null) {
+			RequestStopWithWarning($"Unknown function '{call.FunctionName}' (line {call.Line})");
+			yield break;
+		}
+
+		int previousLine = CommandExecutionContext.CurrentLine;
+		CommandExecutionContext.CurrentLine = call.Line;
+		yield return StartCoroutine(RunFunction(call.FunctionName, runtimeArgs, call.Line));
+		CommandExecutionContext.CurrentLine = previousLine;
+	}
+
+	private IEnumerator ExecuteBuiltinInvocationAsync(DslBuiltinInvocation invocation) {
+		if (!invocation.IsAsync) {
+			yield break;
+		}
+
+		while (!invocation.AsyncOperation.Tick(Time.deltaTime)) {
+			if (HasRuntimeError) {
+				yield break;
+			}
+
+			yield return null;
 		}
 	}
 
@@ -393,39 +418,50 @@ public class AstInterpreter : MonoBehaviour {
 		}
 	}
 
-	private bool TryTickInlineCommand(IRobotCommand command, List<object> runtimeArgs, CallNode call, out bool done) {
-		done = false;
-
-		try {
-			done = command.Tick(runtimeArgs.ToArray());
-			return true;
-		} catch (ValidationError vex) {
-			RequestStopWithWarning(vex.ToString());
-			return false;
-		} catch (System.Exception ex) {
-			RequestStopWithWarning($"Runtime error in '{call.FunctionName}' (line {call.Line}): {ex.Message}");
+	private bool TryInvokeBuiltin(string name, IList<object> args, int line, out DslBuiltinInvocation invocation) {
+		invocation = default;
+		if (_builtinRuntime == null || !_builtinRuntime.IsBuiltin(name)) {
 			return false;
 		}
+
+		invocation = _builtinRuntime.Invoke(name, args, line);
+		return true;
+	}
+
+	private object InvokeBuiltinValue(string name, IList<object> args, int line) {
+		if (!TryInvokeBuiltin(name, args, line, out DslBuiltinInvocation invocation)) {
+			throw new ValidationError($"Unsupported call expression '{name}' (line {line})", line);
+		}
+
+		if (invocation.IsAsync) {
+			throw new DslRuntimeError($"Builtin '{name}' cannot be used in an expression (line {line})", line);
+		}
+
+		return WrapRuntimeValue(invocation.Value);
+	}
+
+	private object WrapRuntimeValue(object value) {
+		return _facadeFactory != null ? _facadeFactory.WrapUnknown(value) : value;
 	}
 
 	private object EvaluateExpression(ExpressionNode expr) {
-		ScriptInvocationContext invocationContext = ScriptInvocationContext.Create(Executor);
-
 		switch (expr) {
 			case NumberLiteralExpression n:
 				return n.Value;
 			case StringLiteralExpression s:
 				return s.Value;
+			case BooleanLiteralExpression b:
+				return b.Value;
+			case NullLiteralExpression:
+				return null;
 			case IdentifierExpression id:
-				// Try variable lookup first
-				if (CommandExecutionContext.TryGetVariable(id.Name, out var v)) return BuiltinClassRegistry.WrapValue(v, invocationContext);
+				if (CommandExecutionContext.TryGetVariable(id.Name, out var v)) return WrapRuntimeValue(v);
 				throw new ValidationError($"Unknown variable '{id.Name}' (line {GetLine(id)})", GetLine(id));
 			case ListLiteralExpression list:
-				// Beklenen: move_to((0,0,5)) gibi; elemanlar sayı ise List<float>
 				var evaluated = new List<object>();
 				foreach (var el in list.Elements) {
 					var val = EvaluateExpression(el);
-					evaluated.Add(val);
+					evaluated.Add(WrapRuntimeValue(val));
 				}
 				return evaluated;
 
@@ -483,15 +519,10 @@ public class AstInterpreter : MonoBehaviour {
 				}
 				throw new ValidationError($"Unsupported binary operation or operand types at line {GetLine(bin)}", GetLine(bin));
 			case CallNode callExpr:
-				// Delegate built-in call handling to BuiltinFunctions
 				var name = callExpr.FunctionName;
 				var evaluatedArgs = new List<object>();
 				foreach (var a in callExpr.Arguments) evaluatedArgs.Add(EvaluateExpression(a));
-				// Use the new BuiltinFunctions helper for expression-level builtins
-				if (BuiltinFunctions.IsBuiltin(name)) {
-					return BuiltinFunctions.Invoke(name, evaluatedArgs.ToArray(), GetLine(callExpr));
-				}
-				throw new ValidationError($"Unsupported call expression '{name}' (line {GetLine(callExpr)})", GetLine(callExpr));
+				return InvokeBuiltinValue(name, evaluatedArgs, GetLine(callExpr));
 
 			case MemberAccessExpression memberExpr:
 				return EvaluateMemberAccess(memberExpr);
@@ -507,10 +538,9 @@ public class AstInterpreter : MonoBehaviour {
 				else if (indexVal is int iidx) ii = iidx;
 				else throw new ValidationError($"Index must be integer (line {GetLine(idxExpr)})", GetLine(idxExpr));
 
-				// Accept any non-string IList (List<object>, List<float>, arrays, etc.)
 				if (target is System.Collections.IList listTarget) {
 					if (ii < 0 || ii >= listTarget.Count) throw new ValidationError($"Index out of range (line {GetLine(idxExpr)})", GetLine(idxExpr));
-					return BuiltinClassRegistry.WrapValue(listTarget[ii], invocationContext);
+					return WrapRuntimeValue(listTarget[ii]);
 				}
 				throw new ValidationError($"Cannot index non-list value (line {GetLine(idxExpr)})", GetLine(idxExpr));
 			default:
@@ -520,29 +550,16 @@ public class AstInterpreter : MonoBehaviour {
 
 	private object EvaluateMemberAccess(MemberAccessExpression memberExpr) {
 		var target = EvaluateExpression(memberExpr.Target) ?? throw new ValidationError($"Cannot access member '{memberExpr.MemberName}' of null (line {GetLine(memberExpr)})", GetLine(memberExpr));
-		ScriptInvocationContext context = ScriptInvocationContext.Create(Executor);
-		if (BuiltinClassRegistry.TryGetMember(target, memberExpr.MemberName, context, out object builtinResult)) {
-			return builtinResult;
-		}
-
 		var type = target.GetType();
 
 		var prop = type.GetProperty(memberExpr.MemberName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
 		if (prop != null) {
-			return BuiltinClassRegistry.WrapValue(prop.GetValue(target), context);
+			return WrapRuntimeValue(prop.GetValue(target));
 		}
 
 		var field = type.GetField(memberExpr.MemberName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
 		if (field != null) {
-			return BuiltinClassRegistry.WrapValue(field.GetValue(target), context);
-		}
-
-		// Unity-style convenience mappings for scripting names
-		if (target is TableBehavior table && string.Equals(memberExpr.MemberName, "customers", System.StringComparison.OrdinalIgnoreCase)) {
-			return BuiltinClassRegistry.WrapValue(table.Customers, context);
-		}
-		if (target is Customer customer && string.Equals(memberExpr.MemberName, "table", System.StringComparison.OrdinalIgnoreCase)) {
-			return BuiltinClassRegistry.WrapValue(customer.Table, context);
+			return WrapRuntimeValue(field.GetValue(target));
 		}
 
 		throw new ValidationError($"Unknown member '{memberExpr.MemberName}' on type '{type.Name}' (line {GetLine(memberExpr)})", GetLine(memberExpr));
@@ -556,22 +573,12 @@ public class AstInterpreter : MonoBehaviour {
 				evaluatedArgs[i] = EvaluateExpression(invocationExpr.Arguments[i]);
 			}
 
-			ScriptInvocationContext context = ScriptInvocationContext.Create(Executor);
-			if (BuiltinClassRegistry.TryInvoke(instance, memberTarget.MemberName, evaluatedArgs, context, GetLine(invocationExpr), out object routedResult)) {
-				return routedResult;
-			}
-
-			var methods = instance.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public);
-			for (int i = 0; i < methods.Length; i++) {
-				var m = methods[i];
-				if (!string.Equals(m.Name, memberTarget.MemberName, System.StringComparison.OrdinalIgnoreCase)) continue;
-				var parameters = m.GetParameters();
-				if (parameters.Length != evaluatedArgs.Length) continue;
-
+			if (TryResolveMethod(instance, memberTarget.MemberName, evaluatedArgs, out MethodInfo method, out object[] invocationArguments)) {
 				try {
-					return BuiltinClassRegistry.WrapValue(m.Invoke(instance, evaluatedArgs), context);
+					return WrapRuntimeValue(method.Invoke(instance, invocationArguments));
 				} catch (System.Exception ex) {
-					throw new ValidationError($"Method call '{memberTarget.MemberName}' failed: {ex.Message} (line {GetLine(invocationExpr)})", GetLine(invocationExpr));
+					Exception realException = ex is TargetInvocationException tie && tie.InnerException != null ? tie.InnerException : ex;
+					throw new ValidationError($"Method call '{memberTarget.MemberName}' failed: {realException.Message} (line {GetLine(invocationExpr)})", GetLine(invocationExpr));
 				}
 			}
 
@@ -584,13 +591,143 @@ public class AstInterpreter : MonoBehaviour {
 				evaluatedArgs.Add(EvaluateExpression(invocationExpr.Arguments[i]));
 			}
 
-			if (BuiltinFunctions.IsBuiltin(idTarget.Name)) {
-				return BuiltinFunctions.Invoke(idTarget.Name, evaluatedArgs.ToArray(), GetLine(invocationExpr));
+			if (_builtinRuntime != null && _builtinRuntime.IsBuiltin(idTarget.Name)) {
+				return InvokeBuiltinValue(idTarget.Name, evaluatedArgs, GetLine(invocationExpr));
 			}
 		}
 
 		throw new ValidationError($"Unsupported invocation target (line {GetLine(invocationExpr)})", GetLine(invocationExpr));
 	}
 
+	private static bool TryResolveMethod(object instance, string methodName, object[] args, out MethodInfo method, out object[] invocationArguments) {
+		method = null;
+		invocationArguments = null;
+		if (instance == null || string.IsNullOrWhiteSpace(methodName)) {
+			return false;
+		}
+
+		MethodInfo[] methods = instance.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public);
+		int bestScore = int.MinValue;
+		for (int i = 0; i < methods.Length; i++) {
+			MethodInfo candidate = methods[i];
+			if (!string.Equals(candidate.Name, methodName, StringComparison.OrdinalIgnoreCase)) {
+				continue;
+			}
+
+			if (!TryBuildInvocationArguments(candidate, args, out object[] candidateArguments, out int score)) {
+				continue;
+			}
+
+			if (score > bestScore) {
+				bestScore = score;
+				method = candidate;
+				invocationArguments = candidateArguments;
+			}
+		}
+
+		return method != null;
+	}
+
+	private static bool TryBuildInvocationArguments(MethodInfo method, object[] args, out object[] invocationArguments, out int score) {
+		invocationArguments = null;
+		score = int.MinValue;
+		ParameterInfo[] parameters = method.GetParameters();
+		int argumentCount = args != null ? args.Length : 0;
+		if (argumentCount > parameters.Length) {
+			return false;
+		}
+
+		var resolvedArguments = new object[parameters.Length];
+		int totalScore = parameters.Length == argumentCount ? 100 : 0;
+		for (int i = 0; i < parameters.Length; i++) {
+			ParameterInfo parameter = parameters[i];
+			if (i < argumentCount) {
+				if (!TryConvertArgument(args[i], parameter.ParameterType, out object convertedArgument, out int parameterScore)) {
+					return false;
+				}
+
+				resolvedArguments[i] = convertedArgument;
+				totalScore += parameterScore;
+				continue;
+			}
+
+			if (!parameter.IsOptional) {
+				return false;
+			}
+
+			resolvedArguments[i] = parameter.DefaultValue;
+		}
+
+		invocationArguments = resolvedArguments;
+		score = totalScore;
+		return true;
+	}
+
+	private static bool TryConvertArgument(object value, Type targetType, out object convertedValue, out int score) {
+		convertedValue = value;
+		score = 0;
+		if (targetType == typeof(object)) {
+			score = 1;
+			return true;
+		}
+
+		if (value == null) {
+			if (!targetType.IsValueType || Nullable.GetUnderlyingType(targetType) != null) {
+				score = 2;
+				return true;
+			}
+
+			return false;
+		}
+
+		Type actualType = value.GetType();
+		if (targetType.IsAssignableFrom(actualType)) {
+			score = targetType == actualType ? 10 : 8;
+			return true;
+		}
+
+		Type nullableUnderlyingType = Nullable.GetUnderlyingType(targetType);
+		if (nullableUnderlyingType != null) {
+			if (TryConvertArgument(value, nullableUnderlyingType, out object nullableValue, out int nullableScore)) {
+				convertedValue = nullableValue;
+				score = nullableScore;
+				return true;
+			}
+		}
+
+		if (targetType == typeof(float)) {
+			if (value is int integerValue) {
+				convertedValue = (float)integerValue;
+				score = 6;
+				return true;
+			}
+		}
+
+		if (targetType == typeof(int)) {
+			if (value is float floatValue) {
+				int integerValue = (int)floatValue;
+				if (Mathf.Approximately(floatValue, integerValue)) {
+					convertedValue = integerValue;
+					score = 6;
+					return true;
+				}
+			}
+		}
+
+		try {
+			convertedValue = Convert.ChangeType(value, targetType, CultureInfo.InvariantCulture);
+			score = 4;
+			return true;
+		} catch {
+			return false;
+		}
+	}
+
 	private int GetLine(AstNode n) => n != null ? n.Line : -1;
+
+	private sealed class InterpreterOutputSink : IDslOutputSink {
+		public void Write(string message, bool isError = false) {
+			CommandExecutionContext.PublishStatusMessage(message, isError);
+		}
+	}
 }

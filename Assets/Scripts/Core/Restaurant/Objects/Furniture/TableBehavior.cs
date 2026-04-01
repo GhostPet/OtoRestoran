@@ -19,6 +19,7 @@ public class TableBehavior : BaseRestaurantObject, IPlaceableLifecycle {
 	public Transform Location => transform;
 	public IReadOnlyList<Vector2Int> SeatCellOffsets => seatCellOffsets;
 	public IReadOnlyList<Customer> Customers => customers;
+	public bool IsDirty => dirty;
 
 	public void OnPlaced(PlaceableObject placedObject) {
 		if (placedObject != null) originCell = placedObject.OriginCell;
@@ -63,6 +64,15 @@ public class TableBehavior : BaseRestaurantObject, IPlaceableLifecycle {
 
 	public void SetDirty(bool value) {
 		dirty = value;
+	}
+
+	public bool Clean() {
+		if (!dirty) {
+			return false;
+		}
+
+		dirty = false;
+		return true;
 	}
 
 	public bool HasCustomer() => customers.Count > 0;

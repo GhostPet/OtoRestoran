@@ -67,7 +67,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b5550c985adf2c3409a70f9b46c7b479, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::OvenBehavior
-  recipes: []
+  recipes:
+  - {fileID: 11400000, guid: cee236e2bc2580a45bc76f24476df5fa, type: 2}
 --- !u!1001 &6008442788063942162
 PrefabInstance:
   m_ObjectHideFlags: 0

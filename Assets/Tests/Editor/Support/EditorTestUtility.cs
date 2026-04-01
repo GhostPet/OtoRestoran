@@ -81,11 +81,7 @@ public static class EditorTestUtility {
 		}
 
 		for (int i = 0; i < wrappedObjects.Count; i++) {
-			if (wrappedObjects[i] is not BuiltinObject builtin) {
-				continue;
-			}
-
-			if (ReferenceEquals(builtin.RawInstance, expected)) {
+			if (ReferenceEquals(wrappedObjects[i], expected)) {
 				return true;
 			}
 		}

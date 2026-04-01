@@ -272,6 +272,12 @@ public class Parser {
 			expr = new NumberLiteralExpression { Value = float.Parse(Previous().Lexeme), Line = Previous().Line };
 		} else if (Match(TokenType.String)) {
 			expr = new StringLiteralExpression { Value = Previous().Lexeme, Line = Previous().Line };
+		} else if (Match(TokenType.KeywordNone)) {
+			expr = new NullLiteralExpression { Line = Previous().Line };
+		} else if (Match(TokenType.KeywordTrue)) {
+			expr = new BooleanLiteralExpression { Value = true, Line = Previous().Line };
+		} else if (Match(TokenType.KeywordFalse)) {
+			expr = new BooleanLiteralExpression { Value = false, Line = Previous().Line };
 		} else if (Match(TokenType.Identifier)) {
 			var id = Previous();
 			expr = new IdentifierExpression { Name = id.Lexeme, Line = id.Line };

@@ -372,9 +372,10 @@ public class Customer : MonoBehaviour {
 
 	private bool TryPopulateOrder(Order order) {
 		if (order == null || defaultOrderItems == null) {
-			return false;
+           return TryPopulateFallbackOrder(order);
 		}
 
+     bool hasValidConfiguredItem = false;
 		for (int i = 0; i < defaultOrderItems.Count; i++) {
 			OrderItem orderItem = defaultOrderItems[i];
 			if (orderItem == null || !orderItem.IsValid) {
@@ -386,9 +387,49 @@ public class Customer : MonoBehaviour {
 				continue;
 			}
 
+           hasValidConfiguredItem = true;
 			order.AddItem(orderItem);
 		}
 
+        if (order.Items != null && order.Items.Count > 0) {
+			return true;
+		}
+
+		if (hasValidConfiguredItem) {
+			return false;
+		}
+
+		return TryPopulateFallbackOrder(order);
+	}
+
+	private bool TryPopulateFallbackOrder(Order order) {
+		if (order == null) {
+			return false;
+		}
+
+		ItemSO[] loadedItems = Resources.FindObjectsOfTypeAll<ItemSO>();
+		if (loadedItems == null || loadedItems.Length == 0) {
+			return false;
+		}
+
+		var candidates = new List<ItemSO>();
+		for (int i = 0; i < loadedItems.Length; i++) {
+			ItemSO item = loadedItems[i];
+			if (item == null || !item.Orderable) {
+				continue;
+			}
+
+			if (!candidates.Contains(item)) {
+				candidates.Add(item);
+			}
+		}
+
+		if (candidates.Count == 0) {
+			return false;
+		}
+
+		int selectedIndex = Random.Range(0, candidates.Count);
+		order.AddItem(new OrderItem(candidates[selectedIndex], 1));
 		return order.Items != null && order.Items.Count > 0;
 	}
 

@@ -34,6 +34,9 @@ public enum TokenType {
 	KeywordFor,
 	KeywordIn,
 	KeywordReturn,
+	KeywordNone,
+	KeywordTrue,
+	KeywordFalse,
 
 	EOF
 }

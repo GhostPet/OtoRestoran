@@ -1419,7 +1419,7 @@ MonoBehaviour:
   customerPrefabs:
   - {fileID: 3139418177077522112, guid: 4d5299022b578494ba17009ce4ed1d2d, type: 3}
   spawningEnabled: 1
-  spawnInterval: 3
+  spawnInterval: 10
   customerSpawnPoint: {fileID: 130777905}
   restaurantOpen: 0
   toggleButton: {fileID: 0}

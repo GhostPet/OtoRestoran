@@ -21,8 +21,8 @@ public class RuntimeInfrastructureTests {
 	[Test]
 	public void RobotCommandQueue_PreservesFifoOrderAndClear() {
 		var queue = new RobotCommandQueue();
-		var first = new EnqueuedCommand(new DropCommand(), new object[] { "first" }, 1);
-		var second = new EnqueuedCommand(new CleanTableCommand(), new object[] { "second" }, 2);
+		var first = new EnqueuedCommand(new TestCommandStub(), new object[] { "first" }, 1);
+		var second = new EnqueuedCommand(new TestCommandStub(), new object[] { "second" }, 2);
 
 		queue.Enqueue(first);
 		queue.Enqueue(second);
@@ -39,7 +39,7 @@ public class RuntimeInfrastructureTests {
 
 	[Test]
 	public void EnqueuedCommand_CapturesValidationErrorsAndRestoresCallerContext() {
-		var enqueued = new EnqueuedCommand(new MoveToCommand(), new object[] { "bad_target" }, 17, "queued");
+		var enqueued = new EnqueuedCommand(new FailingCommandStub(), new object[] { "bad_target" }, 17, "queued");
 
 		bool done = enqueued.Tick();
 
@@ -52,19 +52,77 @@ public class RuntimeInfrastructureTests {
 	}
 
 	[Test]
-	public void Validator_ReportsUndefinedCommandsAndArgumentCountIssues() {
+	public void Validator_AcceptsPythonStyleDslWithoutCommandRegistry() {
 		var validator = new Validator();
 		var lines = new List<string> {
-			"print(hello)",
-			"no_such_command()",
-			"move_to()"
+		 "def main():",
+			"    values = range(3)",
+			"    for value in values:",
+			"        x = int(value)",
+			""
 		};
 
 		List<ValidationError> errors = validator.Validate(lines);
 
 		Assert.IsNotNull(errors);
-		Assert.AreEqual(2, errors.Count);
-		Assert.IsTrue(errors.Exists(error => error is UndefinedVariableError));
-		Assert.IsTrue(errors.Exists(error => error is InvalidArgumentCountError));
+		Assert.AreEqual(0, errors.Count);
+	}
+
+	[Test]
+	public void Validator_AcceptsPythonStyleLiteralsAndWhileTrue() {
+		var validator = new Validator();
+		var lines = new List<string> {
+			"def main():",
+		   "    missing = None",
+			"    active = True",
+			"    if missing == None:",
+			"        while True:",
+			"            active = False",
+			""
+		};
+
+		List<ValidationError> errors = validator.Validate(lines);
+
+		Assert.IsNotNull(errors);
+		Assert.AreEqual(0, errors.Count);
+	}
+
+	[Test]
+	public void Validator_ReportsSyntaxErrorsForInvalidPythonStyleDsl() {
+		var validator = new Validator();
+		var lines = new List<string> {
+			"def main():",
+			"    values = range(3)",
+			"    if values",
+			"        x = 1"
+		};
+
+		List<ValidationError> errors = validator.Validate(lines);
+
+		Assert.IsNotNull(errors);
+		Assert.AreEqual(1, errors.Count);
+		Assert.IsInstanceOf<InvalidFunctionCallError>(errors[0]);
+	}
+
+	private sealed class TestCommandStub : IRobotCommand {
+		public int ExpectedArgumentCount => 1;
+
+		public bool Tick(params object[] args) {
+			return true;
+		}
+
+		public void Reset() {
+		}
+	}
+
+	private sealed class FailingCommandStub : IRobotCommand {
+		public int ExpectedArgumentCount => 1;
+
+		public bool Tick(params object[] args) {
+			throw new ValidationError("Line 17: invalid target", 17);
+		}
+
+		public void Reset() {
+		}
 	}
 }

@@ -20,7 +20,13 @@ public class Lexer {
 		{ "while", TokenType.KeywordWhile },
 		{ "for", TokenType.KeywordFor },
 		{ "in", TokenType.KeywordIn },
-		{ "return", TokenType.KeywordReturn }
+		{ "return", TokenType.KeywordReturn },
+		{ "None", TokenType.KeywordNone },
+		{ "null", TokenType.KeywordNone },
+		{ "True", TokenType.KeywordTrue },
+		{ "true", TokenType.KeywordTrue },
+		{ "False", TokenType.KeywordFalse },
+		{ "false", TokenType.KeywordFalse }
 	};
 
 	public Lexer(string source) {

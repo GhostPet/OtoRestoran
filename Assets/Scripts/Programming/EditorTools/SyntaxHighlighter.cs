@@ -9,8 +9,27 @@ public class SyntaxHighlighter : MonoBehaviour {
 		"def", "if", "elif", "else", "while", "for", "in", "return"
 	};
 
-	private static readonly HashSet<string> LiteralKeywords = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
-		"true", "false", "null"
+   private static readonly HashSet<string> LiteralKeywords = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
+		"True", "False", "None"
+	};
+
+	private static readonly HashSet<string> CoreBuiltins = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
+		"print",
+		"find_item",
+		"range",
+		"len",
+		"wait",
+		"get_robot",
+		"get_tables",
+		"get_furnaces",
+		"get_fridges",
+		"get_trashcans",
+		"get_orders",
+		"get_nearest_robot",
+		"get_nearest_table",
+		"get_nearest_furnace",
+		"get_nearest_fridge",
+		"get_nearest_trashcan"
 	};
 
 	[SerializeField] private TMP_InputField sourceInputField;
@@ -267,11 +286,7 @@ public class SyntaxHighlighter : MonoBehaviour {
 			return keywordColor;
 		}
 
-		if (BuiltinFunctions.IsBuiltin(identifier)) {
-			return builtinColor;
-		}
-
-		if (BuiltinCommandRegistry.IsBuiltin(identifier)) {
+		if (CoreBuiltins.Contains(identifier)) {
 			return builtinColor;
 		}
 
