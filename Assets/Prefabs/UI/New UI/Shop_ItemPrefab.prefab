@@ -67,8 +67,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "Sat\u0131\u015F Fiyat\u0131"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: fe8d2396ec8bebb418b9a023650693a0, type: 2}
+  m_sharedMaterial: {fileID: 2264986254747273677, guid: fe8d2396ec8bebb418b9a023650693a0, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -204,8 +204,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 1
+  m_Sprite: {fileID: 21300000, guid: e2374522647726447abc9d0d937ef809, type: 3}
+  m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -325,8 +325,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 1
+  m_Sprite: {fileID: 21300000, guid: e2374522647726447abc9d0d937ef809, type: 3}
+  m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -446,8 +446,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 'Envanterde:'
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: fe8d2396ec8bebb418b9a023650693a0, type: 2}
+  m_sharedMaterial: {fileID: 2264986254747273677, guid: fe8d2396ec8bebb418b9a023650693a0, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -583,8 +583,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "Al\u0131\u015F Fiyat\u0131"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: fe8d2396ec8bebb418b9a023650693a0, type: 2}
+  m_sharedMaterial: {fileID: 2264986254747273677, guid: fe8d2396ec8bebb418b9a023650693a0, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -720,8 +720,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Item Name
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: fe8d2396ec8bebb418b9a023650693a0, type: 2}
+  m_sharedMaterial: {fileID: 2264986254747273677, guid: fe8d2396ec8bebb418b9a023650693a0, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -857,8 +857,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "Sat\u0131n Al"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: fe8d2396ec8bebb418b9a023650693a0, type: 2}
+  m_sharedMaterial: {fileID: 2264986254747273677, guid: fe8d2396ec8bebb418b9a023650693a0, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -984,11 +984,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopProductItemUI
   iconImage: {fileID: 5686743946295336713}
   nameText: {fileID: 8469394521152266723}
-  descriptionText: {fileID: 0}
   priceText: {fileID: 113528441672413229}
   sellPriceText: {fileID: 3990561698660012515}
   ownedText: {fileID: 1440762669493740758}
-  statusText: {fileID: 0}
   buyButton: {fileID: 4328487788418816345}
   sellButton: {fileID: 4382339054362615801}
 --- !u!1 &6562156775086227194
@@ -1058,8 +1056,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Sat
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: fe8d2396ec8bebb418b9a023650693a0, type: 2}
+  m_sharedMaterial: {fileID: 2264986254747273677, guid: fe8d2396ec8bebb418b9a023650693a0, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
