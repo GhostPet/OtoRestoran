@@ -7,14 +7,15 @@ public class CarMovement : MonoBehaviour
     private NavMeshAgent agent;
     private Transform customTarget;
     private bool isDestroying = false;
+    private ParticleSystem exhaustSmoke;
 
     void Awake()
     {
-        // Komponenti alalım
         agent = GetComponent<NavMeshAgent>();
+        // Araba içindeki duman efektini otomatik bul
+        exhaustSmoke = GetComponentInChildren<ParticleSystem>();
     }
 
-    // TrafficManager tarafından çağrılacak fonksiyon
     public void SetTarget(Transform target)
     {
         customTarget = target;
@@ -28,12 +29,12 @@ public class CarMovement : MonoBehaviour
 
     void Update()
     {
-        // Eğer hedefimiz varsa ve henüz yok olma sürecinde değilsek
         if (customTarget != null && !isDestroying)
         {
-            // Hedefe olan mesafeyi ölç (1.5 birimden azsa yok olmaya başla)
+            // Hedefe yaklaşıp yaklaşmadığını kontrol et
             float distance = Vector3.Distance(transform.position, customTarget.position);
             
+            // 1.5 birim mesafe kalınca yok olma sürecini başlat
             if (distance < 1.5f)
             {
                 StartCoroutine(ShrinkAndDestroy());
@@ -44,27 +45,33 @@ public class CarMovement : MonoBehaviour
     IEnumerator ShrinkAndDestroy()
     {
         isDestroying = true;
+
+        // 1. Dumanı durdur (havadakiler kalır, yeni duman çıkmaz)
+        if (exhaustSmoke != null)
+        {
+            exhaustSmoke.Stop();
+        }
         
-        // Arabayı durdur
+        // 2. Arabayı durdur ve navigasyonu kapat
         if (agent != null) 
         {
             agent.isStopped = true;
-            agent.enabled = false; // Diğer araçlarla çakışmaması için navigasyonu kapat
+            agent.enabled = false;
         }
 
+        // 3. Küçülme animasyonu
         float timer = 0;
-        float duration = 0.8f; // Yok olma hızı (saniye)
+        float duration = 0.8f; 
         Vector3 originalScale = transform.localScale;
 
         while (timer < duration)
         {
             timer += Time.deltaTime;
-            // Boyutu sıfıra indir
             transform.localScale = Vector3.Lerp(originalScale, Vector3.zero, timer / duration);
             yield return null;
         }
 
-        // Sahneden tamamen sil
+        // 4. Objeyi tamamen yok et
         Destroy(gameObject);
     }
 }
