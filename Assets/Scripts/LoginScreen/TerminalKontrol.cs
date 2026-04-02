@@ -43,7 +43,7 @@ public class TerminalKontrol : MonoBehaviour
         StartCoroutine(ImlecDongusu());
         
         // --- YENİ KARŞILAMA MESAJI ---
-        StartCoroutine(YaziYazdir("Welcome to Auto-Restaurant Terminal v1.0 sir.\nReady to open your restaurant?\nCommands: /play, /settings, /exit"));
+        StartCoroutine(YaziYazdir("Welcome to Auto-Restaurant Terminal v1.0 sir.\nCommands: /play, /settings, /exit"));
     }
 
     public void KomutuKontrolEt(string gelenYazi)
@@ -75,7 +75,7 @@ public class TerminalKontrol : MonoBehaviour
         }
         else 
         {
-            if (komut == "/back" || komut == "back")
+            if (komut == "/back")
             {
                 StopAllCoroutines();
                 StartCoroutine(ImlecDongusu());
@@ -146,7 +146,7 @@ public class TerminalKontrol : MonoBehaviour
         if (sesKaynagi != null && uyanisSesi != null) sesKaynagi.PlayOneShot(uyanisSesi);
 
         yield return new WaitForSeconds(uyanmaSuresi + 0.5f);
-        SceneManager.LoadScene("New UI");
+        SceneManager.LoadScene("Restaurant");
     }
 
     // Bu fonksiyonu script bileşeninde göz core resimleri bağlı değilse 
