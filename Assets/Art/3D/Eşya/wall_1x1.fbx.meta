@@ -8,7 +8,7 @@ ModelImporter:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
       name: room_floor_color.002
-    second: {fileID: -4428249817122735387, guid: 718c915d37d3b434b983997215a4bde7, type: 3}
+    second: {fileID: 2100000, guid: 7a04abc68d459c140955efe0c3e050c1, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

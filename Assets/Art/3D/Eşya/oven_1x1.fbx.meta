@@ -3,7 +3,32 @@ guid: 2aef12d84416e1442b4e26b609b01817
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: oven_black.001
+    second: {fileID: 2100000, guid: b3a56b7247797344581f94898ae4df2b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: oven_button
+    second: {fileID: 2100000, guid: b3a56b7247797344581f94898ae4df2b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: oven_color
+    second: {fileID: 2100000, guid: bc7b54032c4e04a4c87503541e7739ce, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: oven_glass
+    second: {fileID: 2100000, guid: bc7b54032c4e04a4c87503541e7739ce, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: oven_white
+    second: {fileID: 2100000, guid: bc7b54032c4e04a4c87503541e7739ce, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
